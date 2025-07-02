@@ -2,7 +2,6 @@
 import React, { useEffect, useRef } from "react";
 import Image from "next/image";
 
-
 // Dynamically import p5 to avoid SSR issues
 const loadP5 = () => import("p5");
 
@@ -25,12 +24,10 @@ function HeroPage() {
       name: 'Indeed',
       src: 'https://i0.wp.com/verotouch.com/wp-content/uploads/2024/02/Indeed-Logo-Black.png?ssl=1'
     },
-   
-     {
+    {
       name: 'Naukri',
       src: 'https://fontslogo.com/wp-content/uploads/2013/04/M-2p-black_Naukri-Logo-Font.jpg'
     },
-   
   ];
 
   useEffect(() => {
@@ -49,15 +46,13 @@ function HeroPage() {
         let isDarkMode = false;
 
         p.setup = () => {
-          
-
-const canvas = p.createCanvas(p.windowWidth, p.windowHeight);
-
+          const canvas = p.createCanvas(p.windowWidth, p.windowHeight);
           canvas.parent(canvasRef.current!);
-          canvas.style('position', 'absolute');
+          canvas.style('position', 'fixed');
           canvas.style('top', '0');
           canvas.style('left', '0');
-          canvas.style('z-index', '-1');
+          canvas.style('z-index', '0');
+          canvas.style('pointer-events', 'none');
           
           cols = Math.ceil(p.width / gridSize);
           rows = Math.ceil(p.height / gridSize);
@@ -90,9 +85,9 @@ const canvas = p.createCanvas(p.windowWidth, p.windowHeight);
           
           // Clear background completely
           if (isDarkMode) {
-            p.background(0, 0, 0); // Pure white background
+            p.background(0, 0, 0); // Pure black background
           } else {
-            p.background(255, 255, 255); // Pure black background
+            p.background(255, 255, 255); // Pure white background
           }
 
           // Calculate mouse grid position
@@ -251,15 +246,13 @@ const canvas = p.createCanvas(p.windowWidth, p.windowHeight);
   }, []);
 
   return (
-    <div className="relative  overflow-hidden">
+    <div className="relative w-full min-h-[90vh] overflow-hidden">
       {/* P5.js Canvas Container */}
-      <div className="absolute min-w-screen " >
-  <div ref={canvasRef} />
-</div>
+      <div ref={canvasRef} className="absolute inset-0" />
 
-      
       {/* Hero Content */}
-      <div className="relative z-10 flex flex-col items-center min-h-screen py-12 px-4">
+      <div className="relative z-10 flex flex-col justify-center items-center min-h-screen w-full px-4 py-12">
+       <div className="flex-1 flex flex-col  items-center text-center space-y-6 max-w-6xl mx-auto">
         <div className="text-center space-y-6  bg-black/10 dark:bg-white/10  p-8 md:p-12">
           <h1 className="text-3xl md:text-8xl font-medium font-poppins text-white dark:text-black/85">
             Hir&apos;in
@@ -281,28 +274,31 @@ const canvas = p.createCanvas(p.windowWidth, p.windowHeight);
             Get a Job
           </button>
         </div>
-        <div className="relative z-10">
-            <h2 className="text-center text-2xl font-semibold mb-6 text-black dark:text-white">
-              Trusted by job seekers on major platforms
-            </h2>
-            <div className="flex flex-wrap justify-between items-center gap-6 max-w-5xl mx-auto px-4">
-              {logos.map((logo) => (
-                <div key={logo.name} className=" flex justify-center items-center">
-                  <Image
-                    src={logo.src}
-                    alt={logo.name}
-                    width={180}
-                    height={180}
-                    className="object-contain filter "
-                  />
-                </div>
-              ))}
-            </div>
+
+        </div>
+
+        {/* Logo Section */}
+        <div className="min-w-screen bg-white/95  backdrop-blur-sm py-8 px-4 ">
+          <h2 className="text-center text-xl md:text-2xl font-medium mb-6 text-black font-poppins ">
+            Trusted by job seekers on major platforms
+          </h2>
+          <div className="flex flex-wrap justify-between items-center gap-8 md:gap-12 max-w-5xl mb-10 mx-auto">
+            {logos.map((logo) => (
+              <div key={logo.name} className="flex justify-center  items-center">
+                <Image
+                  src={logo.src}
+                  alt={logo.name}
+                  width={150}
+                  height={150}
+                  className="object-contain filter grayscale hover:grayscale-0 transition-all duration-300"
+                />
+              </div>
+            ))}
           </div>
-        
+        </div>
       </div>
-      
-    </div>
+      </div>
+    
   );
 }
 
