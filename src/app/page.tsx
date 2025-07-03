@@ -1,6 +1,6 @@
 import Header from "@/components/Header";
-import Company from "@/components/Hero/Company";
 import HeroPage from "@/components/Hero/HeroPage";
+import HowItWorks from "@/components/Hero/HowItWorks";
 
 
 export default function Home() {
@@ -8,6 +8,7 @@ export default function Home() {
       <div>
         <Header />
         <HeroPage/>
+        <HowItWorks/>
         
       </div>
   );
