@@ -1,6 +1,7 @@
 "use client";
-import React, { useState } from 'react';
-import { Search, Target, FileText, Send, TrendingUp, Clock,   User, Settings } from 'lucide-react';
+import React from 'react';
+import { Search, Target, FileText, Send, TrendingUp, Clock, } from 'lucide-react';
+
 
 type Status = 'interview' | 'progress' | 'submitted' | 'rejected' | string;
 
@@ -11,7 +12,7 @@ const JobSearchDashboard = ({
   height = "400px", 
   width = "800px" 
 }) => {
-  const [activeTab, setActiveTab] = useState('dashboard');
+  
 
   const stats = [
     { label: 'Job Matches', value: '24', subtext: '80%+ compatibility', icon: Target, color: 'bg-blue-500' },
@@ -51,55 +52,78 @@ const JobSearchDashboard = ({
     return 'text-orange-600 bg-orange-50';
   };
 
+  const items = [
+    { label: "Job Matches", href: "/matches" },
+    { label: "Applications", href: "/applications" },
+    { label: "My Profile", href: "/profile" }
+  ];
+
   return (
     <div className={`${isEmbedded ? 'h-full w-full ' : 'min-h-screen'} bg-gray-50 ${className}`} style={isEmbedded ? { height, width } : {}}>
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className={`${isEmbedded ? 'px-4' : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'}`}>
-          <div className={`flex justify-between items-center ${isEmbedded ? 'h-12' : 'h-16'}`}>
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <div className={`${isEmbedded ? 'w-6 h-6' : 'w-8 h-8'} bg-blue-600 rounded-lg flex items-center justify-center`}>
-                  <Target className={`${isEmbedded ? 'w-4 h-4' : 'w-5 h-5'} text-white`} />
-                </div>
-                <span className={`${isEmbedded ? 'text-lg' : 'text-xl'} font-bold text-gray-900`}>JobFlow</span>
-              </div>
-            </div>
-            {!isEmbedded && (
-              <nav className="flex space-x-8">
-                <button 
-                  onClick={() => setActiveTab('dashboard')}
-                  className={`text-sm font-medium ${activeTab === 'dashboard' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'} pb-4`}
-                >
-                  Dashboard
-                </button>
-                <button 
-                  onClick={() => setActiveTab('matches')}
-                  className={`text-sm font-medium ${activeTab === 'matches' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'} pb-4`}
-                >
-                  Job Matches
-                </button>
-                <button 
-                  onClick={() => setActiveTab('applications')}
-                  className={`text-sm font-medium ${activeTab === 'applications' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'} pb-4`}
-                >
-                  Applications
-                </button>
-                <button 
-                  onClick={() => setActiveTab('profile')}
-                  className={`text-sm font-medium ${activeTab === 'profile' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'} pb-4`}
-                >
-                  Profile
-                </button>
-              </nav>
-            )}
-            <div className="flex items-center space-x-4">
-              <Settings className={`${isEmbedded ? 'w-4 h-4' : 'w-5 h-5'} text-gray-400 cursor-pointer hover:text-gray-600`} />
-              <User className={`${isEmbedded ? 'w-4 h-4' : 'w-5 h-5'} text-gray-400 cursor-pointer hover:text-gray-600`} />
+      {isEmbedded &&
+        <div>
+          <header className="dark:bg-white bg-black sticky top-0 z-50 backdrop-blur-sm pt-2 pb-2">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16 lg:h-10">
+            {/* Logo */}
+           
+<div
+  className="flex items-center gap-1 hover:cursor-pointer group hover:scale-105 transition-all duration-300"
+>
+  
+  <h1 className="text-2xl  font-bold text-black font-sans">
+    Hir&apos;
+  </h1>
+
+  {/* 'in' part inside a blue box */}
+  <h1 className="text-2xl  font-bold text-white bg-blue-600 dark:bg-blue-600 rounded px-1">
+    in
+  </h1>
+</div>
+
+            {/* Desktop Navigation */}
+          
+      <div className=" flex gap-8">
+        {items.map((item) => (
+          <div
+            key={item.href}
+            className="relative  group hover:cursor-pointer hover:scale-105 transition-all duration-300"
+           
+          >
+            <span className="text-white dark:text-black font-poppins text-sm ">
+              {item.label}
+            </span>
+            <div className="absolute left-0 -bottom-1 h-0.5 bg-blue-500 w-0 group-hover:w-full transition-all duration-300"></div>
+          </div>
+        ))}
+      </div>
+
+            {/* Right Side Actions */}
+            <div className="flex items-center gap-3">
+              {/* Get a Job Button - Desktop */}
+              <button
+                className="flex items-center  gap-2 bg-black hover:bg-black/85  text-white px-4 py-2 rounded-font-medium text-sm  transition-all duration-300 "
+               
+              >
+                
+                Get a Job
+              </button>
+
+            
+
+              
             </div>
           </div>
         </div>
+
+      
+       
       </header>
+
+        </div>
+        }
+      
 
       <div className={`${isEmbedded ? 'px-4 py-4' : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'}  overflow-hidden`}>
         {/* Stats Cards */}
