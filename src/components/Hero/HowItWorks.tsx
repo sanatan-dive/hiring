@@ -20,9 +20,9 @@ function HowItWorks() {
         style={{
           backgroundImage: `
             radial-gradient(
-              circle at left,
+              circle at center left,
               rgba(21, 93, 252, 0.5),
-              transparent 70%
+              transparent 60%
             )
           `,
           filter: "blur(80px)",

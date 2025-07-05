@@ -95,30 +95,30 @@ const Carousel: React.FC<CarouselProps> = ({
   };
 
   return (
-    <div className="w-full h-screen bg-black dark:bg-white flex  items-center justify-center relative ">
+    <div className="w-full h-[800px] flex  items-center justify-center relative ">
         
       {/* Left navigation */}
       <div className="absolute left-8 z-40 flex items-end flex-col group " onClick={goToPrevious}>
-        <div className="w-[300px] h-[3px] bg-gradient-to-l from-blue-600 to-blue-400 transition-colors duration-200 mb-10 rounded-full "></div>
+        <div className="w-[300px] h-[3px] bg-gradient-to-l from-blue-600 to-blue-400 transition-colors duration-200 mb-10 rounded-full -z-10"></div>
         <div className="ml-4 text-blue-600 group-hover:text-blue-800  transition-all duration-200 flex items-center cursor-pointer">
           <ChevronLeft size={32} className='font-bold'  />
           <div className="w-sm h-[3px] bg-gradient-to-l from-blue-600 to-blue-400 hover:bg-gradient-to-l hover:from-blue-800 hover:to-blue-600 transition-colors duration-200 rounded-full"></div>
         </div>
-        <div className="w-[300px] h-[3px] bg-gradient-to-l from-blue-600 to-blue-400 transition-colors duration-200 mt-10 rounded-full"></div>
+        <div className="w-[300px] h-[3px] bg-gradient-to-l from-blue-600 to-blue-400 transition-colors duration-200 mt-10 rounded-full -z-10"></div>
       </div>
 
       {/* Right navigation */}
       <div className="absolute right-8 z-40 flex items-start flex-col group " onClick={goToNext}>
-         <div className="w-[300px] h-[3px] bg-gradient-to-r from-blue-600 to-blue-400 mb-10 rounded-full "></div>
+         <div className="w-[300px] h-[3px] bg-gradient-to-r from-blue-600 to-blue-400 mb-10 rounded-full -z-10"></div>
         <div className="mr-4 text-blue-600 group-hover:text-blue-800  transition-all duration-200 flex items-center cursor-pointer">
             <div className="w-sm h-[3px] bg-gradient-to-r from-blue-600 to-blue-400 hover:bg-gradient-to-r hover:from-blue-800 hover:to-blue-600 transition-colors duration-200  rounded-full"></div>
           <ChevronRight size={32} />
         </div>
-         <div className="w-[300px] h-[3px] bg-gradient-to-r from-blue-600 to-blue-400  mt-10 rounded-full "></div>
+         <div className="w-[300px] h-[3px] bg-gradient-to-r from-blue-600 to-blue-400  mt-10 rounded-full -z-10"></div>
       </div>
 
       {/* Carousel slides */}
-      <div className="relative flex justify-center mt-72  h-full">
+      <div className="relative flex justify-center mt-30  h-full">
         {items.map((item, index) => (
           <div
             key={item.id}
@@ -264,7 +264,7 @@ const CarouselDemo: React.FC = () => {
   ];
 
   return (
-    <div className='relative bg-white font-poppins'>
+    <div className='relative bg-white font-poppins '>
       <div
         className="absolute inset-0 z-10"
         style={{
@@ -272,7 +272,7 @@ const CarouselDemo: React.FC = () => {
             radial-gradient(
               circle at center,
               rgba(21, 93, 252, 0.5),
-              transparent 40%
+              transparent 50%
             )
           `,
           filter: "blur(80px)",
@@ -280,7 +280,7 @@ const CarouselDemo: React.FC = () => {
         }}
       />
       <div>
-        <div className="flex ml-4 sm:ml-40 items-center gap-1 mb-4">
+        <div className="flex ml-4 sm:ml-40 items-center gap-1 mb-4 pt-30 ">
           <span className="text-2xl font-bold text-blue-600 z-10 font-poppins">—</span>
           <h1 className="text-2xl sm:text-4xl font-bold text-black z-10 font-poppins">Success Stories</h1>
         </div>
@@ -293,8 +293,34 @@ const CarouselDemo: React.FC = () => {
       <Carousel 
         items={studentSuccessStories} 
         autoPlay={true} 
-        autoPlayDelay={4000}
+        autoPlayDelay={7000}
       />
+
+      <div className='  '>
+      <div className="relative z-20 px-4 sm:px-40 ">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 ">
+          <div className="text-center">
+            <div className="text-3xl sm:text-4xl font-bold text-blue-600 mb-2">500+</div>
+            <div className="text-sm text-gray-600">Students Placed</div>
+          </div>
+          <div className="text-center">
+            <div className="text-3xl sm:text-4xl font-bold text-blue-600 mb-2">₹45L</div>
+            <div className="text-sm text-gray-600">Average Package</div>
+          </div>
+          <div className="text-center">
+            <div className="text-3xl sm:text-4xl font-bold text-blue-600 mb-2">150+</div>
+            <div className="text-sm text-gray-600">Partner Companies</div>
+          </div>
+          <div className="text-center">
+            <div className="text-3xl sm:text-4xl font-bold text-blue-600 mb-2">98%</div>
+            <div className="text-sm text-gray-600">Success Rate</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Call to Action */}
+     
+      </div>
         
    
     </div>
