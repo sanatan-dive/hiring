@@ -1,8 +1,17 @@
 import React from 'react';
 import JobSearchDashboard from '../Dashboard';
 import { ArrowRight } from 'lucide-react';
+import GlowButton from '../ui/glow-button';
+
+const varian = [
+  {
+    name: 'blue',
+    color: '#126fff'
+  }
+]
 
 function HowItWorks() {
+  const selectedVariant = varian[0];
   return (
     <div className="min-h-screen w-full relative bg-white dark:bg-white dark:text-white z-10">
       {/* Cool Blue Glow Left */}
@@ -54,7 +63,7 @@ function HowItWorks() {
             All your job search details in one place
           </h2>
           <p className="text-gray-600 text-sm sm:text-md mb-3">
-            Hir’in tracks your applications, matches, résumés, and progress — no more messy spreadsheets.
+            Hir&apos;in tracks your applications, matches, résumés, and progress — no more messy spreadsheets.
           </p>
           <p className="text-gray-600 text-sm sm:text-md mb-3">
             Get personalized job matches, automatic résumé tailoring, and detailed gap analysis for every role you apply to.
@@ -63,9 +72,8 @@ function HowItWorks() {
             Apply faster and smarter, with clear visibility into your interview pipeline and application status.
           </p>
           <div className="flex flex-col sm:flex-row justify-between mt-4 sm:mt-8 gap-4">
-            <button className="bg-blue-600 text-white duration-300 rounded-full px-6 py-3 sm:py-4 hover:bg-blue-700 transition text-sm sm:text-md">
-              Get Started for free
-            </button>
+           <GlowButton variant={selectedVariant.name} className='font-poppins px-4 py-3' > Get Started for Free</GlowButton>
+            
             <button className="text-gray-900 font-medium text-sm sm:text-md flex items-center gap-1 hover:underline">
               To Learn More
               <span><ArrowRight size={20} /></span>

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
@@ -82,7 +83,7 @@ const FallingProfilesBackground: React.FC = () => {
           const newY = profile.y + profile.speed;
           const newTrail = [
             { x: profile.x, y: profile.y, opacity: 1 },
-            ...profile.trail.map((point, index) => ({
+            ...profile.trail.map((point) => ({
               ...point,
               opacity: point.opacity - 0.04,
             })),
@@ -175,7 +176,8 @@ function HeroPage() {
 
   useEffect(() => {
     if (!canvasRef.current) return;
-
+  
+    
     let p5Instance: any = null;
 
     const initP5 = async () => {
@@ -419,7 +421,7 @@ function HeroPage() {
               </p>
 
               <p className="text-md font-poppins font-light text-white dark:text-black/85">
-                Hir&apos;in helps you apply smarter and faster to jobs where you can thrive. Whether you're seeking your next opportunity <br/> or looking to land interviews at top companies, Hir'in streamlines the process for you.
+                Hir&apos;in helps you apply smarter and faster to jobs where you can thrive. Whether you&apos;re seeking your next opportunity <br/> or looking to land interviews at top companies, Hir&apos;in streamlines the process for you.
               </p>
             </div>
 
@@ -435,7 +437,7 @@ function HeroPage() {
       {/* Logo Section - Now appears below the hero */}
       <div className="w-full bg-white backdrop-blur-sm py-8 px-4">
         <h2 className="text-center text-xl md:text-2xl font-medium mb-6 text-black font-poppins">
-          Trusted by job seekers on major platforms
+          Trusted by job seekers 
         </h2>
         <div className="flex flex-wrap justify-between items-center gap-8 md:gap-12 max-w-5xl mb-10 mx-auto">
           {logos.map((logo) => (

@@ -1,6 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import { ChevronRight } from 'lucide-react';
+import GlowButton from '../ui/glow-button';
 
 interface FAQItem {
   question: string;
@@ -26,8 +27,17 @@ const faqData: FAQItem[] = [
   }
 ];
 
+const variant = [
+    {
+      name: 'blue',
+      color: '#126fff'
+    }
+  ]
+
 const FAQ = () => {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const selectedVariant = variant[0];
+
 
   const toggle = (index: number) => {
     setActiveIndex(prev => (prev === index ? null : index));
@@ -81,11 +91,55 @@ const FAQ = () => {
     </div>
   );
 
+  
+
   return (
-    <div className="bg-white min-h-screen  flex flex-col justify-center p-12 font-poppins  relative ">
+    <div className="bg-white min-h-screen  flex flex-col  justify-center p-12 font-poppins  relative ">
        <div className="absolute top-32 right-32 w-[500px] h-[500px] rounded-full bg-gradient-to-br from-blue-600 to-blue-800 opacity-10 blur-3xl"></div>
         <div className="absolute bottom-32 left-32 w-[500px] h-[500px] rounded-full bg-gradient-to-br from-blue-600 to-blue-800 opacity-10 blur-3xl"></div>
-      <div className='container max-w-7xl mx-auto z-50'>
+      
+      <div className='absolute inset-0 '>
+      <div className="relative z-20 px-4 sm:px-40 ">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-16">
+          <div className="text-center">
+            <div className="text-3xl sm:text-4xl font-bold text-blue-600 mb-2">500+</div>
+            <div className="text-sm text-gray-600">Students Placed</div>
+          </div>
+          <div className="text-center">
+            <div className="text-3xl sm:text-4xl font-bold text-blue-600 mb-2">₹45L</div>
+            <div className="text-sm text-gray-600">Average Package</div>
+          </div>
+          <div className="text-center">
+            <div className="text-3xl sm:text-4xl font-bold text-blue-600 mb-2">150+</div>
+            <div className="text-sm text-gray-600">Partner Companies</div>
+          </div>
+          <div className="text-center">
+            <div className="text-3xl sm:text-4xl font-bold text-blue-600 mb-2">98%</div>
+            <div className="text-sm text-gray-600">Success Rate</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Call to Action */}
+      <div className="relative z-20 text-center px-4 sm:px-40 p-4">
+        <div className=" rounded-2xl p-8 text-black">
+          <h3 className="text-2xl sm:text-3xl font-bold mb-4">Ready to Start Your Success Story?</h3>
+          <p className="text-lg mb-6 opacity-90">
+            Join thousands of students who have transformed their careers with Hir&apos;in
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+           
+            <button className="bg-white text-blue-600 px-8 py-3 rounded-full font-semibold hover:bg-gray-100 transition-colors">
+              Get Started Today
+            </button>
+             <GlowButton variant={selectedVariant.name} className='font-poppins' > View All Stories</GlowButton>
+            
+          </div>
+        </div>
+      </div>
+      </div>
+
+      <div className='container max-w-7xl mx-auto mt-72 z-50'>
         <div className='flex gap-12 max-w-7xl '>
         <h2 className="text-9xl font-bold text-black mb-12 text-left">FAQ</h2>
         
