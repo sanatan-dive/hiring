@@ -574,7 +574,7 @@ function HeroPage() {
 
             <motion.div variants={buttonVariants}>
               <button
-                className="bg-black hover:bg-black/85 transition-colors duration-300 text-white h-12 w-36 flex items-center justify-center text-lg font-light py-4 px-6 rounded-md"
+                className="bg-black hover:bg-black/85 transition-colors duration-300 text-white h-12 w-36 flex items-center justify-center text-lg font-light py-4 px-6 "
                
               >
                 Get a Job
