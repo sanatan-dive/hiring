@@ -146,14 +146,14 @@ const Carousel: React.FC<CarouselProps> = ({
 
        
         <div className="absolute -right-175 pt-32 z-40 flex items-start flex-col group " onClick={goToNext}>
-           <div className="w-[100px] h-[3px] bg-gradient-to-r from-blue-600 to-blue-400 mb-10 rounded-full -z-10"></div>
-          <div className="w-[200px] h-[3px] bg-gradient-to-r from-blue-600 to-blue-400 mb-10 rounded-full -z-10"></div>
+           <div className="w-[100px] h-[3px] bg-gradient-to-r from-blue-600 to-blue-400 mb-8 rounded-full -z-10"></div>
+          <div className="w-[200px] h-[3px] bg-gradient-to-r from-blue-600 to-blue-400 mb-6 rounded-full -z-10"></div>
           <div className="mr-4 text-blue-600 group-hover:text-blue-800 transition-all duration-200 flex items-center cursor-pointer">
             <div className="w-72 h-[3px] bg-gradient-to-r from-blue-600 to-blue-400 hover:bg-gradient-to-r hover:from-blue-800 hover:to-blue-600 transition-colors duration-200 rounded-full"></div>
             <ChevronRight size={32} />
           </div>
-          <div className="w-[200px] h-[3px] bg-gradient-to-r from-blue-600 to-blue-400 mt-10 rounded-full -z-10"></div>
-          <div className="w-[100px] h-[3px] bg-gradient-to-r from-blue-600 to-blue-400 mt-10 rounded-full -z-10"></div>
+          <div className="w-[200px] h-[3px] bg-gradient-to-r from-blue-600 to-blue-400 mt-6 rounded-full -z-10"></div>
+          <div className="w-[100px] h-[3px] bg-gradient-to-r from-blue-600 to-blue-400 mt-8 rounded-full -z-10"></div>
         </div>
           {items.map((item, index) => (
             <div
