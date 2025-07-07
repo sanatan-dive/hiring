@@ -1,6 +1,8 @@
 'use client';
 import React, { useState } from 'react';
 import { ChevronRight } from 'lucide-react';
+import GlowButton from '../ui/glow-button';
+import { motion } from 'framer-motion';
 
 interface FAQItem {
   question: string;
@@ -27,18 +29,8 @@ const faqData: FAQItem[] = [
 ];
 
 const variant = [
-    {
-      name: 'blue',
-      color: '#126fff'
-    }
-  ]
-
-// Simple GlowButton component since it's not available
-const GlowButton = ({ variant, className, children }) => (
-  <button className={`bg-blue-600 text-white px-6 py-3 rounded-full font-semibold hover:bg-blue-700 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/25 ${className}`}>
-    {children}
-  </button>
-);
+  { name: 'blue', color: '#126fff' }
+];
 
 const FAQ = () => {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
@@ -56,11 +48,15 @@ const FAQ = () => {
       {items.map((item, index) => {
         const actualIndex = startIndex + index;
         return (
-          <div
+          <motion.div
             key={actualIndex}
             className={`relative border-b-2 ${
               activeIndex === actualIndex ? 'border-blue-500' : 'border-blue-100'
             } transition-all duration-300 group`}
+            initial={{ opacity: 0, y: 40, filter: 'blur(8px)' }}
+            whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+            transition={{ duration: 0.6, ease: 'easeOut' }}
+            viewport={{ once: true }}
           >
             <button
               onClick={() => toggle(actualIndex)}
@@ -90,7 +86,7 @@ const FAQ = () => {
                 {item.answer}
               </p>
             </div>
-          </div>
+          </motion.div>
         );
       })}
     </div>
@@ -104,28 +100,42 @@ const FAQ = () => {
       
       <div className="w-full max-w-7xl mx-auto pt-8 px-4 sm:px-6 lg:px-8">
         {/* Main FAQ Content */}
-        <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 max-w-7xl">
-          {/* FAQ Title */}
+        <motion.div
+          className="flex flex-col lg:flex-row gap-8 lg:gap-12 max-w-7xl"
+          initial={{ opacity: 0, y: 40, filter: 'blur(8px)' }}
+          whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+          transition={{ duration: 0.7, ease: 'easeOut' }}
+          viewport={{ once: true }}
+        >
           <div className="lg:flex-shrink-0">
             <h2 className="text-4xl sm:text-6xl lg:text-8xl xl:text-9xl font-bold text-black mb-8 lg:mb-12 text-center lg:text-left">
               FAQ
             </h2>
           </div>
-          
-          {/* First Section of FAQs */}
           <div className="flex-1">
             {renderFAQSection(firstSection, 0)}
           </div>
-        </div>
-        
-        {/* Second Section of FAQs */}
-        <div className="mt-8 lg:mt-12">
+        </motion.div>
+
+        <motion.div
+          className="mt-8 lg:mt-12"
+          initial={{ opacity: 0, y: 40, filter: 'blur(8px)' }}
+          whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+          transition={{ duration: 0.7, ease: 'easeOut', delay: 0.2 }}
+          viewport={{ once: true }}
+        >
           {renderFAQSection(secondSection, 2)}
-        </div>
+        </motion.div>
       </div>
-      
+
       {/* Call to Action Section */}
-      <div className="relative z-20 text-center px-4 sm:px-8 lg:px-40 pt-20 sm:pt-32 lg:pt-40 w-full max-w-6xl">
+      <motion.div
+        className="relative z-20 text-center px-4 sm:px-8 lg:px-40 pt-20 sm:pt-32 lg:pt-40 w-full max-w-6xl"
+        initial={{ opacity: 0, y: 40, filter: 'blur(8px)' }}
+        whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+        transition={{ duration: 0.7, ease: 'easeOut', delay: 0.4 }}
+        viewport={{ once: true }}
+      >
         <div className="rounded-2xl p-6 sm:p-8 text-black">
           <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-4">
             Ready to Start Your Success Story?
@@ -137,12 +147,12 @@ const FAQ = () => {
             <button className="w-full sm:w-auto bg-white text-blue-600 px-6 sm:px-8 py-3 rounded-full font-semibold hover:bg-gray-100 transition-colors border border-blue-200">
               Get Started Today
             </button>
-            <GlowButton variant={selectedVariant.name} className="w-full sm:w-auto font-sans rounded-full">
+            <GlowButton variant={selectedVariant.name} className="w-full sm:w-auto font-sans py-3 font-poppins rounded-full">
               View All Stories
             </GlowButton>
           </div>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };
