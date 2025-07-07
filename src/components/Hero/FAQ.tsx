@@ -1,7 +1,6 @@
 'use client';
 import React, { useState } from 'react';
 import { ChevronRight } from 'lucide-react';
-import GlowButton from '../ui/glow-button';
 
 interface FAQItem {
   question: string;
@@ -34,10 +33,16 @@ const variant = [
     }
   ]
 
+// Simple GlowButton component since it's not available
+const GlowButton = ({ variant, className, children }) => (
+  <button className={`bg-blue-600 text-white px-6 py-3 rounded-full font-semibold hover:bg-blue-700 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/25 ${className}`}>
+    {children}
+  </button>
+);
+
 const FAQ = () => {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const selectedVariant = variant[0];
-
 
   const toggle = (index: number) => {
     setActiveIndex(prev => (prev === index ? null : index));
@@ -47,7 +52,7 @@ const FAQ = () => {
   const secondSection = faqData.slice(2, 4);
 
   const renderFAQSection = (items: FAQItem[], startIndex: number) => (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {items.map((item, index) => {
         const actualIndex = startIndex + index;
         return (
@@ -59,13 +64,13 @@ const FAQ = () => {
           >
             <button
               onClick={() => toggle(actualIndex)}
-              className="w-full flex items-center justify-between py-5 group"
+              className="w-full flex items-center justify-between py-4 sm:py-5 group"
             >
-              <span className="text-2xl font-medium text-black text-left">
+              <span className="text-lg sm:text-xl lg:text-2xl font-medium text-black text-left pr-4">
                 {item.question}
               </span>
               <ChevronRight
-                className={`w-7 h-7 text-blue-400 group-hover:text-blue-600 transform transition-transform duration-300 ${
+                className={`w-6 h-6 sm:w-7 sm:h-7 text-blue-400 group-hover:text-blue-600 transform transition-transform duration-300 flex-shrink-0 ${
                   activeIndex === actualIndex ? 'rotate-90' : ''
                 } group-hover:translate-x-1`}
               />
@@ -78,10 +83,10 @@ const FAQ = () => {
             />
             <div
               className={`overflow-hidden transition-all duration-500 ${
-                activeIndex === actualIndex ? 'max-h-48' : 'max-h-0'
+                activeIndex === actualIndex ? 'max-h-96 sm:max-h-48' : 'max-h-0'
               }`}
             >
-              <p className="text-gray-600 text-lg p-4">
+              <p className="text-gray-600 text-base sm:text-lg p-4 leading-relaxed">
                 {item.answer}
               </p>
             </div>
@@ -91,44 +96,53 @@ const FAQ = () => {
     </div>
   );
 
-  
-
   return (
-    <div className="bg-white min-h-screen  flex flex-col  justify-center p-12 font-poppins  relative ">
-       <div className="absolute top-32 right-32 w-[500px] h-[500px] rounded-full bg-gradient-to-br from-blue-600 to-blue-800 opacity-10 blur-3xl"></div>
-        <div className="absolute bottom-32 left-32 w-[500px] h-[500px] rounded-full bg-gradient-to-br from-blue-600 to-blue-800 opacity-10 blur-3xl"></div>
+    <div className="bg-white min-h-screen flex flex-col justify-center items-center font-sans relative overflow-hidden">
+      {/* Background decorative elements */}
+      <div className="absolute top-16 sm:top-32 right-8 sm:right-32 w-[200px] h-[200px] sm:w-[300px] sm:h-[300px] lg:w-[500px] lg:h-[500px] rounded-full bg-gradient-to-br from-blue-600 to-blue-800 opacity-10 blur-3xl"></div>
+      <div className="absolute bottom-16 sm:bottom-32 left-8 sm:left-32 w-[200px] h-[200px] sm:w-[300px] sm:h-[300px] lg:w-[500px] lg:h-[500px] rounded-full bg-gradient-to-br from-blue-600 to-blue-800 opacity-10 blur-3xl"></div>
       
-       <div className="relative z-20 text-center px-4 sm:px-40 pt-8 ">
-        <div className=" rounded-2xl p-8 text-black">
-          <h3 className="text-2xl sm:text-3xl font-bold mb-4">Ready to Start Your Success Story?</h3>
-          <p className="text-lg mb-6 opacity-90">
+      <div className="w-full max-w-7xl mx-auto pt-8 px-4 sm:px-6 lg:px-8">
+        {/* Main FAQ Content */}
+        <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 max-w-7xl">
+          {/* FAQ Title */}
+          <div className="lg:flex-shrink-0">
+            <h2 className="text-4xl sm:text-6xl lg:text-8xl xl:text-9xl font-bold text-black mb-8 lg:mb-12 text-center lg:text-left">
+              FAQ
+            </h2>
+          </div>
+          
+          {/* First Section of FAQs */}
+          <div className="flex-1">
+            {renderFAQSection(firstSection, 0)}
+          </div>
+        </div>
+        
+        {/* Second Section of FAQs */}
+        <div className="mt-8 lg:mt-12">
+          {renderFAQSection(secondSection, 2)}
+        </div>
+      </div>
+      
+      {/* Call to Action Section */}
+      <div className="relative z-20 text-center px-4 sm:px-8 lg:px-40 pt-20 sm:pt-32 lg:pt-40 w-full max-w-6xl">
+        <div className="rounded-2xl p-6 sm:p-8 text-black">
+          <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-4">
+            Ready to Start Your Success Story?
+          </h3>
+          <p className="text-base sm:text-lg mb-6 opacity-90 max-w-2xl mx-auto">
             Join thousands of students who have transformed their careers with Hir&apos;in
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-           
-            <button className="bg-white text-blue-600 px-8 py-3 rounded-full font-semibold hover:bg-gray-100 transition-colors">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <button className="w-full sm:w-auto bg-white text-blue-600 px-6 sm:px-8 py-3 rounded-full font-semibold hover:bg-gray-100 transition-colors border border-blue-200">
               Get Started Today
             </button>
-             <GlowButton variant={selectedVariant.name} className='font-poppins' > View All Stories</GlowButton>
-            
+            <GlowButton variant={selectedVariant.name} className="w-full sm:w-auto font-sans rounded-full">
+              View All Stories
+            </GlowButton>
           </div>
         </div>
       </div>
-
-      <div className='container max-w-7xl mx-auto mt-30 z-50'>
-        <div className='flex gap-12 max-w-7xl '>
-        <h2 className="text-9xl font-bold text-black mb-12 text-left">FAQ</h2>
-        
-         
-            {renderFAQSection(firstSection, 0)}
-          
-    
-        </div>
-        <div className="space-y-8">
-            {renderFAQSection(secondSection, 2)}
-          </div>
-      </div>
-      
     </div>
   );
 };

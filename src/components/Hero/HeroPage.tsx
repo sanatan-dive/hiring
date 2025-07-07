@@ -2,7 +2,8 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-
+import { motion, AnimatePresence } from "framer-motion";
+import { Variants } from "framer-motion";
 // Dynamically import p5 to avoid SSR issues
 const loadP5 = () => import("p5");
 
@@ -115,50 +116,65 @@ const FallingProfilesBackground: React.FC = () => {
 
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none z-[1]" style={{ height: '700px' }}>
-      {profiles.map((profile) => (
-        <div key={profile.id}>
-          {/* Trail effect */}
-          {profile.trail.map((point, index) => (
-            <div
-              key={`${profile.id}-trail-${index}`}
-              className="absolute rounded-full"
+      <AnimatePresence>
+        {profiles.map((profile) => (
+          <motion.div
+            key={profile.id}
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            transition={{ duration: 0.5 }}
+          >
+            {/* Trail effect */}
+            {profile.trail.map((point, index) => (
+              <motion.div
+                key={`${profile.id}-trail-${index}`}
+                className="absolute rounded-full"
+                style={{
+                  left: point.x,
+                  top: point.y,
+                  width: profile.size * (0.4 + point.opacity * 0.6),
+                  height: profile.size * (0.4 + point.opacity * 0.6),
+                  opacity: point.opacity * 0.15,
+                  background: `radial-gradient(circle, rgba(255, 255, 255, ${point.opacity * 0.3}), transparent 70%)`,
+                  transform: 'translate(-50%, -50%)',
+                  filter: 'blur(1px)',
+                }}
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ duration: 0.3, delay: index * 0.1 }}
+              />
+            ))}
+            
+            {/* Main profile picture */}
+            <motion.div
+              className="absolute rounded-full shadow-md border border-white/20"
               style={{
-                left: point.x,
-                top: point.y,
-                width: profile.size * (0.4 + point.opacity * 0.6),
-                height: profile.size * (0.4 + point.opacity * 0.6),
-                opacity: point.opacity * 0.15,
-                background: `radial-gradient(circle, rgba(255, 255, 255, ${point.opacity * 0.3}), transparent 70%)`,
+                left: profile.x,
+                top: profile.y,
+                width: profile.size,
+                height: profile.size,
                 transform: 'translate(-50%, -50%)',
-                filter: 'blur(1px)',
+                backgroundImage: `url(${profileImages[profile.imageIndex]})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                opacity: profile.y < -50 ? 0 : 0.6,
+                transition: 'opacity 0.5s ease-in-out',
               }}
+              whileHover={{ scale: 1.1, opacity: 0.8 }}
+              transition={{ type: "spring", stiffness: 400, damping: 10 }}
             />
-          ))}
-          
-          {/* Main profile picture */}
-          <div
-            className="absolute rounded-full shadow-md border border-white/20"
-            style={{
-              left: profile.x,
-              top: profile.y,
-              width: profile.size,
-              height: profile.size,
-              transform: 'translate(-50%, -50%)',
-              backgroundImage: `url(${profileImages[profile.imageIndex]})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              opacity: profile.y < -50 ? 0 : 0.6,
-              transition: 'opacity 0.5s ease-in-out',
-            }}
-          />
-        </div>
-      ))}
+          </motion.div>
+        ))}
+      </AnimatePresence>
     </div>
   );
 };
 
 function HeroPage() {
   const canvasRef = useRef<HTMLDivElement>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
+
   const logos = [
     {
       name: 'LinkedIn',
@@ -175,9 +191,12 @@ function HeroPage() {
   ];
 
   useEffect(() => {
+    setIsLoaded(true);
+  }, []);
+
+  useEffect(() => {
     if (!canvasRef.current) return;
   
-    
     let p5Instance: any = null;
 
     const initP5 = async () => {
@@ -393,10 +412,97 @@ function HeroPage() {
     };
   }, []);
 
+  // Animation variants
+  const containerVariants: Variants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.3,
+        delayChildren: 0.2,
+      },
+    },
+  };
+
+  const itemVariants: Variants = {
+    hidden: { opacity: 0, y: 50 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        type: "spring",
+        stiffness: 100,
+        damping: 12,
+      },
+    },
+  };
+
+  const titleVariants: Variants = {
+    hidden: { opacity: 0, scale: 0.8 },
+    visible: {
+      opacity: 1,
+      scale: 1,
+      transition: {
+        type: "spring",
+        stiffness: 150,
+        damping: 12,
+        delay: 0.5,
+      },
+    },
+  };
+
+  const buttonVariants: Variants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        type: "spring",
+        stiffness: 200,
+        damping: 15,
+        delay: 1.2,
+      },
+    },
+    hover: {
+      scale: 1.05,
+      transition: {
+        type: "spring",
+        stiffness: 400,
+        damping: 10,
+      },
+    },
+    tap: {
+      scale: 0.95,
+      transition: {
+        type: "spring",
+        stiffness: 400,
+        damping: 10,
+      },
+    },
+  };
+
+  const logoVariants: Variants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        type: "spring",
+        stiffness: 100,
+        damping: 12,
+      },
+    },
+  };
+
   return (
     <>
       {/* Hero Section with Fixed Height */}
-      <div className="relative w-full h-[700px] overflow-hidden">
+      <motion.div
+        className="relative w-full h-[700px] overflow-hidden"
+        initial="hidden"
+        animate={isLoaded ? "visible" : "hidden"}
+        variants={containerVariants}
+      >
         {/* P5.js Canvas Container */}
         <div ref={canvasRef} className="absolute inset-0" />
         
@@ -405,54 +511,130 @@ function HeroPage() {
 
         {/* Hero Content */}
         <div className="relative z-10 flex flex-col justify-center items-center h-full w-full px-4">
-          <div className="flex-1 flex flex-col items-center justify-center text-center space-y-6 max-w-6xl mx-auto">
-            <div className="text-center space-y-6 bg-black/10 dark:bg-white/10 p-8 md:p-12 rounded-lg">
-              <h1 className="text-3xl md:text-8xl flex items-center justify-center font-medium font-poppins text-white dark:text-black/85">
-                Hir&apos;
-                    <h1 className="text-3xl lg:text-7xl font-bold text-white bg-blue-600 dark:bg-blue-600 rounded px-1">
-                       in
-                    </h1>
-              </h1>
-              <p className="text-3xl font-poppins font-medium md:text-8xl text-white dark:text-black/85">
+          <motion.div
+            className="flex-1 flex flex-col items-center justify-center text-center space-y-6 max-w-6xl mx-auto"
+            variants={containerVariants}
+          >
+            <motion.div
+              className="text-center space-y-6 bg-black/10 dark:bg-white/10 p-8 md:p-12 rounded-lg "
+              variants={itemVariants}
+            >
+              <motion.div
+                className="flex items-center justify-center"
+                variants={titleVariants}
+              >
+                <motion.h1
+                  className="text-3xl md:text-8xl font-medium font-poppins text-white dark:text-black/85"
+                  whileHover={{ scale: 1.05 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                >
+                  Hir&apos;
+                </motion.h1>
+                <motion.h1
+                  className="text-3xl lg:text-7xl font-bold text-white bg-blue-600 dark:bg-blue-600 rounded px-1 ml-2"
+                  whileHover={{ 
+                    scale: 1.1,
+                    rotateZ: [0, -5, 5, 0],
+                    transition: { duration: 0.3 }
+                  }}
+                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                >
+                  in
+                </motion.h1>
+              </motion.div>
+
+              <motion.p
+                className="text-3xl font-poppins font-medium md:text-8xl text-white dark:text-black/85"
+                variants={itemVariants}
+                whileHover={{ scale: 1.02 }}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              >
                 Apply Smarter,
-              </p>
-              <p className="text-3xl font-poppins font-medium md:text-8xl text-white dark:text-black/85">
+              </motion.p>
+              
+              <motion.p
+                className="text-3xl font-poppins font-medium md:text-8xl text-white dark:text-black/85"
+                variants={itemVariants}
+                whileHover={{ scale: 1.02 }}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              >
                 Land Better.
-              </p>
+              </motion.p>
 
-              <p className="text-md font-poppins font-light text-white dark:text-black/85">
+              <motion.p
+                className="text-md font-poppins font-light text-white dark:text-black/85"
+                variants={itemVariants}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1, duration: 0.6 }}
+              >
                 Hir&apos;in helps you apply smarter and faster to jobs where you can thrive. Whether you&apos;re seeking your next opportunity <br/> or looking to land interviews at top companies, Hir&apos;in streamlines the process for you.
-              </p>
-            </div>
+              </motion.p>
+            </motion.div>
 
-            <div>
-              <button className="bg-black hover:bg-black/85 transition-colors duration-300 text-white h-12 w-36 flex items-center justify-center text-lg font-light py-4 px-6">
+            <motion.div variants={buttonVariants}>
+              <button
+                className="bg-black hover:bg-black/85 transition-colors duration-300 text-white h-12 w-36 flex items-center justify-center text-lg font-light py-4 px-6 rounded-md"
+               
+              >
                 Get a Job
               </button>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         </div>
-      </div>
+      </motion.div>
 
-      {/* Logo Section - Now appears below the hero */}
-      <div className="w-full bg-white backdrop-blur-sm py-8 px-4">
-        <h2 className="text-center text-xl md:text-2xl font-medium mb-6 text-black font-poppins">
+      
+      <motion.div
+        className="w-full bg-white backdrop-blur-sm py-8 px-4 "
+        initial={{ opacity: 0, y: 50 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 1.5, duration: 0.8 }}
+      >
+        <motion.h2
+          className="text-center text-xl md:text-2xl font-medium mb-6 text-black font-poppins "
+          variants={logoVariants}
+          initial="hidden"
+          animate="visible"
+          transition={{ delay: 1.7 }}
+        >
           Trusted by job seekers 
-        </h2>
-        <div className="flex flex-wrap justify-between items-center gap-8 md:gap-12 max-w-5xl mb-10 mx-auto">
-          {logos.map((logo) => (
-            <div key={logo.name} className="flex justify-center items-center">
-              <Image
-                src={logo.src}
-                alt={logo.name}
-                width={150}
-                height={150}
-                className="object-contain filter grayscale hover:grayscale-0 transition-all duration-300"
-              />
-            </div>
+        </motion.h2>
+        
+        <motion.div
+          className="flex flex-wrap justify-between items-center gap-8 md:gap-12 max-w-5xl mb-10 mx-auto"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
+          {logos.map((logo, index) => (
+            <motion.div
+              key={logo.name}
+              className="flex justify-center items-center"
+              variants={logoVariants}
+              whileHover={{ 
+                scale: 1.1,
+                y: -5,
+                transition: { type: "spring", stiffness: 300, damping: 20 }
+              }}
+              custom={index}
+            >
+              <motion.div
+                whileHover={{ filter: "grayscale(0%)" }}
+                transition={{ duration: 0.3 }}
+              >
+                <Image
+                  src={logo.src}
+                  alt={logo.name}
+                  width={150}
+                  height={150}
+                  className="object-contain filter grayscale hover:grayscale-0 transition-all duration-300 w-20 h-20 sm:w-40 sm:h-40"
+                />
+              </motion.div>
+            </motion.div>
           ))}
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     </>
   );
 }

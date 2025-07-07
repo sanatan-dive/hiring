@@ -3,6 +3,7 @@ import JobSearchDashboard from '../Dashboard';
 import { ArrowRight } from 'lucide-react';
 import GlowButton from '../ui/glow-button';
 
+
 const varian = [
   {
     name: 'blue',
@@ -47,7 +48,7 @@ function HowItWorks() {
       </div>
 
       {/* Dashboard Embed */}
-      <div className="relative z-0 mx-auto mb-12 lg:mb-0 lg:absolute lg:left-1/12 sm:top-36 bg-white h-[500px] sm:h-[750px] w-[90%] lg:w-[800px] rounded-2xl shadow-2xl">
+      <div className="relative z-0 mx-auto mb-12 lg:mb-0 lg:absolute lg:left-1/12 sm:top-36 bg-white h-[500px] sm:h-[750px] w-[90%] lg:w-[800px] rounded-2xl shadow-xl">
         <JobSearchDashboard 
           isEmbedded={true} 
           height="100%" 
