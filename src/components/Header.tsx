@@ -64,7 +64,7 @@ function Header() {
               {/* Get a Job Button - Desktop */}
               <button
                 className="hidden md:flex items-center h gap-2 bg-black hover:bg-black/85  text-white px-6 py-3 rounded-font-medium text-sm lg:text-base transition-all duration-300 "
-                onClick={() => router.push("/")}
+                onClick={() => router.push("/Onboard")}
               >
                 
                 Get a Job
