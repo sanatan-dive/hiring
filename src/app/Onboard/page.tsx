@@ -1,15 +1,42 @@
 "use client";
 import React, { useState, useRef, useEffect } from 'react';
-import { Cog, Users, Clock, DollarSign, ArrowDownRight, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Cog, Users, DollarSign, ArrowDownRight, ArrowLeft, ArrowRight, Briefcase, Code, MapPin, Settings } from 'lucide-react';
 import { motion, useAnimation, AnimatePresence } from "framer-motion";
 import { useInView,Variants } from "framer-motion";
 import Image from 'next/image';
+import FileUpload from '@/components/ui/file-upload';
+import PreferenceCard from '@/components/preferences/PreferenceCard';
+import MultiSelect from '@/components/preferences/MultiSelect';
+import SalaryRangeSlider from '@/components/preferences/SalaryRangeSlider';
+import RadioGroup from '@/components/preferences/RadioGroup';
+import {
+  JobPreferences,
+  EXPERIENCE_LEVELS,
+  WORK_LOCATIONS,
+  JOB_TYPES,
+  COMMON_TECH_STACKS,
+  COMMON_ROLES,
+  ExperienceLevel,
+  JobType,
+  WorkLocation,
+} from '@/types';
+import { usePreferencesState } from '@/lib/preferences-storage';
 
 const OnboardingPage = () => {
   const [activeSection, setActiveSection] = useState(0);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [parsedResume, setParsedResume] = useState<any>(null);
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true });
   const controls = useAnimation();
+  const { preferences, updatePreferences } = usePreferencesState();
+
+  const updatePreference = <K extends keyof JobPreferences>(
+    key: K,
+    value: JobPreferences[K]
+  ) => {
+    updatePreferences({ [key]: value });
+  };
 
   useEffect(() => {
     if (isInView) {
@@ -20,16 +47,10 @@ const OnboardingPage = () => {
   const sections = [
     {
       id: 'work-process',
-      title: 'Work process',
+      title: 'Lets get to work',
       icon: <ArrowDownRight className='h-16 '/>,
       content: {
-        description: "Our flexible work environment is designed to help you thrive while maintaining work-life balance.",
-        items: [
-          'Flexible remote work - Work from anywhere in the world with stable internet',
-          'Flexible 40-hour working week - Choose your own schedule within core hours',
-          'Open-minded team - Collaborate with diverse professionals from different backgrounds',
-          'Accountant support and tax coverage - Full financial assistance for contractors'
-        ]
+        description: "Our flexible work environment is designed to help you thrive while maintaining work-life balance."
       },
       additionalContent: {
         title: 'Getting Started',
@@ -46,112 +67,146 @@ const OnboardingPage = () => {
       }
     },
     {
-      id: 'cutting-edge',
-      title: 'Cutting-edge tools',
+      id: 'resume-insights',
+      title: 'Resume Insights',
       icon: <Cog className="w-8 h-8" />,
       content: {
-        description: "Stay ahead with the latest technology and tools that enhance your productivity.",
-        items: [
-          'Latest development frameworks - React, Vue, Angular, Node.js and modern tech stack',
-          'AI-powered development tools - GitHub Copilot, ChatGPT Plus, and AI coding assistants',
-          'Cloud infrastructure access - AWS, Google Cloud, Azure credits and premium accounts',
-          'Premium software licenses - JetBrains, Adobe Creative Suite, and professional tools'
-        ]
+        description: "Here are some insights from your resume.",
+        items: parsedResume ? [
+          `Name: ${parsedResume.name}`,
+          `Skills: ${parsedResume.skills.slice(0, 3).join(', ')}...`,
+          `Experience: ${parsedResume.experience[0]?.company} - ${parsedResume.experience[0]?.role}`,
+          `Education: ${parsedResume.education[0]?.degree.slice(0,10)}... at ${parsedResume.education[0]?.institute.slice(0,10)}...`,
+        ] : []
       },
       additionalContent: {
-        title: 'Tools & Resources',
+        title: 'Your Profile',
         sections: [
           {
-            title: 'Development Tools',
-            items: ['VS Code / JetBrains IDEs', 'Docker & Kubernetes', 'Git & GitHub Enterprise', 'CI/CD Pipeline Tools']
-          },
-          {
-            title: 'Learning Resources',
-            items: ['Pluralsight subscription', 'Conference attendance', 'Online course credits', 'Technical book allowance']
+            title: 'Full Details',
+            items: ['View full parsed resume details']
           }
         ]
       }
+    },
+    {
+      id: 'job-preferences',
+      title: 'Job Preferences',
+      icon: <Settings className="w-8 h-8" />,
+      content: {
+        description: "Let users tell what they want, not just what they are.",
+      },
+      component: (
+        <div className="space-y-4 ">
+          <PreferenceCard
+            title="Desired role"
+            description="Frontend, Backend, Fullstack, ML, etc."
+            icon={<Briefcase className="w-5 h-5 text-blue-600" />}
+          >
+            <MultiSelect
+              options={COMMON_ROLES}
+              selected={preferences.desiredRoles}
+              onChange={(values) => updatePreference('desiredRoles', values)}
+              placeholder="Search for roles..."
+              maxItems={5}
+              allowCustom={true}
+            />
+          </PreferenceCard>
+          <PreferenceCard
+            title="Preferred tech stack"
+            description="React, Next.js, Solana, etc."
+            icon={<Code className="w-5 h-5 text-blue-600" />}
+          >
+            <MultiSelect
+              options={COMMON_TECH_STACKS}
+              selected={preferences.preferredTechStack}
+              onChange={(values) => updatePreference('preferredTechStack', values)}
+              placeholder="Search technologies..."
+              maxItems={10}
+              allowCustom={true}
+            />
+          </PreferenceCard>
+        </div>
+      )
     },
     {
       id: 'financial-security',
-      title: 'Financial security',
+      title: 'Experience',
       icon: <DollarSign className="w-8 h-8" />,
       content: {
-        description: "Comprehensive financial benefits to secure your future and peace of mind.",
-        items: [
-          'Competitive salary packages - Above market rates with annual reviews',
-          'Performance-based bonuses - Quarterly bonuses based on project success',
-          'Stock options available - Equity participation in company growth',
-          'Retirement planning support - 401k matching and financial planning assistance'
-        ]
+        description: "We offer competitive compensation and benefits to ensure your financial well-being.",
       },
-      additionalContent: {
-        title: 'Financial Benefits',
-        sections: [
-          {
-            title: 'Salary & Benefits',
-            items: ['Competitive base salary', 'Annual salary reviews', 'Health insurance coverage', 'Dental & vision plans']
-          },
-          {
-            title: 'Growth Incentives',
-            items: ['Performance bonuses', 'Stock option plans', 'Profit sharing', 'Referral bonuses']
-          }
-        ]
-      }
-    },
-    {
-      id: 'paid-leave',
-      title: 'Paid leave options',
-      icon: <Clock className="w-8 h-8" />,
-      content: {
-        description: "Take time off when you need it most with our generous leave policies.",
-        items: [
-          'Unlimited PTO policy - Take time off when you need it, no questions asked',
-          'Paid sick leave - Full pay during illness with no deductions',
-          'Parental leave benefits - 12 weeks paid leave for new parents',
-          'Mental health days - Dedicated days off for mental wellness and self-care'
-        ]
-      },
-      additionalContent: {
-        title: 'Time Off Policies',
-        sections: [
-          {
-            title: 'Time Off Types',
-            items: ['Vacation days', 'Personal days', 'Sick leave', 'Bereavement leave']
-          },
-          {
-            title: 'Special Leave',
-            items: ['Maternity/Paternity leave', 'Medical leave', 'Sabbatical options', 'Volunteer time off']
-          }
-        ]
-      }
+      component: (
+        <div className="space-y-4 ">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <PreferenceCard
+                title="Experience level"
+                description=""
+                icon={<Settings className="w-5 h-5 text-blue-600" />}
+            >
+                <RadioGroup
+                options={EXPERIENCE_LEVELS}
+                value={preferences.experienceLevel}
+                onChange={(value) => updatePreference('experienceLevel', value as ExperienceLevel)}
+                orientation="vertical"
+                size="sm"
+                />
+            </PreferenceCard>
+            <PreferenceCard
+                title="Job type"
+                description="Internship / Full-time / Contract"
+                icon={<Briefcase className="w-5 h-5 text-blue-600" />}
+            >
+                <RadioGroup
+                options={JOB_TYPES}
+                value={preferences.jobType}
+                onChange={(value) => updatePreference('jobType', value as JobType)}
+                orientation="vertical"
+                size="sm"
+                />
+            </PreferenceCard>
+          </div>
+        </div>
+      )
     },
     {
       id: 'dynamic-teamwork',
-      title: 'Dynamic teamwork',
+      title: 'Location & Pay',
       icon: <Users className="w-8 h-8" />,
       content: {
         description: "Join a collaborative environment where every voice matters and innovation thrives.",
-        items: [
-          'Cross-functional collaboration - Work with design, product, and engineering teams',
-          'Regular team building events - Monthly virtual and in-person team activities',
-          'Mentorship programs - Paired with senior developers for career growth',
-          'Open communication culture - Transparent feedback and regular one-on-ones'
-        ]
       },
-      additionalContent: {
-        title: 'Team Collaboration',
-        sections: [
-          {
-            title: 'Collaboration Tools',
-            items: ['Slack/Teams communication', 'Agile project management', 'Video conferencing', 'Shared documentation']
-          },
-          {
-            title: 'Team Activities',
-            items: ['Weekly team meetings', 'Monthly social events', 'Quarterly offsites', 'Annual company retreat']
-          }
-        ]
-      }
+      component: (
+        <div className="space-y-4 ">
+          <PreferenceCard
+            title="Location"
+            description="Remote / Hybrid / Onsite"
+            icon={<MapPin className="w-5 h-5 text-blue-600" />}
+          >
+            <RadioGroup
+              options={WORK_LOCATIONS}
+              value={preferences.workLocation}
+              onChange={(value) => updatePreference('workLocation', value as WorkLocation)}
+              orientation="horizontal"
+              size="sm"
+            />
+          </PreferenceCard>
+          <PreferenceCard
+            title="Salary range"
+            description=""
+            icon={<DollarSign className="w-5 h-5 text-blue-600" />}
+          >
+            <SalaryRangeSlider
+              min={30000}
+              max={300000}
+              value={preferences.salaryRange}
+              onChange={(value) => updatePreference('salaryRange', { ...value, currency: 'USD' })}
+              currency="$"
+              step={5000}
+            />
+          </PreferenceCard>
+        </div>
+      )
     }
   ];
 
@@ -343,59 +398,81 @@ const OnboardingPage = () => {
 
                     {/* Content Area */}
                     <motion.div 
-                      className="flex-1 overflow-y-hidden p-6"
+                      className="flex-1 overflow-y-auto p-6"
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.5, duration: 0.4 }}
                     >
                       {/* Main Content Grid */}
-                      <motion.div 
-                        className="grid grid-cols-1 lg:grid-cols-2 mt-46"
-                        initial="hidden"
-                        animate="visible"
-                        variants={{
-                          hidden: {},
-                          visible: {
-                            transition: {
-                              staggerChildren: 0.1,
-                              delayChildren: 0.6
-                            }
-                          }
-                        }}
-                      >
-                        {section.content.items.map((item, itemIndex) => {
-                          const [title] = item.split(' - ');
-                          return (
-                            <motion.div 
-                              key={itemIndex} 
-                              className="flex items-center space-x-2 p-3 bg-gray-100 rounded-full hover:bg-blue-100 transition-colors mb-6 w-fit"
-                              variants={itemVariants}
-                              whileHover={{ 
-                                scale: 1.05,
-                                backgroundColor: "#dbeafe",
-                                transition: { type: "spring", stiffness: 300, damping: 20 }
-                              }}
-                            >
-                              <motion.div 
-                                className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0"
-                                initial={{ scale: 0 }}
-                                animate={{ scale: 1 }}
-                                transition={{ 
-                                  type: "spring", 
-                                  stiffness: 300, 
-                                  damping: 20,
-                                  delay: 0.7 + itemIndex * 0.1
-                                }}
-                              >
-                                <span className="text-white text-xs font-medium">{String(itemIndex + 1).padStart(2, '0')}</span>
-                              </motion.div>
-                              <div>
-                                <h3 className="font-light text-gray-900 rounded-full text-md">{title}</h3>
-                              </div>
-                            </motion.div>
-                          );
-                        })}
-                      </motion.div>
+                      {section.component ? (
+                        section.component
+                      ) : (
+                        <motion.div
+                          className="grid grid-cols-1 lg:grid-cols-2 mt-46"
+                          initial="hidden"
+                          animate="visible"
+                          variants={{
+                            hidden: {},
+                            visible: {
+                              transition: {
+                                staggerChildren: 0.1,
+                                delayChildren: 0.6,
+                              },
+                            },
+                          }}
+                        >
+                          {section.content.items &&
+                            section.content.items.map((item, itemIndex) => {
+                              const [title] = item.split(' - ');
+                              return (
+                                <motion.div
+                                  key={itemIndex}
+                                  className="flex items-center space-x-2 p-3 bg-gray-100 rounded-full hover:bg-blue-100 transition-colors mb-6 w-fit"
+                                  variants={itemVariants}
+                                  whileHover={{
+                                    scale: 1.05,
+                                    backgroundColor: '#dbeafe',
+                                    transition: {
+                                      type: 'spring',
+                                      stiffness: 300,
+                                      damping: 20,
+                                    },
+                                  }}
+                                >
+                                  <motion.div
+                                    className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0"
+                                    initial={{ scale: 0 }}
+                                    animate={{ scale: 1 }}
+                                    transition={{
+                                      type: 'spring',
+                                      stiffness: 300,
+                                      damping: 20,
+                                      delay: 0.7 + itemIndex * 0.1,
+                                    }}
+                                  >
+                                    <span className="text-white text-xs font-medium">
+                                      {String(itemIndex + 1).padStart(2, '0')}
+                                    </span>
+                                  </motion.div>
+                                  <div>
+                                    <h3 className="font-light text-gray-900 rounded-full text-md">{title}</h3>
+                                  </div>
+                                </motion.div>
+                              );
+                            })}
+                        </motion.div>
+                      )}
+                      {activeSection === 0 && ( // Render FileUpload only for the 'work-process' section
+                        <motion.div
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.8, duration: 0.4 }}
+                          className="-mt-24 mb-16"
+                        >
+                          <h3 className="text-xl font-medium text-gray-900 mb-4">Upload Your Resume</h3>
+                          <FileUpload onUpload={setParsedResume} />
+                        </motion.div>
+                      )}
 
                       <motion.div 
                         className='flex items-center justify-center gap-4'

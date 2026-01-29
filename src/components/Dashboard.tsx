@@ -1,6 +1,6 @@
 "use client";
 import React from 'react';
-import { Search, Target, FileText, Send, TrendingUp, Clock, } from 'lucide-react';
+import { Search, Target, FileText, Send, TrendingUp, Clock, Settings, Briefcase, MapPin, DollarSign } from 'lucide-react';
 
 
 type Status = 'interview' | 'progress' | 'submitted' | 'rejected' | string;
@@ -214,6 +214,54 @@ const JobSearchDashboard = ({
                 </div>
               </div>
             </div>
+
+            {/* Job Preferences Summary */}
+            {!isEmbedded && (
+              <div className="bg-white rounded-xl shadow-sm border">
+                <div className="p-6 border-b">
+                  <h2 className="text-lg font-semibold text-gray-900">Job Preferences</h2>
+                </div>
+                <div className="p-6">
+                  <div className="space-y-4">
+                    {/* Desired Roles */}
+                    <div className="flex items-start space-x-3">
+                      <Briefcase className="w-5 h-5 text-blue-500 mt-0.5" />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-gray-700">Desired Roles</p>
+                        <p className="text-sm text-gray-600">Frontend Developer, Full Stack Developer</p>
+                      </div>
+                    </div>
+
+                    {/* Location */}
+                    <div className="flex items-start space-x-3">
+                      <MapPin className="w-5 h-5 text-blue-500 mt-0.5" />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-gray-700">Location</p>
+                        <p className="text-sm text-gray-600">Remote</p>
+                      </div>
+                    </div>
+
+                    {/* Salary */}
+                    <div className="flex items-start space-x-3">
+                      <DollarSign className="w-5 h-5 text-blue-500 mt-0.5" />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-gray-700">Salary Range</p>
+                        <p className="text-sm text-gray-600">$80k - $130k</p>
+                      </div>
+                    </div>
+
+                    {/* Complete Preferences Button */}
+                    <button 
+                      onClick={() => window.open('/preferences', '_self')}
+                      className="w-full mt-4 flex items-center justify-center space-x-2 p-3 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors"
+                    >
+                      <Settings className="w-4 h-4" />
+                      <span className="text-sm font-medium">Complete Preferences</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Quick Actions */}
             {!isEmbedded && (

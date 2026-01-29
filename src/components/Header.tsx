@@ -1,5 +1,5 @@
 "use client";
-import { Briefcase, User, Menu, X } from "lucide-react";
+import { Briefcase, Menu, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 
@@ -108,25 +108,13 @@ function Header() {
               <button
                 className="w-full mt-3 flex items-center justify-center gap-2 bg-black hover:bg-black/85  text-white px-4 py-3 rounded-lg font-medium transition-all duration-300 hover:scale-[1.02] active:scale-95"
                 onClick={() => {
-                  router.push("/");
+                  router.push("/Onboard");
                   setIsMobileMenuOpen(false);
                 }}
               >
                 <Briefcase className="h-4 w-4" />
                 Get a Job
               </button>
-              
-              {/* Mobile Profile Link */}
-              <div
-                className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-200 dark:text-gray-700 hover:bg-slate-800/50 dark:hover:bg-gray-100 hover:text-white dark:hover:text-gray-900 transition-all duration-300 cursor-pointer"
-                onClick={() => {
-                  router.push("/profile");
-                  setIsMobileMenuOpen(false);
-                }}
-              >
-                <User className="h-5 w-5" />
-                Profile
-              </div>
             </div>
           </div>
         )}

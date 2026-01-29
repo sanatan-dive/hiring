@@ -17,7 +17,7 @@ const FallingProfilesBackground: React.FC = () => {
 
   // Sample profile images (you can replace these with actual images)
   const profileImages = [
-    'https://images.unsplash.com/photo-1494790108755-2616b612b780?w=100&h=100&fit=crop&crop=face',
+    
     'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face',
     'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&h=100&fit=crop&crop=face',
     'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face',
