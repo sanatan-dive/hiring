@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
   images: {
     domains: ["blog.waalaxy.com","i0.wp.com","fontslogo.com","images.unsplash.com","linkedin.com"],
   },
+  serverExternalPackages: ["pdf-parse", "@napi-rs/canvas"],
 };
 
 export default nextConfig;

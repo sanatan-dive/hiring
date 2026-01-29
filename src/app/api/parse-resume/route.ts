@@ -1,19 +1,13 @@
 export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
+import "pdf-parse/worker"; // Import this before importing "pdf-parse"
 import { PDFParse } from "pdf-parse";
 import mammoth from "mammoth";
 import fs from "fs/promises";
 import path from "path";
 import os from "os";
-import { createRequire } from "module";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-
-/* ---------- PDF WORKER SETUP ---------- */
-
-const require = createRequire(import.meta.url);
-const workerPath = require.resolve("pdfjs-dist/build/pdf.worker.mjs");
-PDFParse.setWorker(workerPath);
 
 /* ---------- GEMINI SETUP ---------- */
 
@@ -40,7 +34,6 @@ export async function POST(request: Request) {
     if (file.name.toLowerCase().endsWith(".pdf")) {
       const parser = new PDFParse({ data: buffer });
       const result = await parser.getText();
-      await parser.destroy();
       text = result.text;
     }
 

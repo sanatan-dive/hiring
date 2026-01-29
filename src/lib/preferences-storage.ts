@@ -41,29 +41,32 @@ export const clearPreferencesFromStorage = (): void => {
 
 // Hook for managing preferences state
 export const usePreferencesState = () => {
-  const [preferences, setPreferences] = React.useState<JobPreferences>(() => {
-    // Load from localStorage on initial render
-    const stored = loadPreferencesFromStorage();
-    return stored || {
-      desiredRoles: [],
-      preferredTechStack: [],
-      experienceLevel: 'mid',
-      workLocation: 'remote',
-      locations: [],
-      salaryRange: {
-        min: 70000,
-        max: 120000,
-        currency: '$'
-      },
-      jobType: 'full-time',
-      companySize: 'medium',
-      industries: [],
-      industriesToAvoid: [],
-      workSchedule: 'flexible',
-      travelWillingness: 'occasional',
-      benefitsPriority: ['health', 'retirement']
-    };
+  const [preferences, setPreferences] = React.useState<JobPreferences>({
+    desiredRoles: [],
+    preferredTechStack: [],
+    experienceLevel: 'mid',
+    workLocation: 'remote',
+    locations: [],
+    salaryRange: {
+      min: 70000,
+      max: 120000,
+      currency: '$'
+    },
+    jobType: 'full-time',
+    companySize: 'medium',
+    industries: [],
+    industriesToAvoid: [],
+    workSchedule: 'flexible',
+    travelWillingness: 'occasional',
+    benefitsPriority: ['health', 'retirement']
   });
+
+  React.useEffect(() => {
+    const stored = loadPreferencesFromStorage();
+    if (stored) {
+      setPreferences(stored);
+    }
+  }, []);
 
   const updatePreferences = (updates: Partial<JobPreferences>) => {
     const newPreferences = {

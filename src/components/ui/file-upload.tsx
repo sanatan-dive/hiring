@@ -10,7 +10,7 @@ const FileUpload = ({ onUpload }: { onUpload: (data: any) => void }) => {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [isHovering, setIsHovering] = useState(false);
 
-   const parseFile = async (file: File) => {
+   const parseFile = useCallback(async (file: File) => {
     const formData = new FormData();
     formData.append('file', file);
 
@@ -31,7 +31,7 @@ const FileUpload = ({ onUpload }: { onUpload: (data: any) => void }) => {
     } catch (error) {
       console.error('Error uploading file:', error);
     }
-  }
+  }, [onUpload]);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (!acceptedFiles.length) return;
@@ -39,7 +39,7 @@ const FileUpload = ({ onUpload }: { onUpload: (data: any) => void }) => {
     const file = acceptedFiles[0];
     setUploadedFile(file);
     parseFile(file);
-  }, []);
+  }, [parseFile]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,

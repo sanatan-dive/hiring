@@ -21,13 +21,16 @@ const StatCounter = ({
         ease: "easeOut",
       });
 
-      rounded.on("change", (latest) => {
-        setDisplayValue(latest);
-      });
-
       return controls.stop;
     }
-  }, [isInView, value]);
+  }, [isInView, value, count]);
+
+  useEffect(() => {
+    const unsubscribe = rounded.on("change", (latest) => {
+      setDisplayValue(latest);
+    });
+    return unsubscribe;
+  }, [rounded]);
 
   return (
     <div 
