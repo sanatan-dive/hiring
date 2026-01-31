@@ -58,7 +58,7 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
         {selected.map((item) => (
           <div
             key={item}
-            className="inline-flex items-center gap-1 px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm"
+            className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm"
           >
             <span>{item}</span>
             <button
@@ -100,7 +100,7 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
             <div
               key={option}
               onMouseDown={() => handleSelect(option)}
-              className="px-4 py-2 hover:bg-gray-50 cursor-pointer transition-colors"
+              className="px-4 py-2 hover:bg-gray-100 cursor-pointer transition-colors text-gray-900"
             >
               <div className="flex items-center justify-between">
                 <span>{option}</span>

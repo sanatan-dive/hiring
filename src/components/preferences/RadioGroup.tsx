@@ -34,9 +34,9 @@ const RadioGroup: React.FC<RadioGroupProps> = ({
         <label
           key={option.value}
           className={cn(
-            "relative flex items-center cursor-pointer rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-200",
+            "relative flex items-center cursor-pointer rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-100 transition-all duration-200",
             sizeClasses[size],
-            value === option.value && "border-blue-500 bg-blue-50",
+            value === option.value && "border-blue-500 bg-blue-100",
             orientation === 'horizontal' && "flex-1 min-w-0"
           )}
         >

@@ -101,7 +101,7 @@ const OnboardingPage = () => {
           <PreferenceCard
             title="Desired role"
             description="Frontend, Backend, Fullstack, ML, etc."
-            icon={<Briefcase className="w-5 h-5 text-blue-600" />}
+            icon={<Briefcase className="w-5 h-5  text-blue-600" />}
           >
             <MultiSelect
               options={COMMON_ROLES}
