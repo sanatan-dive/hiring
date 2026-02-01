@@ -27,79 +27,71 @@ const PreferenceCard: React.FC<PreferenceCardProps> = ({
   onEdit,
   onSave,
   onCancel,
-  className
+  className,
 }) => {
   return (
-    <div className={cn(
-      "bg-white rounded-xl shadow-sm border hover:shadow-md transition-all duration-300",
-      className
-    )}>
+    <div
+      className={cn(
+        'rounded-xl border bg-white shadow-sm transition-all duration-300 hover:shadow-md',
+        className
+      )}
+    >
       {/* Header */}
-      <div className="p-6 border-b">
+      <div className="border-b p-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            {icon && (
-              <div className="p-2 bg-blue-50 rounded-lg">
-                {icon}
-              </div>
-            )}
+            {icon && <div className="rounded-lg bg-blue-50 p-2">{icon}</div>}
             <div>
               <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-              {description && (
-                <p className="text-sm text-gray-600 mt-1">{description}</p>
-              )}
+              {description && <p className="mt-1 text-sm text-gray-600">{description}</p>}
             </div>
           </div>
-          
+
           <div className="flex items-center space-x-2">
             {isEditing ? (
               <>
                 <button
                   onClick={onSave}
-                  className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                  className="rounded-lg p-2 text-green-600 transition-colors hover:bg-green-50"
                 >
-                  <Save className="w-4 h-4" />
+                  <Save className="h-4 w-4" />
                 </button>
                 <button
                   onClick={onCancel}
-                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                  className="rounded-lg p-2 text-red-600 transition-colors hover:bg-red-50"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="h-4 w-4" />
                 </button>
               </>
             ) : (
               onEdit && (
                 <button
                   onClick={onEdit}
-                  className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                  className="rounded-lg p-2 text-blue-600 transition-colors hover:bg-blue-50"
                 >
-                  <Edit2 className="w-4 h-4" />
+                  <Edit2 className="h-4 w-4" />
                 </button>
               )
             )}
-            
+
             {onToggle && (
               <button
                 onClick={onToggle}
-                className="p-2 text-gray-400 hover:text-gray-600 rounded-lg transition-colors"
+                className="rounded-lg p-2 text-gray-400 transition-colors hover:text-gray-600"
               >
                 {isExpanded ? (
-                  <ChevronUp className="w-4 h-4" />
+                  <ChevronUp className="h-4 w-4" />
                 ) : (
-                  <ChevronDown className="w-4 h-4" />
+                  <ChevronDown className="h-4 w-4" />
                 )}
               </button>
             )}
           </div>
         </div>
       </div>
-      
+
       {/* Content */}
-      {isExpanded && (
-        <div className="p-6">
-          {children}
-        </div>
-      )}
+      {isExpanded && <div className="p-6">{children}</div>}
     </div>
   );
 };

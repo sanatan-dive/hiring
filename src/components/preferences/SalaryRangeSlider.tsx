@@ -18,7 +18,7 @@ const SalaryRangeSlider: React.FC<SalaryRangeSliderProps> = ({
   onChange,
   currency = '$',
   step = 5000,
-  className
+  className,
 }) => {
   const [localMin, setLocalMin] = React.useState(value.min);
   const [localMax, setLocalMax] = React.useState(value.max);
@@ -48,7 +48,7 @@ const SalaryRangeSlider: React.FC<SalaryRangeSliderProps> = ({
   const maxPercent = ((localMax - min) / (max - min)) * 100;
 
   return (
-    <div className={cn("space-y-4", className)}>
+    <div className={cn('space-y-4', className)}>
       {/* Display */}
       <div className="flex items-center justify-between">
         <div className="text-sm font-medium text-gray-700">
@@ -61,9 +61,9 @@ const SalaryRangeSlider: React.FC<SalaryRangeSliderProps> = ({
 
       {/* Slider */}
       <div className="relative pt-6">
-        <div className="absolute top-1/2 left-0 right-0 h-1 bg-gray-200 rounded -translate-y-1/2"></div>
+        <div className="absolute top-1/2 right-0 left-0 h-1 -translate-y-1/2 rounded bg-gray-200"></div>
         <div
-          className="absolute top-1/2 h-1 bg-blue-600 rounded -translate-y-1/2"
+          className="absolute top-1/2 h-1 -translate-y-1/2 rounded bg-blue-600"
           style={{ left: `${minPercent}%`, width: `${maxPercent - minPercent}%` }}
         ></div>
 
@@ -75,7 +75,7 @@ const SalaryRangeSlider: React.FC<SalaryRangeSliderProps> = ({
           step={step}
           value={localMin}
           onChange={(e) => handleMinChange(parseInt(e.target.value))}
-          className="absolute top-1/2 w-full h-5 opacity-0 cursor-pointer -translate-y-1/2 z-20"
+          className="absolute top-1/2 z-20 h-5 w-full -translate-y-1/2 cursor-pointer opacity-0"
           style={{ zIndex: 30 }}
         />
 
@@ -87,16 +87,16 @@ const SalaryRangeSlider: React.FC<SalaryRangeSliderProps> = ({
           step={step}
           value={localMax}
           onChange={(e) => handleMaxChange(parseInt(e.target.value))}
-          className="absolute top-1/2 w-full h-5 opacity-0 cursor-pointer -translate-y-1/2 z-10"
+          className="absolute top-1/2 z-10 h-5 w-full -translate-y-1/2 cursor-pointer opacity-0"
         />
 
         {/* Thumb Handles */}
         <div
-          className="absolute top-1/2 w-4 h-4 bg-white border-2 border-blue-600 rounded-full shadow -translate-y-1/2 z-30 pointer-events-none"
+          className="pointer-events-none absolute top-1/2 z-30 h-4 w-4 -translate-y-1/2 rounded-full border-2 border-blue-600 bg-white shadow"
           style={{ left: `${minPercent}%` }}
         ></div>
         <div
-          className="absolute top-1/2 w-4 h-4 bg-white border-2 border-blue-600 rounded-full shadow -translate-y-1/2 z-30 pointer-events-none"
+          className="pointer-events-none absolute top-1/2 z-30 h-4 w-4 -translate-y-1/2 rounded-full border-2 border-blue-600 bg-white shadow"
           style={{ left: `${maxPercent}%` }}
         ></div>
       </div>
@@ -107,12 +107,12 @@ const SalaryRangeSlider: React.FC<SalaryRangeSliderProps> = ({
           { label: 'Entry Level', range: { min: 40000, max: 70000 } },
           { label: 'Mid Level', range: { min: 70000, max: 120000 } },
           { label: 'Senior Level', range: { min: 120000, max: 180000 } },
-          { label: 'Lead Level', range: { min: 180000, max: 250000 } }
+          { label: 'Lead Level', range: { min: 180000, max: 250000 } },
         ].map(({ label, range }) => (
           <button
             key={label}
             onClick={() => onChange(range)}
-            className="px-3 py-1 text-xs border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            className="rounded-lg border border-gray-300 px-3 py-1 text-xs transition-colors hover:bg-gray-50"
           >
             {label}
           </button>

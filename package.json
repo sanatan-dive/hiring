@@ -6,10 +6,17 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "lint:fix": "next lint --fix",
+    "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "typecheck": "tsc --noEmit",
+    "prepare": "husky"
   },
   "dependencies": {
+    "@clerk/nextjs": "^6.37.1",
     "@google/generative-ai": "^0.24.1",
+    "@prisma/client": "^5.22.0",
     "@types/p5": "^1.7.6",
     "clsx": "^2.1.1",
     "embla-carousel-react": "^8.6.0",
@@ -21,12 +28,17 @@
     "p5": "^2.0.3",
     "pdf-parse": "^2.4.5",
     "pdfjs-dist": "^5.4.296",
+    "prisma": "^5.22.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-dropzone": "^14.3.8",
+    "react-hot-toast": "^2.6.0",
+    "svix": "^1.84.1",
     "tailwind-merge": "^3.3.1"
   },
   "devDependencies": {
+    "@commitlint/cli": "^20.4.0",
+    "@commitlint/config-conventional": "^20.4.0",
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
@@ -34,6 +46,11 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.3.4",
+    "eslint-config-prettier": "^10.1.8",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
+    "prettier": "^3.8.1",
+    "prettier-plugin-tailwindcss": "^0.7.2",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

@@ -1,10 +1,9 @@
-"use client"
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Star } from 'lucide-react';
 import Image from 'next/image';
 import StatCounter from '../ui/StatCounter';
-
 
 interface CarouselItem {
   id: number;
@@ -25,22 +24,18 @@ interface CarouselProps {
   autoPlayDelay?: number;
 }
 
-const Carousel: React.FC<CarouselProps> = ({ 
-  items: propItems, 
-  autoPlay = true, 
-  autoPlayDelay = 6000 
+const Carousel: React.FC<CarouselProps> = ({
+  items: propItems,
+  autoPlay = true,
+  autoPlayDelay = 6000,
 }) => {
-  
-
-  const items = propItems ;
+  const items = propItems;
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
     if (autoPlay && items.length > 1) {
       const interval = setInterval(() => {
-        setCurrentIndex((prevIndex) =>
-          prevIndex === items.length - 1 ? 0 : prevIndex + 1
-        );
+        setCurrentIndex((prevIndex) => (prevIndex === items.length - 1 ? 0 : prevIndex + 1));
       }, autoPlayDelay);
 
       return () => clearInterval(interval);
@@ -72,23 +67,22 @@ const Carousel: React.FC<CarouselProps> = ({
   const getSlideBlur = (index: number) => {
     const diff = Math.abs(index - currentIndex);
     if (diff === 0) return '';
-    if (diff === 1 || (diff === items.length - 1 && items.length > 2))
-      return 'blur-[0px]';
+    if (diff === 1 || (diff === items.length - 1 && items.length > 2)) return 'blur-[0px]';
     return '';
   };
 
   const CompanyLogo = ({ company }: { company: string }) => {
     const logoMap: { [key: string]: string } = {
-      'Google': 'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg',
-      'Microsoft': 'https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg',
-      'Amazon': 'https://upload.wikimedia.org/wikipedia/commons/a/a9/Amazon_logo.svg',
-      'Apple': 'https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg',
-      'Meta': 'https://upload.wikimedia.org/wikipedia/commons/7/7b/Meta_Platforms_Inc._logo.svg',
-      'Netflix': 'https://upload.wikimedia.org/wikipedia/commons/0/08/Netflix_2015_logo.svg'
+      Google: 'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg',
+      Microsoft: 'https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg',
+      Amazon: 'https://upload.wikimedia.org/wikipedia/commons/a/a9/Amazon_logo.svg',
+      Apple: 'https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg',
+      Meta: 'https://upload.wikimedia.org/wikipedia/commons/7/7b/Meta_Platforms_Inc._logo.svg',
+      Netflix: 'https://upload.wikimedia.org/wikipedia/commons/0/08/Netflix_2015_logo.svg',
     };
 
     return (
-      <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
+      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white">
         <Image
           src={logoMap[company] || ''}
           alt={`${company} logo`}
@@ -101,9 +95,9 @@ const Carousel: React.FC<CarouselProps> = ({
   };
 
   return (
-    <div className='relative bg-white font-sans min-h-screen flex flex-col  '>
+    <div className="relative flex min-h-screen flex-col bg-white font-sans">
       <div
-        className="absolute inset-0  z-10"
+        className="absolute inset-0 z-10"
         style={{
           backgroundImage: `
             radial-gradient(
@@ -111,62 +105,66 @@ const Carousel: React.FC<CarouselProps> = ({
               rgba(21, 93, 252, 0.5),
               transparent 50%
             )    
-          `, filter: "blur(80px)",
-          backgroundRepeat: "no-repeat"
+          `,
+          filter: 'blur(80px)',
+          backgroundRepeat: 'no-repeat',
         }}
       />
       <div className="relative z-20">
-        <div className="flex ml-4 sm:ml-40 items-center gap-1 mb-4 pt-20">
-          <span className="text-2xl font-bold text-blue-600 z-10">—</span>
-          <h1 className="text-2xl sm:text-4xl font-bold text-black z-10">Success Stories</h1>
+        <div className="mb-4 ml-4 flex items-center gap-1 pt-20 sm:ml-40">
+          <span className="z-10 text-2xl font-bold text-blue-600">—</span>
+          <h1 className="z-10 text-2xl font-bold text-black sm:text-4xl">Success Stories</h1>
         </div>
 
-        <div className="flex flex-col gap-2 ml-4 sm:ml-44 mt-6">
-          <p className="text-sm sm:text-md font-light text-black/60">
+        <div className="mt-6 ml-4 flex flex-col gap-2 sm:ml-44">
+          <p className="sm:text-md text-sm font-light text-black/60">
             Hir&apos;in finds jobs that fit your skills and tailors your applications automatically.
           </p>
         </div>
       </div>
 
-      <div className="relative h-[560px] flex items-center justify-center  ">
-     
-       
+      <div className="relative flex h-[560px] items-center justify-center">
         {/* Carousel slides */}
-        <div className="relative flex justify-center items-center ">
-           <div className="absolute -left-175 z-40 flex items-end flex-col group pt-32" onClick={goToPrevious}>
-             <div className="w-[100px] h-[3px] bg-gradient-to-l from-blue-600 to-blue-400 transition-colors duration-200 mb-8 rounded-full -z-10"></div>
-          <div className="w-[200px] h-[3px] bg-gradient-to-l from-blue-600 to-blue-400 transition-colors duration-200 mb-6 rounded-full -z-10"></div>
-          <div className="ml-4 text-blue-600 group-hover:text-blue-800 transition-all duration-200 flex items-center cursor-pointer">
-            <ChevronLeft size={32} className='font-bold' />
-            <div className="w-72 h-[3px] bg-gradient-to-l from-blue-600 to-blue-400 hover:bg-gradient-to-l hover:from-blue-800 hover:to-blue-600 transition-colors duration-200 rounded-full"></div>
+        <div className="relative flex items-center justify-center">
+          <div
+            className="group absolute -left-175 z-40 flex flex-col items-end pt-32"
+            onClick={goToPrevious}
+          >
+            <div className="-z-10 mb-8 h-[3px] w-[100px] rounded-full bg-gradient-to-l from-blue-600 to-blue-400 transition-colors duration-200"></div>
+            <div className="-z-10 mb-6 h-[3px] w-[200px] rounded-full bg-gradient-to-l from-blue-600 to-blue-400 transition-colors duration-200"></div>
+            <div className="ml-4 flex cursor-pointer items-center text-blue-600 transition-all duration-200 group-hover:text-blue-800">
+              <ChevronLeft size={32} className="font-bold" />
+              <div className="h-[3px] w-72 rounded-full bg-gradient-to-l from-blue-600 to-blue-400 transition-colors duration-200 hover:bg-gradient-to-l hover:from-blue-800 hover:to-blue-600"></div>
+            </div>
+            <div className="-z-10 mt-6 h-[3px] w-[200px] rounded-full bg-gradient-to-l from-blue-600 to-blue-400 transition-colors duration-200"></div>
+            <div className="-z-10 mt-8 h-[3px] w-[100px] rounded-full bg-gradient-to-l from-blue-600 to-blue-400 transition-colors duration-200"></div>
           </div>
-          <div className="w-[200px] h-[3px] bg-gradient-to-l from-blue-600 to-blue-400 transition-colors duration-200 mt-6 rounded-full -z-10"></div>
-           <div className="w-[100px] h-[3px] bg-gradient-to-l from-blue-600 to-blue-400 transition-colors duration-200 mt-8 rounded-full -z-10"></div>
-        </div>
 
-       
-        <div className="absolute -right-175 pt-32 z-40 flex items-start flex-col group " onClick={goToNext}>
-           <div className="w-[100px] h-[3px] bg-gradient-to-r from-blue-600 to-blue-400 mb-8 rounded-full -z-10"></div>
-          <div className="w-[200px] h-[3px] bg-gradient-to-r from-blue-600 to-blue-400 mb-6 rounded-full -z-10"></div>
-          <div className="mr-4 text-blue-600 group-hover:text-blue-800 transition-all duration-200 flex items-center cursor-pointer">
-            <div className="w-72 h-[3px] bg-gradient-to-r from-blue-600 to-blue-400 hover:bg-gradient-to-r hover:from-blue-800 hover:to-blue-600 transition-colors duration-200 rounded-full"></div>
-            <ChevronRight size={32} />
+          <div
+            className="group absolute -right-175 z-40 flex flex-col items-start pt-32"
+            onClick={goToNext}
+          >
+            <div className="-z-10 mb-8 h-[3px] w-[100px] rounded-full bg-gradient-to-r from-blue-600 to-blue-400"></div>
+            <div className="-z-10 mb-6 h-[3px] w-[200px] rounded-full bg-gradient-to-r from-blue-600 to-blue-400"></div>
+            <div className="mr-4 flex cursor-pointer items-center text-blue-600 transition-all duration-200 group-hover:text-blue-800">
+              <div className="h-[3px] w-72 rounded-full bg-gradient-to-r from-blue-600 to-blue-400 transition-colors duration-200 hover:bg-gradient-to-r hover:from-blue-800 hover:to-blue-600"></div>
+              <ChevronRight size={32} />
+            </div>
+            <div className="-z-10 mt-6 h-[3px] w-[200px] rounded-full bg-gradient-to-r from-blue-600 to-blue-400"></div>
+            <div className="-z-10 mt-8 h-[3px] w-[100px] rounded-full bg-gradient-to-r from-blue-600 to-blue-400"></div>
           </div>
-          <div className="w-[200px] h-[3px] bg-gradient-to-r from-blue-600 to-blue-400 mt-6 rounded-full -z-10"></div>
-          <div className="w-[100px] h-[3px] bg-gradient-to-r from-blue-600 to-blue-400 mt-8 rounded-full -z-10"></div>
-        </div>
           {items.map((item, index) => (
             <div
               key={item.id}
-              className={`absolute w-[420px] h-[580px] rounded-2xl shadow-2xl transition-all duration-700 ease-out cursor-pointer hover:shadow-3xl overflow-hidden ${getSlidePosition(index)} ${getSlideBlur(index)}`}
+              className={`hover:shadow-3xl absolute h-[580px] w-[420px] cursor-pointer overflow-hidden rounded-2xl shadow-2xl transition-all duration-700 ease-out ${getSlidePosition(index)} ${getSlideBlur(index)}`}
               onClick={() => goToSlide(index)}
             >
               {/* Background Image */}
-              <div className="absolute inset-0 w-full h-full">
+              <div className="absolute inset-0 h-full w-full">
                 <Image
                   src={item.image}
                   alt={item.name}
-                  className="w-full h-full object-cover"
+                  className="h-full w-full object-cover"
                   width={420}
                   height={580}
                 />
@@ -175,9 +173,9 @@ const Carousel: React.FC<CarouselProps> = ({
               </div>
 
               {/* Content Overlay */}
-              <div className="absolute inset-0 p-6 flex flex-col justify-between z-10">
+              <div className="absolute inset-0 z-10 flex flex-col justify-between p-6">
                 {/* Header with Company Logo and Package */}
-                <div className="flex items-center justify-between mb-4">
+                <div className="mb-4 flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     <CompanyLogo company={item.company} />
                     <div>
@@ -194,7 +192,7 @@ const Carousel: React.FC<CarouselProps> = ({
                 {/* Student Details */}
                 <div className="space-y-3">
                   <div className="flex items-center space-x-2">
-                    <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-400 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-r from-blue-500 to-blue-400 text-lg font-bold text-white">
                       {item.name.charAt(0)}
                     </div>
                     <div>
@@ -204,7 +202,9 @@ const Carousel: React.FC<CarouselProps> = ({
                           <Star
                             key={i}
                             size={12}
-                            className={i < item.rating ? "text-yellow-400 fill-current" : "text-gray-400"}
+                            className={
+                              i < item.rating ? 'fill-current text-yellow-400' : 'text-gray-400'
+                            }
                           />
                         ))}
                       </div>
@@ -217,10 +217,9 @@ const Carousel: React.FC<CarouselProps> = ({
         </div>
       </div>
 
-      <div className="relative z-20 px-4 sm:px-40 py-8 pt-24">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+      <div className="relative z-20 px-4 py-8 pt-24 sm:px-40">
+        <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
           <div className="text-center">
-            
             <StatCounter value={500} suffix="+" />
             <div className="text-sm text-gray-600">Students Placed</div>
           </div>

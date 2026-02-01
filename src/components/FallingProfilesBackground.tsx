@@ -17,7 +17,7 @@ const FallingProfilesBackground: React.FC = () => {
 
   // Sample profile images (you can replace these with actual images)
   const profileImages = [
-    
+    'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face',
     'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face',
     'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&h=100&fit=crop&crop=face',
     'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face',
@@ -47,7 +47,7 @@ const FallingProfilesBackground: React.FC = () => {
     const generateXPosition = () => {
       const centerZone = dimensions.width * 0.4; // 40% center area to avoid
       const leftZone = (dimensions.width - centerZone) / 2;
-      
+
       if (Math.random() < 0.5) {
         // Left side
         return Math.random() * leftZone;
@@ -61,10 +61,10 @@ const FallingProfilesBackground: React.FC = () => {
     const initialProfiles: FallingProfile[] = Array.from({ length: 12 }, (_, i) => ({
       id: i,
       x: generateXPosition(),
-      y: -100 - (i * 50), // Stagger vertically too
+      y: -100 - i * 50, // Stagger vertically too
       speed: 0.5 + Math.random() * 1.0,
       size: 40 + Math.random() * 20,
-      delay: Date.now() + (i * 800), // Progressive delays
+      delay: Date.now() + i * 800, // Progressive delays
       trail: [],
       imageIndex: i % profileImages.length,
     }));
@@ -79,7 +79,7 @@ const FallingProfilesBackground: React.FC = () => {
     const generateXPosition = () => {
       const centerZone = dimensions.width * 0.4; // 40% center area to avoid
       const leftZone = (dimensions.width - centerZone) / 2;
-      
+
       if (Math.random() < 0.5) {
         // Left side
         return Math.random() * leftZone;
@@ -98,17 +98,20 @@ const FallingProfilesBackground: React.FC = () => {
           }
 
           const newY = profile.y + profile.speed;
-          
+
           // Only add to trail if profile is visible and moving
-          const newTrail = profile.y > -100 ? [
-            { x: profile.x, y: profile.y, opacity: 1 },
-            ...profile.trail.map((point) => ({
-              ...point,
-              opacity: point.opacity - 0.06,
-            })),
-          ]
-          .filter((point) => point.opacity > 0.1)
-          .slice(0, 15) : profile.trail;
+          const newTrail =
+            profile.y > -100
+              ? [
+                  { x: profile.x, y: profile.y, opacity: 1 },
+                  ...profile.trail.map((point) => ({
+                    ...point,
+                    opacity: point.opacity - 0.06,
+                  })),
+                ]
+                  .filter((point) => point.opacity > 0.1)
+                  .slice(0, 15)
+              : profile.trail;
 
           // Reset position when profile goes off screen
           if (newY > dimensions.height + 100) {
@@ -136,7 +139,7 @@ const FallingProfilesBackground: React.FC = () => {
   }, [profiles.length, dimensions, profileImages.length]);
 
   return (
-    <div className="fixed inset-0 overflow-hidden pointer-events-none z-[1]">
+    <div className="pointer-events-none fixed inset-0 z-[1] overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-purple-50 via-white to-blue-50">
         {profiles.map((profile) => (
           <div key={profile.id}>
@@ -157,10 +160,10 @@ const FallingProfilesBackground: React.FC = () => {
                 }}
               />
             ))}
-            
+
             {/* Main profile picture */}
             <div
-              className="absolute rounded-full shadow-lg border-2 border-white"
+              className="absolute rounded-full border-2 border-white shadow-lg"
               style={{
                 left: profile.x,
                 top: profile.y,

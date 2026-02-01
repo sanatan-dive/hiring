@@ -1,18 +1,18 @@
-export const runtime = "nodejs";
+export const runtime = 'nodejs';
 
-import { NextResponse } from "next/server";
-import "pdf-parse/worker"; // Import this before importing "pdf-parse"
-import { PDFParse } from "pdf-parse";
-import mammoth from "mammoth";
-import fs from "fs/promises";
-import path from "path";
-import os from "os";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { NextResponse } from 'next/server';
+import 'pdf-parse/worker'; // Import this before importing "pdf-parse"
+import { PDFParse } from 'pdf-parse';
+import mammoth from 'mammoth';
+import fs from 'fs/promises';
+import path from 'path';
+import os from 'os';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 /* ---------- GEMINI SETUP ---------- */
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
 /* ----------------------------------- */
 
@@ -21,36 +21,29 @@ export async function POST(request: Request) {
 
   try {
     const formData = await request.formData();
-    const file = formData.get("file") as File;
+    const file = formData.get('file') as File;
 
     if (!file) {
-      return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
+      return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    let text = "";
+    let text = '';
 
     /* ---------- PDF ---------- */
-    if (file.name.toLowerCase().endsWith(".pdf")) {
+    if (file.name.toLowerCase().endsWith('.pdf')) {
       const parser = new PDFParse({ data: buffer });
       const result = await parser.getText();
       text = result.text;
-    }
-
-    /* ---------- DOCX ---------- */
-    else if (file.name.toLowerCase().endsWith(".docx")) {
+    } else if (file.name.toLowerCase().endsWith('.docx')) {
+      /* ---------- DOCX ---------- */
       tempPath = path.join(os.tmpdir(), `${Date.now()}-${file.name}`);
       await fs.writeFile(tempPath, buffer);
 
       const result = await mammoth.extractRawText({ path: tempPath });
       text = result.value;
-    }
-
-    else {
-      return NextResponse.json(
-        { error: "Unsupported file type (PDF/DOCX only)" },
-        { status: 400 }
-      );
+    } else {
+      return NextResponse.json({ error: 'Unsupported file type (PDF/DOCX only)' }, { status: 400 });
     }
 
     /* ---------- GEMINI STRUCTURING ---------- */
@@ -77,11 +70,11 @@ ${text}
 `;
 
     const geminiResult = await model.generateContent({
-  contents: [{ role: "user", parts: [{ text: prompt }] }],
-  generationConfig: {
-    responseMimeType: "application/json"
-  }
-});
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      generationConfig: {
+        responseMimeType: 'application/json',
+      },
+    });
     const responseText = geminiResult.response.text();
 
     let resumeJSON;
@@ -89,22 +82,18 @@ ${text}
       resumeJSON = JSON.parse(responseText);
     } catch {
       return NextResponse.json(
-        { error: "Gemini returned invalid JSON", raw: responseText },
+        { error: 'Gemini returned invalid JSON', raw: responseText },
         { status: 500 }
       );
     }
 
     return NextResponse.json({
       success: true,
-      resume: resumeJSON
+      resume: resumeJSON,
     });
-
   } catch (error) {
-    console.error("Parse error:", error);
-    return NextResponse.json(
-      { error: "Failed to parse resume" },
-      { status: 500 }
-    );
+    console.error('Parse error:', error);
+    return NextResponse.json({ error: 'Failed to parse resume' }, { status: 500 });
   } finally {
     if (tempPath) {
       await fs.unlink(tempPath).catch(() => {});

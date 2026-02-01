@@ -50,7 +50,7 @@ export const usePreferencesState = () => {
     salaryRange: {
       min: 70000,
       max: 120000,
-      currency: '$'
+      currency: '$',
     },
     jobType: 'full-time',
     companySize: 'medium',
@@ -58,7 +58,7 @@ export const usePreferencesState = () => {
     industriesToAvoid: [],
     workSchedule: 'flexible',
     travelWillingness: 'occasional',
-    benefitsPriority: ['health', 'retirement']
+    benefitsPriority: ['health', 'retirement'],
   });
 
   React.useEffect(() => {
@@ -72,9 +72,9 @@ export const usePreferencesState = () => {
     const newPreferences = {
       ...preferences,
       ...updates,
-      updatedAt: new Date()
+      updatedAt: new Date(),
     };
-    
+
     setPreferences(newPreferences);
     savePreferencesToStorage(newPreferences);
   };
@@ -89,7 +89,7 @@ export const usePreferencesState = () => {
       salaryRange: {
         min: 70000,
         max: 120000,
-        currency: '$'
+        currency: '$',
       },
       jobType: 'full-time',
       companySize: 'medium',
@@ -98,9 +98,9 @@ export const usePreferencesState = () => {
       workSchedule: 'flexible',
       travelWillingness: 'occasional',
       benefitsPriority: ['health', 'retirement'],
-      updatedAt: new Date()
+      updatedAt: new Date(),
     };
-    
+
     setPreferences(defaultPreferences);
     savePreferencesToStorage(defaultPreferences);
   };
@@ -108,6 +108,6 @@ export const usePreferencesState = () => {
   return {
     preferences,
     updatePreferences,
-    resetPreferences
+    resetPreferences,
   };
 };

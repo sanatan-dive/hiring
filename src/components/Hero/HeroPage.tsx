@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-"use client";
-import React, { useEffect, useRef, useState } from "react";
-import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
-import { Variants } from "framer-motion";
+'use client';
+import React, { useEffect, useRef, useState } from 'react';
+import Image from 'next/image';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Variants } from 'framer-motion';
 // Dynamically import p5 to avoid SSR issues
-const loadP5 = () => import("p5");
+const loadP5 = () => import('p5');
 
 interface GridCell {
   x: number;
@@ -88,7 +88,9 @@ const FallingProfilesBackground: React.FC = () => {
               ...point,
               opacity: point.opacity - 0.04,
             })),
-          ].filter((point) => point.opacity > 0).slice(0, 12);
+          ]
+            .filter((point) => point.opacity > 0)
+            .slice(0, 12);
 
           // Reset position when profile goes off screen
           if (newY > dimensions.height + 100) {
@@ -115,7 +117,10 @@ const FallingProfilesBackground: React.FC = () => {
   }, [profiles.length, dimensions, profileImages.length]);
 
   return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none z-[1]" style={{ height: '700px' }}>
+    <div
+      className="pointer-events-none absolute inset-0 z-[1] overflow-hidden"
+      style={{ height: '700px' }}
+    >
       <AnimatePresence>
         {profiles.map((profile) => (
           <motion.div
@@ -145,10 +150,10 @@ const FallingProfilesBackground: React.FC = () => {
                 transition={{ duration: 0.3, delay: index * 0.1 }}
               />
             ))}
-            
+
             {/* Main profile picture */}
             <motion.div
-              className="absolute rounded-full shadow-md border border-white/20"
+              className="absolute rounded-full border border-white/20 shadow-md"
               style={{
                 left: profile.x,
                 top: profile.y,
@@ -162,7 +167,7 @@ const FallingProfilesBackground: React.FC = () => {
                 transition: 'opacity 0.5s ease-in-out',
               }}
               whileHover={{ scale: 1.1, opacity: 0.8 }}
-              transition={{ type: "spring", stiffness: 400, damping: 10 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 10 }}
             />
           </motion.div>
         ))}
@@ -178,15 +183,15 @@ function HeroPage() {
   const logos = [
     {
       name: 'LinkedIn',
-      src: 'https://blog.waalaxy.com/wp-content/uploads/2021/01/2-2.png.webp'
+      src: 'https://blog.waalaxy.com/wp-content/uploads/2021/01/2-2.png.webp',
     },
     {
       name: 'Indeed',
-      src: 'https://i0.wp.com/verotouch.com/wp-content/uploads/2024/02/Indeed-Logo-Black.png?ssl=1'
+      src: 'https://i0.wp.com/verotouch.com/wp-content/uploads/2024/02/Indeed-Logo-Black.png?ssl=1',
     },
     {
       name: 'Naukri',
-      src: 'https://fontslogo.com/wp-content/uploads/2013/04/M-2p-black_Naukri-Logo-Font.jpg'
+      src: 'https://fontslogo.com/wp-content/uploads/2013/04/M-2p-black_Naukri-Logo-Font.jpg',
     },
   ];
 
@@ -196,7 +201,7 @@ function HeroPage() {
 
   useEffect(() => {
     if (!canvasRef.current) return;
-  
+
     let p5Instance: any = null;
 
     const initP5 = async () => {
@@ -219,10 +224,10 @@ function HeroPage() {
           canvas.style('left', '0');
           canvas.style('z-index', '0');
           canvas.style('pointer-events', 'none');
-          
+
           cols = Math.ceil(canvasWidth / gridSize);
           rows = Math.ceil(canvasHeight / gridSize);
-          
+
           // Initialize grid
           grid = [];
           for (let i = 0; i < cols; i++) {
@@ -233,7 +238,7 @@ function HeroPage() {
                 y: j * gridSize,
                 size: gridSize,
                 hoverIntensity: 0,
-                targetIntensity: 0
+                targetIntensity: 0,
               };
             }
           }
@@ -248,7 +253,7 @@ function HeroPage() {
 
         p.draw = () => {
           checkDarkMode();
-          
+
           // Clear background completely
           if (isDarkMode) {
             p.background(0, 0, 0); // Pure black background
@@ -264,10 +269,10 @@ function HeroPage() {
           for (let i = 0; i < cols; i++) {
             for (let j = 0; j < rows; j++) {
               const cell = grid[i][j];
-              
+
               // Calculate distance from mouse
               const distance = Math.sqrt(Math.pow(i - mouseCol, 2) + Math.pow(j - mouseRow, 2));
-              
+
               if (distance <= 3) {
                 if (distance === 0) {
                   // Direct hover - full blue
@@ -293,7 +298,7 @@ function HeroPage() {
 
           // Draw grid lines
           p.noFill();
-          
+
           // Draw all grid lines first (gray)
           for (let i = 0; i <= cols; i++) {
             if (isDarkMode) {
@@ -304,7 +309,7 @@ function HeroPage() {
             p.strokeWeight(1);
             p.line(i * gridSize, 0, i * gridSize, canvasHeight);
           }
-          
+
           for (let j = 0; j <= rows; j++) {
             if (isDarkMode) {
               p.stroke(128, 128, 128, 80); // Gray lines in dark mode
@@ -319,23 +324,23 @@ function HeroPage() {
           for (let i = 0; i < cols; i++) {
             for (let j = 0; j < rows; j++) {
               const cell = grid[i][j];
-              
+
               if (cell.hoverIntensity > 0.01) {
                 const alpha = cell.hoverIntensity * 200;
                 const strokeWeight = 1 + cell.hoverIntensity * 2;
-                
+
                 // Blue hover effect
                 if (isDarkMode) {
                   p.stroke(0, 100, 255, alpha); // Blue in dark mode
                 } else {
                   p.stroke(100, 150, 255, alpha); // Light blue in light mode
                 }
-                
+
                 p.strokeWeight(strokeWeight);
-                
+
                 // Draw the cell border
                 p.rect(cell.x, cell.y, cell.size, cell.size);
-                
+
                 // Add subtle fill for stronger hover effect
                 if (cell.hoverIntensity > 0.3) {
                   if (isDarkMode) {
@@ -356,13 +361,13 @@ function HeroPage() {
 
         const drawFloatingParticles = () => {
           const time = p.millis() * 0.001;
-          
+
           for (let i = 0; i < 15; i++) {
-            const x = (p.noise(i * 0.1, time * 0.3) * canvasWidth);
-            const y = (p.noise(i * 0.1 + 100, time * 0.2) * canvasHeight);
+            const x = p.noise(i * 0.1, time * 0.3) * canvasWidth;
+            const y = p.noise(i * 0.1 + 100, time * 0.2) * canvasHeight;
             const size = p.noise(i * 0.1 + 200, time * 0.15) * 2 + 1;
             const alpha = p.noise(i * 0.1 + 300, time * 0.25) * 60 + 30;
-            
+
             if (isDarkMode) {
               p.fill(150, 180, 255, alpha);
             } else {
@@ -378,7 +383,7 @@ function HeroPage() {
           p.resizeCanvas(newWidth, canvasHeight);
           cols = Math.ceil(newWidth / gridSize);
           rows = Math.ceil(canvasHeight / gridSize);
-          
+
           // Reinitialize grid
           grid = [];
           for (let i = 0; i < cols; i++) {
@@ -389,7 +394,7 @@ function HeroPage() {
                 y: j * gridSize,
                 size: gridSize,
                 hoverIntensity: 0,
-                targetIntensity: 0
+                targetIntensity: 0,
               };
             }
           }
@@ -430,7 +435,7 @@ function HeroPage() {
       opacity: 1,
       y: 0,
       transition: {
-        type: "spring",
+        type: 'spring',
         stiffness: 100,
         damping: 12,
       },
@@ -443,7 +448,7 @@ function HeroPage() {
       opacity: 1,
       scale: 1,
       transition: {
-        type: "spring",
+        type: 'spring',
         stiffness: 150,
         damping: 12,
         delay: 0.5,
@@ -457,7 +462,7 @@ function HeroPage() {
       opacity: 1,
       y: 0,
       transition: {
-        type: "spring",
+        type: 'spring',
         stiffness: 200,
         damping: 15,
         delay: 1.2,
@@ -466,7 +471,7 @@ function HeroPage() {
     hover: {
       scale: 1.05,
       transition: {
-        type: "spring",
+        type: 'spring',
         stiffness: 400,
         damping: 10,
       },
@@ -474,7 +479,7 @@ function HeroPage() {
     tap: {
       scale: 0.95,
       transition: {
-        type: "spring",
+        type: 'spring',
         stiffness: 400,
         damping: 10,
       },
@@ -487,7 +492,7 @@ function HeroPage() {
       opacity: 1,
       y: 0,
       transition: {
-        type: "spring",
+        type: 'spring',
         stiffness: 100,
         damping: 12,
       },
@@ -498,65 +503,62 @@ function HeroPage() {
     <>
       {/* Hero Section with Fixed Height */}
       <motion.div
-        className="relative w-full h-[700px] overflow-hidden"
+        className="relative h-[700px] w-full overflow-hidden"
         initial="hidden"
-        animate={isLoaded ? "visible" : "hidden"}
+        animate={isLoaded ? 'visible' : 'hidden'}
         variants={containerVariants}
       >
         {/* P5.js Canvas Container */}
         <div ref={canvasRef} className="absolute inset-0" />
-        
+
         {/* Falling Profiles Background */}
         <FallingProfilesBackground />
 
         {/* Hero Content */}
-        <div className="relative z-10 flex flex-col justify-center items-center h-full w-full px-4">
+        <div className="relative z-10 flex h-full w-full flex-col items-center justify-center px-4">
           <motion.div
-            className="flex-1 flex flex-col items-center justify-center text-center space-y-6 max-w-6xl mx-auto"
+            className="mx-auto flex max-w-6xl flex-1 flex-col items-center justify-center space-y-6 text-center"
             variants={containerVariants}
           >
             <motion.div
-              className="text-center space-y-6 bg-black/10 dark:bg-white/10 p-8 md:p-12 rounded-lg "
+              className="space-y-6 rounded-lg bg-black/10 p-8 text-center md:p-12 dark:bg-white/10"
               variants={itemVariants}
             >
-              <motion.div
-                className="flex items-center justify-center"
-                variants={titleVariants}
-              >
+              <motion.div className="flex items-center justify-center" variants={titleVariants}>
                 <motion.h1
-                  className="text-3xl md:text-8xl font-medium font-poppins text-white dark:text-black/85"
+                  className="font-poppins text-3xl font-medium text-white md:text-8xl dark:text-black/85"
                   whileHover={{ scale: 1.05 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 20 }}
                 >
                   Hir&apos;
                 </motion.h1>
                 <motion.h1
-                  className="text-3xl lg:text-7xl font-bold text-white bg-blue-600 dark:bg-blue-600 rounded px-1 ml-2"
-                  whileHover={{ 
+                  className="ml-2 rounded bg-blue-600 px-1 text-3xl font-bold text-white lg:text-7xl dark:bg-blue-600"
+                  whileHover={{
                     scale: 1.1,
                     rotateZ: [0, -5, 5, 0],
-                    transition: { duration: 0.3 }
+                    transition: { duration: 0.3 },
                   }}
-                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 20 }}
                 >
                   in
                 </motion.h1>
               </motion.div>
 
               <motion.p
-                className="text-3xl font-poppins font-medium md:text-8xl text-white dark:text-black/85"
+                className="font-poppins text-3xl font-medium text-white md:text-8xl dark:text-black/85"
                 variants={itemVariants}
                 whileHover={{ scale: 1.02 }}
-                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 20 }}
               >
                 Apply Smarter,
               </motion.p>
-              
+
               <motion.p
-                className="text-3xl font-poppins font-medium md:text-8xl text-white dark:text-black/85"
+                className="font-poppins text-3xl font-medium text-white md:text-8xl dark:text-black/85"
                 variants={itemVariants}
                 whileHover={{ scale: 1.02 }}
-                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 20 }}
               >
                 Land Better.
               </motion.p>
@@ -568,15 +570,14 @@ function HeroPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 1, duration: 0.6 }}
               >
-                Hir&apos;in helps you apply smarter and faster to jobs where you can thrive. Whether you&apos;re seeking your next opportunity <br/> or looking to land interviews at top companies, Hir&apos;in streamlines the process for you.
+                Hir&apos;in helps you apply smarter and faster to jobs where you can thrive. Whether
+                you&apos;re seeking your next opportunity <br /> or looking to land interviews at
+                top companies, Hir&apos;in streamlines the process for you.
               </motion.p>
             </motion.div>
 
             <motion.div variants={buttonVariants}>
-              <button
-                className="bg-black hover:bg-black/85 transition-colors duration-300 text-white h-12 w-36 flex items-center justify-center text-lg font-light py-4 px-6 "
-               
-              >
+              <button className="flex h-12 w-36 items-center justify-center bg-black px-6 py-4 text-lg font-light text-white transition-colors duration-300 hover:bg-black/85">
                 Get a Job
               </button>
             </motion.div>
@@ -584,25 +585,24 @@ function HeroPage() {
         </div>
       </motion.div>
 
-      
       <motion.div
-        className="w-full bg-white backdrop-blur-sm py-8 px-4 "
+        className="w-full bg-white px-4 py-8 backdrop-blur-sm"
         initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 1.5, duration: 0.8 }}
       >
         <motion.h2
-          className="text-center text-xl md:text-2xl font-medium mb-6 text-black font-poppins "
+          className="font-poppins mb-6 text-center text-xl font-medium text-black md:text-2xl"
           variants={logoVariants}
           initial="hidden"
           animate="visible"
           transition={{ delay: 1.7 }}
         >
-          Trusted by job seekers 
+          Trusted by job seekers
         </motion.h2>
-        
+
         <motion.div
-          className="flex flex-wrap justify-between items-center gap-8 md:gap-12 max-w-5xl mb-10 mx-auto"
+          className="mx-auto mb-10 flex max-w-5xl flex-wrap items-center justify-between gap-8 md:gap-12"
           variants={containerVariants}
           initial="hidden"
           animate="visible"
@@ -610,25 +610,22 @@ function HeroPage() {
           {logos.map((logo, index) => (
             <motion.div
               key={logo.name}
-              className="flex justify-center items-center"
+              className="flex items-center justify-center"
               variants={logoVariants}
-              whileHover={{ 
+              whileHover={{
                 scale: 1.1,
                 y: -5,
-                transition: { type: "spring", stiffness: 300, damping: 20 }
+                transition: { type: 'spring', stiffness: 300, damping: 20 },
               }}
               custom={index}
             >
-              <motion.div
-                whileHover={{ filter: "grayscale(0%)" }}
-                transition={{ duration: 0.3 }}
-              >
+              <motion.div whileHover={{ filter: 'grayscale(0%)' }} transition={{ duration: 0.3 }}>
                 <Image
                   src={logo.src}
                   alt={logo.name}
                   width={150}
                   height={150}
-                  className="object-contain filter grayscale hover:grayscale-0 transition-all duration-300 w-20 h-20 sm:w-40 sm:h-40"
+                  className="h-20 w-20 object-contain grayscale filter transition-all duration-300 hover:grayscale-0 sm:h-40 sm:w-40"
                 />
               </motion.div>
             </motion.div>
