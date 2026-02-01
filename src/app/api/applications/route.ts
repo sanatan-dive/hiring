@@ -50,9 +50,8 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ application });
-  } catch (error: any) {
-    // eslint-disable-line @typescript-eslint/no-explicit-any
-    if (error.code === 'P2002')
+  } catch (error) {
+    if ((error as { code?: string }).code === 'P2002')
       return NextResponse.json({ error: 'Already applied' }, { status: 409 });
     return NextResponse.json({ error: 'Failed to create application' }, { status: 500 });
   }

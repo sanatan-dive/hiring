@@ -58,10 +58,9 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ bookmark });
-  } catch (error: any) {
-    // eslint-disable-line @typescript-eslint/no-explicit-any
+  } catch (error) {
     // Handle duplicate bookmark
-    if (error?.code === 'P2002') {
+    if ((error as { code?: string })?.code === 'P2002') {
       return NextResponse.json({ error: 'Already bookmarked' }, { status: 409 });
     }
     console.error('Error creating bookmark:', error);
