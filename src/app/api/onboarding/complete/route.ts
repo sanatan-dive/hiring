@@ -1,4 +1,4 @@
-import { auth, currentUser } from '@clerk/nextjs/server';
+import { auth, currentUser, clerkClient } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/db/prisma';
 
@@ -119,6 +119,14 @@ export async function POST(req: Request) {
         salaryMax: salaryRange?.max,
         salaryCurrency: salaryRange?.currency || 'USD',
         jobType,
+      },
+    });
+
+    // Update Clerk metadata to mark user as onboarded
+    const client = await clerkClient();
+    await client.users.updateUserMetadata(userId, {
+      publicMetadata: {
+        isOnboarded: true,
       },
     });
 

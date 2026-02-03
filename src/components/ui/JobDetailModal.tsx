@@ -162,7 +162,10 @@ export default function JobDetailModal({
             <div className="mb-8">
               <h3 className="mb-3 text-lg font-bold text-gray-900">About the Role</h3>
               <div className="prose prose-blue max-w-none text-gray-600">
-                <p className="leading-relaxed whitespace-pre-line">{job.description}</p>
+                <div
+                  className="leading-relaxed"
+                  dangerouslySetInnerHTML={{ __html: job.description || '' }}
+                />
               </div>
             </div>
 

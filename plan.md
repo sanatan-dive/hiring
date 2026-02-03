@@ -14,17 +14,17 @@ User uploads resume → We find jobs everywhere → Match with AI → Deliver vi
 
 ### Subscription Tiers
 
-| Feature             | Free      | Pro                             |
-| ------------------- | --------- | ------------------------------- |
-| **Pricing**         | $0        | $8/mo (first 2 months) → $10/mo |
-| Job digest          | Weekly    | Daily                           |
-| Light scraper       | 3x/week   | Unlimited                       |
-| Deep scraper        | ❌        | 2x/month                        |
-| Resumes             | 1         | 3                               |
-| AI Cover Letter     | ❌        | ✅                              |
-| AI Interview Prep   | ❌        | ✅                              |
-| Application Tracker | Basic (5) | Unlimited                       |
-| Job match history   | 7 days    | Forever                         |
+| Feature             | Free      | Pro       |
+| ------------------- | --------- | --------- |
+| **Pricing**         | $0        | $8/mo     |
+| Job digest          | Weekly    | Daily     |
+| Light scraper       | 3x/week   | Unlimited |
+| Deep scraper        | ❌        | 2x/month  |
+| Resumes             | 1         | 3         |
+| AI Cover Letter     | ❌        | ✅        |
+| AI Interview Prep   | ❌        | ✅        |
+| Application Tracker | Basic (5) | Unlimited |
+| Job match history   | 7 days    | Forever   |
 
 ### Payment: Razorpay (India + International)
 
@@ -153,20 +153,20 @@ Cron (daily/weekly):
 - [x] Build `/api/jobs/fetch` endpoint
 - [x] Add job listing UI `/matches`
 
-### Phase 3: Vector Matching
+### Phase 3: Vector Matching ✅ (Done)
 
-- [ ] Enable pgvector in Neon
-- [ ] Add embedding column to Resume & Job
-- [ ] Generate embeddings on resume save
-- [ ] Generate embeddings for jobs
-- [ ] Build similarity search query
-- [ ] Rank jobs by match score
+- [x] Enable pgvector in Neon
+- [x] Add embedding column to Resume & Job
+- [x] Generate embeddings on resume save
+- [x] Generate embeddings for jobs
+- [x] Build similarity search query
+- [x] Rank jobs by match score
 
-### Phase 4: Light Scraper
+### Phase 4: Light Scraper ✅ (Done)
 
-- [ ] Build scraper for RemoteOK (allows scraping)
-- [ ] Build scraper for WeWorkRemotely
-- [ ] Schedule via Vercel Cron (free)
+- [x] Build scraper for RemoteOK (allows scraping)
+- [x] Build scraper for WeWorkRemotely
+- [x] Schedule via Vercel Cron (free)
 - [ ] Rate limit per user tier
 
 ### Phase 5: Email Digests

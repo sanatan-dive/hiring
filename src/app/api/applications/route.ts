@@ -24,7 +24,7 @@ export async function GET() {
   }
 }
 
-// POST: Create application (when user clicks Apply)
+// POST: Create or Update Application (Upsert)
 export async function POST(req: Request) {
   try {
     const { userId: clerkId } = await auth();
@@ -35,25 +35,37 @@ export async function POST(req: Request) {
     const user = await prisma.user.findUnique({ where: { clerkId } });
     if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
-    const application = await prisma.application.create({
-      data: {
+    // Upsert Application
+    const application = await prisma.application.upsert({
+      where: {
+        userId_jobId: {
+          userId: user.id,
+          jobId,
+        },
+      },
+      update: {
+        status,
+        updatedAt: new Date(),
+      },
+      create: {
         userId: user.id,
         jobId,
         status,
       },
     });
 
-    // Also update JobMatch status if exists
+    // Also update JobMatch status if exists (to keep them in sync if you use that field)
+    /*
     await prisma.jobMatch.updateMany({
       where: { userId: user.id, jobId },
-      data: { status: 'applied' },
+      data: { status },
     });
+    */
 
     return NextResponse.json({ application });
   } catch (error) {
-    if ((error as { code?: string }).code === 'P2002')
-      return NextResponse.json({ error: 'Already applied' }, { status: 409 });
-    return NextResponse.json({ error: 'Failed to create application' }, { status: 500 });
+    console.error('Error creating/updating application:', error);
+    return NextResponse.json({ error: 'Failed to save application' }, { status: 500 });
   }
 }
 

@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useRef, useEffect } from 'react';
+import { useUser } from '@clerk/nextjs';
 import {
   Cog,
   Users,
@@ -43,6 +44,8 @@ const OnboardingPage = () => {
   const { preferences, updatePreferences } = usePreferencesState();
   const router = useRouter();
 
+  const { user } = useUser();
+
   const handleCompleteOnboarding = async () => {
     setIsSaving(true);
     try {
@@ -63,15 +66,16 @@ const OnboardingPage = () => {
       });
 
       if (response.ok) {
-        router.push('/profile');
+        // Force reload session to get updated metadata
+        await user?.reload();
+        router.push('/matches');
       } else {
         console.error('Failed to save onboarding data');
-        // Still navigate even if save fails
-        router.push('/profile');
+        router.push('/matches');
       }
     } catch (error) {
       console.error('Error saving onboarding:', error);
-      router.push('/profile');
+      router.push('/matches');
     } finally {
       setIsSaving(false);
     }

@@ -1,18 +1,24 @@
 import prisma from '@/lib/db/prisma';
 import { searchAdzunaJobs } from '@/lib/api/adzuna';
 import { searchJSearchJobs } from '@/lib/api/jsearch';
+import { getRemoteOkJobs } from '@/lib/api/remoteok';
+import { getWeWorkRemotelyJobs } from '@/lib/api/weworkremotely';
 import { generateEmbedding } from '@/lib/ai/google';
 
 export async function fetchAndSaveJobs(query: string, location: string = 'us') {
   console.log(`Fetching jobs for: ${query} in ${location}`);
 
   // Fetch from sources in parallel
-  const [adzunaJobs, jsearchJobs] = await Promise.all([
+  const [adzunaJobs, jsearchJobs, remoteOkJobs, wwrJobs] = await Promise.all([
     searchAdzunaJobs(query, location).catch(() => []),
     searchJSearchJobs(`${query} in ${location}`).catch(() => []),
+    getRemoteOkJobs(20).catch(() => []),
+    getWeWorkRemotelyJobs(20).catch(() => []),
   ]);
 
-  console.log(`Found ${adzunaJobs.length} Adzuna and ${jsearchJobs.length} JSearch jobs`);
+  console.log(
+    `Found ${adzunaJobs.length} Adzuna, ${jsearchJobs.length} JSearch, ${remoteOkJobs.length} RemoteOK, ${wwrJobs.length} WWR jobs`
+  );
 
   // Transform to common format
   const jobs = [
@@ -36,6 +42,47 @@ export async function fetchAndSaveJobs(query: string, location: string = 'us') {
       source: 'jsearch',
       scrapedAt: new Date(),
     })),
+    ...remoteOkJobs.map((job) => ({
+      title: job.position,
+      company: job.company,
+      location: job.location,
+      description: job.description,
+      url: job.url || job.apply_url,
+      salary: job.salary_min
+        ? `${job.salary_min} - ${job.salary_max} ${job.salary_currency || 'USD'}`
+        : null,
+      source: 'remoteok',
+      scrapedAt: new Date(),
+    })),
+    ...wwrJobs.map((job) => {
+      // Extract company from title if possible "Role at Company" or "Role: Company"
+      let company = job.company || 'Unknown';
+      let title = job.title;
+
+      if (title.includes(' at ')) {
+        const parts = title.split(' at ');
+        title = parts[0];
+        company = parts[1];
+      } else if (title.includes(': ')) {
+        const parts = title.split(': ');
+        if (parts.length > 1) {
+          // Usually "Company: Role" in some feeds, "Role: Company" in others.
+          // WWR usually does "Role: Company" in the RSS item title depending on category?
+          // Let's assume the title is the role mainly.
+        }
+      }
+
+      return {
+        title: title,
+        company: company,
+        location: 'Remote', // WWR is mostly remote
+        description: job.content || job.contentSnippet,
+        url: job.link,
+        salary: null, // RSS doesn't usually have structured salary
+        source: 'weworkremotely',
+        scrapedAt: new Date(),
+      };
+    }),
   ];
 
   // Bulk upsert (one by one for safety or use createMany with skipDuplicates if unique constraint exists)
