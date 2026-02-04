@@ -32,8 +32,38 @@ export async function POST(req: Request) {
 
     const { jobId, status = 'applied' } = await req.json();
 
-    const user = await prisma.user.findUnique({ where: { clerkId } });
+    const user = await prisma.user.findUnique({
+      where: { clerkId },
+      include: { subscription: true },
+    });
     if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
+
+    // Check if application already exists
+    const existingApp = await prisma.application.findUnique({
+      where: {
+        userId_jobId: {
+          userId: user.id,
+          jobId,
+        },
+      },
+    });
+
+    // Enforce limits for creating NEW applications
+    if (!existingApp) {
+      const isPro = user.subscription?.plan === 'PRO' && user.subscription.status === 'active';
+      if (!isPro) {
+        const appCount = await prisma.application.count({
+          where: { userId: user.id },
+        });
+
+        if (appCount >= 5) {
+          return NextResponse.json(
+            { error: 'Application limit reached. Upgrade to Pro for unlimited tracking.' },
+            { status: 403 }
+          );
+        }
+      }
+    }
 
     // Upsert Application
     const application = await prisma.application.upsert({

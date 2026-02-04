@@ -15,6 +15,7 @@ export async function getUserByClerkId(clerkId: string) {
       jobPreferences: true,
       socialLinks: true,
       projects: true,
+      subscription: true,
     },
   });
 }

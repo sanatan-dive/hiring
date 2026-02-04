@@ -75,14 +75,13 @@ const ApplicationsPage = () => {
       ? applications
       : applications.filter((app) => (app.status || 'applied') === filter);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const statusCounts = applications.reduce(
-    (acc: any, app: any) => {
+    (acc: Record<string, number>, app) => {
       const status = app.status || 'applied';
       acc[status] = (acc[status] || 0) + 1;
       return acc;
     },
-    {} as Record<ApplicationStatus, number>
+    {} as Record<string, number>
   );
 
   if (loading) {

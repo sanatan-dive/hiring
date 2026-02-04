@@ -124,7 +124,7 @@ src/
 ### System Flow
 
 ```
-User → Upload Resume → Parse (OpenAI) → Generate Embedding → Store
+User → Upload Resume → Parse (Gemini) → Generate Embedding → Store
 
 Cron (daily/weekly):
   → Fetch jobs from APIs
@@ -141,7 +141,7 @@ Cron (daily/weekly):
 ### Phase 1: Core Foundation ✅ (Done)
 
 - [x] Next.js + Tailwind + Clerk auth
-- [x] Resume upload + OpenAI parsing
+- [x] Resume upload + Gemini parsing
 - [x] User profile + preferences
 - [x] NeonDB + Prisma schema
 
@@ -167,14 +167,14 @@ Cron (daily/weekly):
 - [x] Build scraper for RemoteOK (allows scraping)
 - [x] Build scraper for WeWorkRemotely
 - [x] Schedule via Vercel Cron (free)
-- [ ] Rate limit per user tier
+- [x] Rate limit per user tier <!-- id: 5 -->
 
 ### Phase 5: Email Digests
 
-- [ ] Setup Resend integration
-- [ ] Design email template (React Email)
-- [ ] Weekly cron for free users
-- [ ] Daily cron for pro users
+- [x] Setup Resend integration
+- [x] Design email template (React Email)
+- [x] Weekly cron for free users
+- [x] Daily cron for pro users
 - [ ] Track email opens/clicks
 
 ### Phase 6: Payments + Pro Features
@@ -182,7 +182,7 @@ Cron (daily/weekly):
 - [ ] Integrate Razorpay
 - [ ] Build subscription management
 - [ ] Implement tier-based rate limiting
-- [ ] Build AI Cover Letter (OpenAI)
+- [ ] Build AI Cover Letter (Gemini)
 - [ ] Build AI Interview Prep
 - [ ] Application tracker
 
@@ -219,14 +219,14 @@ Cron (daily/weekly):
 
 ### Services
 
-| Service | Free Tier                     |
-| ------- | ----------------------------- |
-| Vercel  | 100GB bandwidth               |
-| NeonDB  | 3GB, 1 compute hr/day         |
-| Clerk   | 10K MAU                       |
-| Upstash | 10K commands/day              |
-| Resend  | 3K emails/month               |
-| OpenAI  | Pay as you go (~$0.01/resume) |
+| Service | Free Tier                        |
+| ------- | -------------------------------- |
+| Vercel  | 100GB bandwidth                  |
+| NeonDB  | 3GB, 1 compute hr/day            |
+| Clerk   | 10K MAU                          |
+| Upstash | 10K commands/day                 |
+| Resend  | 3K emails/month                  |
+| Gemini  | Pay as you go (Gemini Free Tier) |
 
 ---
 
