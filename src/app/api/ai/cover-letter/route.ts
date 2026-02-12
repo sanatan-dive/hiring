@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import prisma from '@/lib/db/prisma';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 // Initialize Gemini
 const genAI = process.env.GEMINI_API_KEY
@@ -14,6 +15,14 @@ export async function POST(req: Request) {
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    await checkRateLimit(userId);
+    /* Uncomment in prod
+    const { success } = await checkRateLimit(userId);
+    if (!success) {
+       return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+    }
+    */
 
     // 1. Check Subscription
     const user = await prisma.user.findUnique({

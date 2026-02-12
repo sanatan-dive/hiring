@@ -177,22 +177,22 @@ Cron (daily/weekly):
 - [x] Daily cron for pro users
 - [ ] Track email opens/clicks
 
-### Phase 6: Payments + Pro Features
+### Phase 6: Payments + Pro Features ✅ (Done)
 
-- [ ] Integrate Razorpay
-- [ ] Build subscription management
-- [ ] Implement tier-based rate limiting
-- [ ] Build AI Cover Letter (Gemini)
-- [ ] Build AI Interview Prep
-- [ ] Application tracker
+- [x] Integrate Razorpay
+- [x] Build subscription management
+- [x] Implement tier-based rate limiting
+- [x] Build AI Cover Letter (Gemini)
+- [x] Build AI Interview Prep
+- [x] Application tracker
 
-### Phase 7: Deep Scraper
+### Phase 7: Deep Scraper ✅ (Done)
 
-- [ ] Setup Upstash Queue
-- [ ] Playwright scraper for LinkedIn (careful)
-- [ ] Scraper for Indeed
-- [ ] Job processing worker
-- [ ] Pro-only access control
+- [x] Setup Upstash Queue
+- [x] Playwright scraper for LinkedIn (careful)
+- [x] Scraper for Indeed
+- [x] Job processing worker
+- [x] Pro-only access control
 
 ### Phase 8: Polish & Launch
 

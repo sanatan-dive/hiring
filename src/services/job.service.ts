@@ -4,6 +4,22 @@ import { searchJSearchJobs } from '@/lib/api/jsearch';
 import { getRemoteOkJobs } from '@/lib/api/remoteok';
 import { getWeWorkRemotelyJobs } from '@/lib/api/weworkremotely';
 import { generateEmbedding } from '@/lib/ai/google';
+import { publishJob } from '@/lib/queue/client';
+import { scrapeLinkedIn } from '@/lib/scrapers/linkedin';
+import { scrapeIndeed } from '@/lib/scrapers/indeed';
+import { sendScrapeCompleteEmail } from '@/services/email.service';
+
+// Helper interface for jobs before they are saved to DB
+interface JobInput {
+  title: string;
+  company: string;
+  location: string;
+  description: string | null | undefined;
+  url: string;
+  salary: string | null;
+  source: string;
+  scrapedAt: Date;
+}
 
 export async function fetchAndSaveJobs(query: string, location: string = 'us') {
   console.log(`Fetching jobs for: ${query} in ${location}`);
@@ -89,6 +105,10 @@ export async function fetchAndSaveJobs(query: string, location: string = 'us') {
   // Since we have `url` as unique, we can use upsert or createMany (createMany skips duplicates is efficient)
   // But createMany doesn't update existing records. Upsert loop is safer for updates but slower.
   // For now, let's just loop and upsert to keep data fresh.
+  return saveJobs(jobs);
+}
+
+export async function saveJobs(jobs: JobInput[]) {
   let savedCount = 0;
   for (const job of jobs) {
     if (!job.url) continue;
@@ -98,19 +118,6 @@ export async function fetchAndSaveJobs(query: string, location: string = 'us') {
         update: {
           title: job.title,
           description: job.description,
-          // const jobs = await prisma.job.createMany({
-          //   data: jobsToSave.map(job => ({
-          //     title: job.title,
-          //     company: job.company,
-          //     location: job.location,
-          //     salary: job.salary,
-          //     description: job.description,
-          //     url: job.url,
-          //     source: source || 'scraper',
-          //     techStack: job.techStack || [],
-          //   })),
-          //   skipDuplicates: true,
-          // });
           salary: job.salary,
         },
         create: {
@@ -145,8 +152,66 @@ export async function fetchAndSaveJobs(query: string, location: string = 'us') {
       console.error(`Failed to save job ${job.url}:`, err);
     }
   }
-
   return savedCount;
+}
+
+export async function triggerDeepScrape(
+  source: 'linkedin' | 'indeed',
+  query: string,
+  location: string,
+  email?: string
+) {
+  const destinationUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/queue/process-job`;
+
+  if (
+    destinationUrl.includes('localhost') ||
+    destinationUrl.includes('::1') ||
+    process.env.NODE_ENV === 'development'
+  ) {
+    console.warn(
+      '⚠️ Localhost detected. Bypassing QStash and running deep scrape directly in background.'
+    );
+
+    // Fire and forget (don't await) to simulate queue behavior
+    (async () => {
+      try {
+        const jobs = await performDeepScrape(source, query, location);
+        if (email) {
+          await sendScrapeCompleteEmail(email, jobs, source);
+        }
+      } catch (err) {
+        console.error('Background scrape failed (Local Mode):', err);
+      }
+    })();
+    return;
+  }
+
+  await publishJob(destinationUrl, { source, query, location, email });
+}
+
+export async function performDeepScrape(source: string, query: string, location: string) {
+  let jobs: JobInput[] = [];
+
+  if (source === 'linkedin') {
+    const scraped = await scrapeLinkedIn(query, location);
+    jobs = scraped.map((j) => ({
+      ...j,
+      description: j.description || null,
+      salary: j.salary || null,
+      scrapedAt: new Date(),
+    }));
+  } else if (source === 'indeed') {
+    const scraped = await scrapeIndeed(query, location);
+    jobs = scraped.map((j) => ({
+      ...j,
+      description: j.description || null,
+      salary: j.salary || null,
+      scrapedAt: new Date(),
+    }));
+  }
+
+  await saveJobs(jobs);
+  return jobs; // Return the actual job objects
 }
 
 export async function getJobs(page: number = 1, limit: number = 10, filters?: { source?: string }) {

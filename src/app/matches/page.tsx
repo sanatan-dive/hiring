@@ -94,7 +94,17 @@ const MatchesPage = () => {
       }
     };
     fetchUserData();
-  }, [fetchJobs, query]); // Re-run when query changes? Maybe debounce later.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchJobs]); // Removed query from dependency to prevent auto-fetch on type
+
+  const handleSearch = () => {
+    fetchJobs(async () => {
+      const params = new URLSearchParams({ limit: '20' });
+      if (query) params.append('query', query);
+      const res = await fetch(`/api/matches?${params.toString()}`);
+      return res.json();
+    });
+  };
 
   // ... (Effect for pref population remains same)
 
@@ -116,6 +126,26 @@ const MatchesPage = () => {
       const res = await fetch(`/api/matches?${params.toString()}`);
       return res.json();
     });
+  };
+
+  const handleDeepScrape = async () => {
+    try {
+      const res = await fetch('/api/jobs/scrape', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: query || 'software engineer', source: 'linkedin' }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success(data.message);
+      } else {
+        if (res.status === 403) toast.error('Upgrade to Pro to use Deep Scraper');
+        else toast.error(data.error || 'Failed to start scrape');
+      }
+    } catch (error) {
+      console.error('Deep scrape error', error);
+      toast.error('Failed to trigger scrape');
+    }
   };
 
   const handleSaveToggle = async (jobId: string, e?: React.MouseEvent) => {
@@ -196,10 +226,17 @@ const MatchesPage = () => {
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                 placeholder="Job role..."
                 className="w-32 text-sm outline-none md:w-48"
               />
             </div>
+            <button
+              onClick={handleSearch}
+              className="rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200"
+            >
+              Search
+            </button>
             <button
               onClick={handleRefresh}
               disabled={isRefreshing || !query}
@@ -207,6 +244,13 @@ const MatchesPage = () => {
             >
               <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
               {isRefreshing ? 'Finding...' : 'Find New Jobs'}
+            </button>
+            <button
+              onClick={handleDeepScrape}
+              className="flex items-center gap-2 rounded-lg border border-purple-200 bg-purple-50 px-4 py-2 text-purple-700 hover:bg-purple-100"
+            >
+              <div className="flex h-2 w-2 animate-pulse rounded-full bg-purple-500" />
+              Deep Scrape
             </button>
           </div>
         </div>
@@ -277,7 +321,9 @@ const MatchesPage = () => {
                         </span>
                       </div>
 
-                      <p className="mt-4 line-clamp-2 text-sm text-gray-600">{job.description}</p>
+                      <p className="mt-4 line-clamp-2 text-sm text-gray-600">
+                        {job.description ? job.description.replace(/<[^>]*>?/gm, '') : ''}
+                      </p>
                     </div>
 
                     <div className="ml-4 flex flex-col gap-2">
