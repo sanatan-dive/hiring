@@ -269,3 +269,17 @@ model SubscriptionEvent {
   @@index([userId])
   @@map("subscription_events")
 }
+
+model EmailEvent {
+  id          String   @id @default(cuid())
+  resendId    String   @map("resend_id")
+  userEmail   String   @map("user_email")
+  eventType   String   @map("event_type") // email.delivered, email.opened, email.clicked, email.bounced, email.complained
+  campaign    String?  // digest, application_reminder, watched_company_alert, etc.
+  metadata    Json?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([userEmail])
+  @@index([campaign])
+  @@map("email_events")
+}
