@@ -22,6 +22,10 @@ import {
   Clock,
 } from 'lucide-react';
 import type { Bookmark as PrismaBookmark, Job } from '@prisma/client';
+import SubscriptionSection from '@/components/profile/SubscriptionSection';
+import EmailPreferencesSection from '@/components/profile/EmailPreferencesSection';
+import ResumeManagerSection from '@/components/profile/ResumeManagerSection';
+import DangerZoneSection from '@/components/profile/DangerZoneSection';
 import PreferenceCard from '@/components/preferences/PreferenceCard';
 import MultiSelect from '@/components/preferences/MultiSelect';
 import SalaryRangeSlider from '@/components/preferences/SalaryRangeSlider';
@@ -51,12 +55,28 @@ interface Project {
   techUsed: string[];
 }
 
+interface ResumeMeta {
+  id: string;
+  fileName: string;
+  createdAt: string;
+  parsedSkillsCount: number;
+  parsedExperiencesCount: number;
+}
+
 interface UserProfile {
   id: string;
   email: string;
   name: string | null;
   imageUrl: string | null;
   skills: string[];
+  emailDigestEnabled: boolean;
+  subscription: {
+    plan: string;
+    status: string;
+    currentPeriodEnd: string | null;
+    cancelAtPeriodEnd: boolean;
+  };
+  resumes: ResumeMeta[];
   resume: {
     id: string;
     fileName: string;
@@ -113,6 +133,19 @@ const ProfilePage = () => {
 
   // New State for Saved Jobs
   const [savedJobs, setSavedJobs] = useState<(PrismaBookmark & { job: Job })[]>([]);
+
+  // Re-fetch helper (also called by Subscription/Resume sections after mutate)
+  const refreshProfile = async () => {
+    try {
+      const userRes = await fetch('/api/user');
+      if (userRes.ok) {
+        const data = await userRes.json();
+        if (data.user) setProfile(data.user);
+      }
+    } catch (err) {
+      console.error('Error refreshing profile', err);
+    }
+  };
 
   // Fetch profile from database
   useEffect(() => {
@@ -731,6 +764,35 @@ const ProfilePage = () => {
           </div>
         </div>
 
+        {/* Subscription / Email prefs / Resume manager — Phase 3 */}
+        {profile?.subscription && (
+          <SubscriptionSection
+            subscription={{
+              ...profile.subscription,
+              currentPeriodEnd:
+                profile.subscription.currentPeriodEnd
+                  ? new Date(profile.subscription.currentPeriodEnd).toISOString()
+                  : null,
+            }}
+            onChange={refreshProfile}
+          />
+        )}
+
+        {profile && (
+          <EmailPreferencesSection initialEnabled={profile.emailDigestEnabled ?? true} />
+        )}
+
+        {profile?.resumes && (
+          <ResumeManagerSection
+            resumes={profile.resumes.map((r) => ({
+              ...r,
+              createdAt: new Date(r.createdAt).toISOString(),
+            }))}
+            plan={profile.subscription?.plan ?? 'FREE'}
+            onChange={refreshProfile}
+          />
+        )}
+
         {/* Saved Jobs */}
         <div className="mt-8 rounded-2xl border bg-white p-6 shadow-sm">
           <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold text-black">
@@ -776,6 +838,11 @@ const ProfilePage = () => {
           ) : (
             <p className="text-sm text-gray-500">No saved jobs yet.</p>
           )}
+        </div>
+
+        {/* Danger zone — Phase 3 (always last) */}
+        <div className="mt-8">
+          <DangerZoneSection />
         </div>
       </div>
     </div>

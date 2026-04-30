@@ -21,11 +21,11 @@ export async function GET() {
             parsedExperiences: true,
           },
           orderBy: { createdAt: 'desc' },
-          take: 1,
         },
         jobPreferences: true,
         socialLinks: true,
         projects: { orderBy: { createdAt: 'desc' } },
+        subscription: true,
       },
     });
 
@@ -43,6 +43,23 @@ export async function GET() {
         name: user.name,
         imageUrl: user.imageUrl,
         skills: user.skills,
+        emailDigestEnabled: user.emailDigestEnabled,
+        hiddenCompanies: user.hiddenCompanies,
+        subscription: user.subscription
+          ? {
+              plan: user.subscription.plan,
+              status: user.subscription.status,
+              currentPeriodEnd: user.subscription.currentPeriodEnd,
+              cancelAtPeriodEnd: user.subscription.cancelAtPeriodEnd,
+            }
+          : { plan: 'FREE', status: 'inactive', currentPeriodEnd: null, cancelAtPeriodEnd: false },
+        resumes: user.resumes.map((r) => ({
+          id: r.id,
+          fileName: r.fileName,
+          createdAt: r.createdAt,
+          parsedSkillsCount: r.parsedSkills.length,
+          parsedExperiencesCount: r.parsedExperiences.length,
+        })),
         resume: resume
           ? {
               id: resume.id,
