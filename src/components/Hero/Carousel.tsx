@@ -102,32 +102,32 @@ const Carousel: React.FC<CarouselProps> = ({
           backgroundImage: `
             radial-gradient(
               circle at center,
-              rgba(21, 93, 252, 0.5),
+              rgba(14, 165, 233, 0.45),
               transparent 50%
-            )    
+            )
           `,
           filter: 'blur(80px)',
           backgroundRepeat: 'no-repeat',
         }}
       />
       <div className="relative z-20">
-        <div className="mb-4 ml-4 flex items-center gap-1 pt-20 sm:ml-40">
+        <div className="mb-4 ml-4 flex items-center gap-1 pt-12 sm:ml-10 sm:pt-20 lg:ml-40">
           <span className="z-10 text-2xl font-bold text-sky-600">—</span>
           <h1 className="z-10 text-2xl font-bold text-black sm:text-4xl">Success Stories</h1>
         </div>
 
-        <div className="mt-6 ml-4 flex flex-col gap-2 sm:ml-44">
+        <div className="mt-6 ml-4 flex flex-col gap-2 sm:ml-12 lg:ml-44">
           <p className="sm:text-md text-sm font-light text-black/60">
             Hirin finds jobs that fit your skills and tailors your applications automatically.
           </p>
         </div>
       </div>
 
-      <div className="relative flex h-[560px] items-center justify-center">
+      <div className="relative flex h-[460px] items-center justify-center sm:h-[540px] md:h-[600px]">
         {/* Carousel slides */}
         <div className="relative flex items-center justify-center">
           <div
-            className="group absolute -left-175 z-40 flex flex-col items-end pt-32"
+            className="group absolute -left-175 z-40 hidden flex-col items-end pt-32 lg:flex"
             onClick={goToPrevious}
           >
             <div className="-z-10 mb-8 h-[3px] w-[100px] rounded-full bg-gradient-to-l from-sky-600 to-sky-400 transition-colors duration-200"></div>
@@ -141,7 +141,7 @@ const Carousel: React.FC<CarouselProps> = ({
           </div>
 
           <div
-            className="group absolute -right-175 z-40 flex flex-col items-start pt-32"
+            className="group absolute -right-175 z-40 hidden flex-col items-start pt-32 lg:flex"
             onClick={goToNext}
           >
             <div className="-z-10 mb-8 h-[3px] w-[100px] rounded-full bg-gradient-to-r from-sky-600 to-sky-400"></div>
@@ -156,7 +156,7 @@ const Carousel: React.FC<CarouselProps> = ({
           {items.map((item, index) => (
             <div
               key={item.id}
-              className={`hover:shadow-3xl absolute h-[580px] w-[420px] cursor-pointer overflow-hidden rounded-2xl shadow-2xl transition-all duration-700 ease-out ${getSlidePosition(index)} ${getSlideBlur(index)}`}
+              className={`hover:shadow-3xl absolute h-[440px] w-[260px] cursor-pointer overflow-hidden rounded-2xl shadow-2xl transition-all duration-700 ease-out sm:h-[520px] sm:w-[340px] md:h-[580px] md:w-[420px] ${getSlidePosition(index)} ${getSlideBlur(index)}`}
               onClick={() => goToSlide(index)}
             >
               {/* Background Image */}

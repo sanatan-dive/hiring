@@ -119,23 +119,23 @@ export default function PricingPage() {
 
   return (
     <div className="font-poppins min-h-screen bg-white">
-      <div className="mx-auto max-w-5xl px-4 py-20 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-20">
         {/* Header */}
-        <div className="mb-16 text-center">
-          <h1 className="text-4xl font-medium tracking-tight text-black sm:text-5xl lg:text-6xl">
+        <div className="mb-10 text-center sm:mb-16">
+          <h1 className="text-3xl font-medium tracking-tight text-black sm:text-5xl lg:text-6xl">
             Pricing<span className="text-sky-500">.</span>
           </h1>
-          <p className="mx-auto mt-4 max-w-xl text-base text-gray-500 sm:text-lg">
+          <p className="mx-auto mt-4 max-w-xl text-sm text-gray-500 sm:text-lg">
             Start free. Upgrade when daily matches become worth nine dollars.
           </p>
         </div>
 
         {/* Pricing Cards */}
-        <div className="mx-auto grid max-w-4xl gap-6 md:grid-cols-2">
+        <div className="mx-auto grid max-w-4xl gap-4 sm:gap-6 md:grid-cols-2">
           {plans.map((plan) => (
             <div
               key={plan.name}
-              className={`relative flex flex-col border border-gray-200 bg-white p-8 ${
+              className={`relative flex flex-col border border-gray-200 bg-white p-5 sm:p-8 ${
                 plan.highlight ? 'border-black' : ''
               }`}
             >
@@ -151,7 +151,7 @@ export default function PricingPage() {
               </div>
 
               <div className="mb-8 flex items-baseline gap-1">
-                <span className="text-5xl font-medium text-black">{plan.price}</span>
+                <span className="text-4xl font-medium text-black sm:text-5xl">{plan.price}</span>
                 <span className="text-base text-gray-400">{plan.period}</span>
               </div>
 

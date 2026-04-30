@@ -93,14 +93,16 @@ const ApplicationsPage = () => {
   }
 
   return (
-    <div className="font-poppins min-h-screen bg-gray-50 p-8">
+    <div className="font-poppins min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
       <div className="mx-auto max-w-5xl">
-        <div className="mb-8 flex items-center justify-between">
+        <div className="mb-6 flex flex-col gap-3 sm:mb-8 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">My Applications</h1>
-            <p className="mt-1 text-gray-500">Track your job application progress</p>
+            <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">My Applications</h1>
+            <p className="mt-1 text-sm text-gray-500 sm:text-base">
+              Track your job application progress
+            </p>
           </div>
-          <div className="flex items-center gap-2 rounded-full bg-sky-50 px-4 py-2 text-sky-700">
+          <div className="flex w-fit items-center gap-2 rounded-full bg-sky-50 px-4 py-2 text-sky-700">
             <Briefcase className="h-5 w-5" />
             <span className="font-medium">{applications.length} total</span>
           </div>
@@ -142,12 +144,12 @@ const ApplicationsPage = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
-              className="rounded-xl border bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
+              className="rounded-xl border bg-white p-4 shadow-sm transition-shadow hover:shadow-md sm:p-6"
             >
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3">
-                    <h3 className="text-xl font-semibold text-gray-900">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                    <h3 className="text-base font-semibold text-gray-900 sm:text-xl">
                       {app.job?.title || 'Unknown Role'}
                     </h3>
                     <span

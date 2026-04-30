@@ -94,20 +94,20 @@ export default function PricingSection() {
             <span className="font-poppins text-sm font-medium text-sky-700">Simple Pricing</span>
           </div>
 
-          <h2 className="font-poppins mb-4 text-4xl font-bold text-black sm:text-5xl">
+          <h2 className="font-poppins mb-4 text-3xl font-bold text-black sm:text-4xl lg:text-5xl">
             Choose Your{' '}
             <span className="bg-gradient-to-r from-sky-600 to-sky-400 bg-clip-text text-transparent">
               Plan
             </span>
           </h2>
-          <p className="font-poppins mx-auto max-w-2xl text-lg text-gray-500">
+          <p className="font-poppins mx-auto max-w-2xl px-4 text-base text-gray-500 sm:text-lg">
             Start free, upgrade when you&apos;re ready. No hidden fees, cancel anytime.
           </p>
         </motion.div>
 
         {/* Cards */}
         <motion.div
-          className="mx-auto grid max-w-4xl gap-8 md:grid-cols-2"
+          className="mx-auto grid max-w-4xl gap-5 sm:gap-8 md:grid-cols-2"
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
@@ -118,7 +118,7 @@ export default function PricingSection() {
               key={plan.name}
               variants={itemVariants}
               whileHover={{ y: -6, transition: { duration: 0.3 } }}
-              className={`relative rounded-2xl p-8 transition-shadow duration-300 ${
+              className={`relative rounded-2xl p-5 transition-shadow duration-300 sm:p-8 ${
                 plan.featured
                   ? 'border-2 border-sky-500 bg-white shadow-xl shadow-sky-500/10'
                   : 'border border-gray-100 bg-white shadow-sm hover:shadow-md'
@@ -149,8 +149,12 @@ export default function PricingSection() {
               </div>
 
               <div className="mb-8">
-                <span className="font-poppins text-5xl font-bold text-black">{plan.price}</span>
-                <span className="font-poppins text-lg text-gray-400">{plan.period}</span>
+                <span className="font-poppins text-4xl font-bold text-black sm:text-5xl">
+                  {plan.price}
+                </span>
+                <span className="font-poppins text-base text-gray-400 sm:text-lg">
+                  {plan.period}
+                </span>
               </div>
 
               <ul className="mb-8 space-y-3">

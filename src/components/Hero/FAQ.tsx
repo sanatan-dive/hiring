@@ -110,7 +110,7 @@ const FAQ = () => {
           viewport={{ once: true }}
         >
           <div className="lg:flex-shrink-0">
-            <h2 className="mb-8 text-center text-4xl font-bold text-black sm:text-6xl lg:mb-12 lg:text-left lg:text-8xl xl:text-9xl">
+            <h2 className="mb-6 text-center text-4xl font-bold text-black sm:mb-8 sm:text-5xl md:text-6xl lg:mb-12 lg:text-left lg:text-8xl xl:text-9xl">
               FAQ
             </h2>
           </div>

@@ -199,7 +199,7 @@ const JobSearchDashboard = ({
       >
         {/* Stats Cards */}
         <div
-          className={`grid grid-cols-4 gap-${isEmbedded ? '3' : '6'} ${isEmbedded ? 'mb-4' : 'mb-8'}`}
+          className={`grid grid-cols-2 md:grid-cols-4 gap-${isEmbedded ? '3' : '4'} sm:gap-${isEmbedded ? '3' : '6'} ${isEmbedded ? 'mb-4' : 'mb-8'}`}
         >
           {stats.map((stat, index) => (
             <div
@@ -229,7 +229,7 @@ const JobSearchDashboard = ({
         </div>
 
         {/* Main Content */}
-        <div className={`grid grid-cols-1 lg:grid-cols-3 gap-${isEmbedded ? '4' : '8'} h-full`}>
+        <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-${isEmbedded ? '4' : '6'} lg:gap-${isEmbedded ? '4' : '8'} h-full`}>
           {/* Left Column - Job Matches */}
           <div className="lg:col-span-2">
             <div className="flex flex-col rounded-xl border bg-white shadow-sm">

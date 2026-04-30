@@ -308,7 +308,7 @@ const ProfilePage = () => {
   // Loading skeleton
   if (!clerkLoaded || isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 p-8">
+      <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
         <div className="mx-auto max-w-5xl">
           <div className="mb-8 rounded-2xl border bg-white p-8">
             <div className="flex items-center gap-6">
@@ -333,24 +333,24 @@ const ProfilePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
       <div className="mx-auto max-w-5xl">
         {/* Profile Header */}
-        <div className="mb-8 rounded-2xl border bg-white p-8 shadow-sm">
-          <div className="flex items-center gap-6">
-            <UserButton appearance={{ elements: { avatarBox: 'w-24 h-24' } }} />
+        <div className="mb-6 rounded-2xl border bg-white p-4 shadow-sm sm:mb-8 sm:p-6 lg:p-8">
+          <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:gap-6">
+            <UserButton appearance={{ elements: { avatarBox: 'w-20 h-20 sm:w-24 sm:h-24' } }} />
             <div className="flex-1">
-              <h1 className="text-3xl font-bold text-gray-900">
+              <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">
                 {clerkUser?.fullName || profile?.name || 'Your Profile'}
               </h1>
-              <p className="mt-1 text-gray-500">
+              <p className="mt-1 break-all text-sm text-gray-500 sm:text-base">
                 {clerkUser?.primaryEmailAddress?.emailAddress || profile?.email}
               </p>
             </div>
             <button
               onClick={() => (isEditing ? handleSave() : setIsEditing(true))}
               disabled={isSaving}
-              className={`flex items-center gap-2 rounded-xl px-6 py-3 font-medium transition-all disabled:opacity-50 ${
+              className={`flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 font-medium transition-all disabled:opacity-50 sm:w-auto sm:px-6 sm:py-3 ${
                 isEditing
                   ? 'bg-green-600 text-white hover:bg-green-700'
                   : 'bg-sky-600 text-white hover:bg-sky-700'

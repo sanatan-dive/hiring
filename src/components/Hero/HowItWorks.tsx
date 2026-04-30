@@ -14,14 +14,14 @@ function HowItWorks() {
   const selectedVariant = varian[0];
   return (
     <div className="relative z-10 min-h-screen w-full bg-white dark:bg-white dark:text-white">
-      {/* Cool Blue Glow Left */}
+      {/* Sky Glow Left */}
       <div
-        className="absolute inset-0 z-0"
+        className="pointer-events-none absolute inset-0 z-0"
         style={{
           backgroundImage: `
             radial-gradient(
               circle at center left,
-              rgba(21, 93, 252, 0.5),
+              rgba(14, 165, 233, 0.4),
               transparent 60%
             )
           `,

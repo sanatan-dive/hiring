@@ -3,19 +3,19 @@ import Image from 'next/image';
 
 export default function Page() {
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-gray-50 p-3 sm:p-6">
       {/* Main Card Container */}
-      <div className="m-auto flex w-full max-w-5xl overflow-hidden rounded-3xl bg-white shadow-2xl">
+      <div className="m-auto flex w-full max-w-5xl overflow-hidden rounded-2xl bg-white shadow-2xl sm:rounded-3xl">
         {/* Left Side - Sign In Form */}
-        <div className="flex w-full flex-col justify-center p-8 md:w-1/2 md:p-12">
-          <div className="mb-8 text-center">
+        <div className="flex w-full flex-col justify-center p-6 sm:p-8 md:w-1/2 md:p-12">
+          <div className="mb-6 text-center sm:mb-8">
             <div className="group mb-4 flex items-center justify-center gap-1 transition-all duration-300 hover:scale-105 hover:cursor-pointer">
-              <h1 className="font-sans text-4xl font-bold tracking-tight text-black lg:text-5xl">
+              <h1 className="font-sans text-3xl font-bold tracking-tight text-black sm:text-4xl lg:text-5xl">
                 Hirin<span className="text-sky-600">.</span>
               </h1>
             </div>
-            <h1 className="text-3xl font-bold text-gray-900">Welcome back</h1>
-            <p className="mt-2 text-gray-500">Please enter your details</p>
+            <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">Welcome back</h1>
+            <p className="mt-2 text-sm text-gray-500 sm:text-base">Please enter your details</p>
           </div>
 
           <div className="flex justify-center">

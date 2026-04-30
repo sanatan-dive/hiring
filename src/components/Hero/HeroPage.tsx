@@ -517,12 +517,12 @@ function HeroPage() {
             variants={containerVariants}
           >
             <motion.div
-              className="space-y-6 rounded-2xl bg-white/90 p-8 text-center shadow-2xl ring-1 ring-black/5 backdrop-blur-md md:p-12"
+              className="space-y-4 rounded-2xl bg-white/90 p-5 text-center shadow-2xl ring-1 ring-black/5 backdrop-blur-md sm:space-y-6 sm:p-8 md:p-12"
               variants={itemVariants}
             >
               <motion.div className="flex items-center justify-center" variants={titleVariants}>
                 <motion.h1
-                  className="font-poppins text-3xl font-medium tracking-tight text-gray-900 md:text-8xl"
+                  className="font-poppins text-4xl font-medium tracking-tight text-gray-900 sm:text-6xl md:text-8xl"
                   whileHover={{ scale: 1.05 }}
                   transition={{ type: 'spring', stiffness: 300, damping: 20 }}
                 >
@@ -531,7 +531,7 @@ function HeroPage() {
               </motion.div>
 
               <motion.p
-                className="font-poppins text-3xl font-medium text-gray-900 md:text-8xl"
+                className="font-poppins text-3xl font-medium text-gray-900 sm:text-5xl md:text-8xl"
                 variants={itemVariants}
                 whileHover={{ scale: 1.02 }}
                 transition={{ type: 'spring', stiffness: 300, damping: 20 }}
@@ -540,7 +540,7 @@ function HeroPage() {
               </motion.p>
 
               <motion.p
-                className="font-poppins text-3xl font-medium text-gray-900 md:text-8xl"
+                className="font-poppins text-3xl font-medium text-gray-900 sm:text-5xl md:text-8xl"
                 variants={itemVariants}
                 whileHover={{ scale: 1.02 }}
                 transition={{ type: 'spring', stiffness: 300, damping: 20 }}
@@ -549,15 +549,16 @@ function HeroPage() {
               </motion.p>
 
               <motion.p
-                className="text-md font-poppins font-light text-gray-600"
+                className="font-poppins text-sm font-light text-gray-600 sm:text-base"
                 variants={itemVariants}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 1, duration: 0.6 }}
               >
                 Hirin helps you apply smarter and faster to jobs where you can thrive. Whether
-                you&apos;re seeking your next opportunity <br /> or looking to land interviews at
-                top companies, Hirin streamlines the process for you.
+                you&apos;re seeking your next opportunity{' '}
+                <br className="hidden sm:inline" /> or looking to land interviews at top companies,
+                Hirin streamlines the process for you.
               </motion.p>
             </motion.div>
 
@@ -587,7 +588,7 @@ function HeroPage() {
         </motion.h2>
 
         <motion.div
-          className="mx-auto mb-10 flex max-w-5xl flex-wrap items-center justify-between gap-8 md:gap-12"
+          className="mx-auto mb-10 flex max-w-5xl flex-wrap items-center justify-center gap-12 md:gap-24"
           variants={containerVariants}
           initial="hidden"
           animate="visible"

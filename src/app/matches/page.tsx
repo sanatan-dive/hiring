@@ -274,7 +274,7 @@ const MatchesPage = () => {
   };
 
   return (
-    <div className="font-poppins min-h-screen bg-gray-50 p-8">
+    <div className="font-poppins min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
       <div className="mx-auto max-w-5xl">
         <MatchesHeader
           query={query}

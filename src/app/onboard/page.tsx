@@ -358,42 +358,46 @@ const OnboardingPage = () => {
   };
 
   return (
-    <div className="font-poppins min-h-screen bg-white p-8">
+    <div className="font-poppins min-h-screen bg-white p-4 sm:p-6 lg:p-8">
       <div className="mx-auto max-w-7xl">
         {/* Header */}
         <motion.div
-          className="text mb-24"
+          className="text mb-10 sm:mb-16 lg:mb-24"
           initial={{ opacity: 0, y: -30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: 'easeOut' }}
         >
-          <h1 className="mb-4 text-6xl font-medium text-gray-900">Onboard with us</h1>
+          <h1 className="mb-4 text-3xl font-medium text-gray-900 sm:text-4xl md:text-5xl lg:text-6xl">
+            Onboard with us
+          </h1>
         </motion.div>
 
-        {/* Horizontal Collapsible Sections */}
+        {/* Horizontal Collapsible Sections (stacks vertically on mobile) */}
         <motion.div
-          className="flex h-[650px] gap-6"
+          className="flex flex-col gap-4 lg:h-[650px] lg:flex-row lg:gap-6"
           variants={containerVariants}
           initial="hidden"
           animate="visible"
         >
-          {sections.map((section, index) => (
+          {sections.map((section, index) => {
+            const isActive = activeSection === index;
+            const isLg = typeof window !== 'undefined' && window.innerWidth >= 1024;
+            return (
             <motion.div
               key={section.id}
-              className={`cursor-pointer overflow-hidden rounded-2xl bg-white shadow-lg ${
-                activeSection === index ? 'flex-1' : 'w-30'
+              className={`cursor-pointer overflow-hidden rounded-2xl bg-white shadow-lg max-lg:!w-full ${
+                isActive ? 'lg:flex-1' : 'lg:w-30'
               }`}
               variants={cardVariants}
               onClick={() => handleSectionClick(index)}
-              animate={{
-                width: activeSection === index ? 'auto' : '120px',
-                transition: {
-                  type: 'spring',
-                  stiffness: 100,
-                  damping: 15,
-                  duration: 0.6,
-                },
-              }}
+              animate={
+                isLg
+                  ? {
+                      width: isActive ? 'auto' : '120px',
+                      transition: { type: 'spring', stiffness: 100, damping: 15, duration: 0.6 },
+                    }
+                  : { width: '100%' }
+              }
             >
               {/* Collapsed State - Vertical Title */}
               <AnimatePresence mode="wait">
@@ -647,7 +651,8 @@ const OnboardingPage = () => {
                 )}
               </AnimatePresence>
             </motion.div>
-          ))}
+            );
+          })}
         </motion.div>
       </div>
     </div>
