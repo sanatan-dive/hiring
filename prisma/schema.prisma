@@ -19,19 +19,64 @@ model User {
   hiddenCompanies     String[] @default([]) @map("hidden_companies")
   emailDigestEnabled  Boolean  @default(true) @map("email_digest_enabled")
   unsubscribeToken    String?  @unique @map("unsubscribe_token")
+
+  // Phase A additions: timezone-aware digest, slack delivery, streaks, referrals
+  timezone            String?  @default("UTC")
+  slackWebhookUrl     String?  @map("slack_webhook_url")
+  lastActiveAt        DateTime? @map("last_active_at")
+  dailyStreak         Int      @default(0) @map("daily_streak")
+  longestStreak       Int      @default(0) @map("longest_streak")
+  referralCode        String?  @unique @map("referral_code")
+  referredByUserId    String?  @map("referred_by_user_id")
+
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 
-  resumes        Resume[]
-  jobPreferences JobPreferences?
-  jobMatches     JobMatch[]
-  applications   Application[]
-  socialLinks    SocialLink[]
-  projects       Project[]
-  subscription   Subscription?
-  bookmarks      Bookmark[]
+  resumes          Resume[]
+  jobPreferences   JobPreferences?
+  jobMatches       JobMatch[]
+  applications     Application[]
+  socialLinks      SocialLink[]
+  projects         Project[]
+  subscription     Subscription?
+  bookmarks        Bookmark[]
+  watchedCompanies WatchedCompany[]
+  referralsGiven   Referral[]      @relation("Referrer")
 
   @@map("users")
+}
+
+model WatchedCompany {
+  id           String   @id @default(cuid())
+  userId       String
+  name         String   // company name as user typed
+  normalized   String   // lowercase, trimmed for matching
+  careersUrl   String?  @map("careers_url") // optional direct careers page (Lever/Greenhouse/Workday)
+  lastCheckedAt DateTime? @map("last_checked_at")
+  lastJobIds   String[] @default([]) @map("last_job_ids") // most recent job ids we saw — diff against on next check
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, normalized])
+  @@map("watched_companies")
+}
+
+model Referral {
+  id              String   @id @default(cuid())
+  referrerUserId  String   @map("referrer_user_id")
+  refereeUserId   String?  @unique @map("referee_user_id") // NULL until signup completes
+  refereeEmail    String?  @map("referee_email")
+  status          String   @default("pending") // pending, signed_up, upgraded, expired
+  rewardGranted   Boolean  @default(false) @map("reward_granted")
+  signedUpAt      DateTime? @map("signed_up_at")
+  upgradedAt      DateTime? @map("upgraded_at")
+  createdAt       DateTime @default(now())
+
+  referrer User @relation("Referrer", fields: [referrerUserId], references: [id], onDelete: Cascade)
+
+  @@index([referrerUserId])
+  @@map("referrals")
 }
 
 model SocialLink {
