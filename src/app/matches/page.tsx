@@ -7,6 +7,7 @@ import MatchesHeader from '@/components/matches/MatchesHeader';
 import MatchesGrid from '@/components/matches/MatchesGrid';
 import MatchSkeleton from '@/components/matches/MatchSkeleton';
 import type { Job } from '@/components/matches/types';
+import { log } from '@/lib/log';
 
 const MatchesPage = () => {
   // const { profile } = useProfile(); // Removed as unused
@@ -50,22 +51,21 @@ const MatchesPage = () => {
         ]);
 
         if (bookmarksRes.ok) {
-          const data = await bookmarksRes.json();
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          setSavedJobs(data.bookmarks.map((b: any) => b.jobId));
+          const data: { bookmarks: { jobId: string }[] } = await bookmarksRes.json();
+          setSavedJobs(data.bookmarks.map((b) => b.jobId));
         }
 
         if (appsRes.ok) {
-          const data = await appsRes.json();
+          const data: { applications: { jobId: string; status: string }[] } =
+            await appsRes.json();
           const appMap: Record<string, string> = {};
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          data.applications.forEach((app: any) => {
+          data.applications.forEach((app) => {
             appMap[app.jobId] = app.status;
           });
           setApplications(appMap);
         }
       } catch (error) {
-        console.error('Error fetching user data', error);
+        log.error('Error fetching user data', error);
       } finally {
         setLoading(false); // Set loading to false after initial data fetch
       }
@@ -120,7 +120,7 @@ const MatchesPage = () => {
         else toast.error(data.error || 'Failed to start scrape');
       }
     } catch (error) {
-      console.error('Deep scrape error', error);
+      log.error('Deep scrape error', error);
       toast.error('Failed to trigger scrape');
     }
   };
@@ -145,7 +145,7 @@ const MatchesPage = () => {
         toast.success('Job saved');
       }
     } catch (error) {
-      console.error('Error toggling save:', error);
+      log.error('Error toggling save:', error);
       // Revert on error
       setSavedJobs((prev) => (isSaved ? [...prev, jobId] : prev.filter((id) => id !== jobId)));
       toast.error('Failed to update bookmark');
@@ -168,7 +168,7 @@ const MatchesPage = () => {
 
       if (!res.ok) {
         const errorData = await res.json();
-        console.error('Failed to update status:', errorData);
+        log.error('Failed to update status:', errorData);
         toast.error('Failed to update status');
         // Revert on error
         setApplications((prev) => ({ ...prev, [selectedJob.id]: previousStatus }));
@@ -176,7 +176,7 @@ const MatchesPage = () => {
         toast.success('Application status updated');
       }
     } catch (error) {
-      console.error('Error updating status:', error);
+      log.error('Error updating status:', error);
       toast.error('Something went wrong');
       // Revert on error
       setApplications((prev) => ({ ...prev, [selectedJob.id]: previousStatus }));
