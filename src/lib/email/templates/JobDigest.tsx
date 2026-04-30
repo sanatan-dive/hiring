@@ -28,13 +28,12 @@ interface JobDigestProps {
   }[];
 }
 
-const APP_URL =
-  process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
 
 export const JobDigestEmail = ({
   userName = 'Job Seeker',
   matchCount = 0,
-  unsubscribeUrl,
+  unsubscribeUrl = '',
   jobs = [],
 }: JobDigestProps) => {
   return (
@@ -43,11 +42,12 @@ export const JobDigestEmail = ({
       <Preview>{`${matchCount} new job matches for you on Hirin`}</Preview>
       <Body style={main}>
         <Container style={container}>
-          <Heading style={h1}>Hirin&apos; — your matches today</Heading>
+          <Heading style={{ fontSize: 28, color: '#0f172a', marginBottom: 24 }}>
+            Hirin<span style={{ color: '#0EA5E9' }}>.</span>
+          </Heading>
           <Text style={text}>Hi {userName},</Text>
           <Text style={text}>
-            We ranked <strong>{matchCount}</strong> new jobs against your resume. Top picks
-            below.
+            We ranked <strong>{matchCount}</strong> new jobs against your resume. Top picks below.
           </Text>
 
           <Section style={jobList}>
@@ -116,14 +116,6 @@ const container = {
   margin: '0 auto',
   padding: '20px 0 48px',
   marginBottom: '64px',
-};
-
-const h1 = {
-  color: '#333',
-  fontSize: '24px',
-  fontWeight: 'bold',
-  textAlign: 'center' as const,
-  margin: '30px 0',
 };
 
 const text = {

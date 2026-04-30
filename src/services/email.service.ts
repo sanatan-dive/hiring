@@ -31,25 +31,85 @@ export function unsubscribeUrl(token: string): string {
   return `${APP_URL}/unsubscribe?token=${encodeURIComponent(token)}`;
 }
 
+interface DigestJob {
+  id: string;
+  title: string;
+  company: string;
+  location: string | null;
+  salary: string | null;
+  url: string;
+  score: number;
+  scrapedAt?: Date | string | null;
+}
+
 interface SendDigestParams {
   to: string;
   userName: string;
   unsubscribeToken: string;
-  jobs: {
-    id: string;
-    title: string;
-    company: string;
-    location: string | null;
-    salary: string | null;
-    url: string;
-    score: number;
-  }[];
+  unsubscribeUrl?: string;
+  frequency?: 'daily' | 'weekly';
+  jobs: DigestJob[];
+}
+
+/**
+ * Build a digest subject line by rotating through 3 templates.
+ * Rotation is deterministic per-day so the same digest run uses one template,
+ * but templates cycle across days.
+ */
+export function generateDigestSubject(jobs: DigestJob[]): string {
+  const total = jobs.length;
+  const fallback = `${total} new matches for you · Hirin`;
+
+  if (total === 0) return fallback;
+
+  // Day-of-year based rotation (0..2)
+  const now = new Date();
+  const dayOfYear = Math.floor(
+    (now.getTime() - new Date(now.getFullYear(), 0, 0).getTime()) / 86_400_000
+  );
+  const variant = dayOfYear % 3;
+
+  try {
+    if (variant === 0) {
+      const companies: string[] = [];
+      for (const j of jobs) {
+        const c = (j.company || '').trim();
+        if (c && !companies.includes(c)) companies.push(c);
+        if (companies.length === 3) break;
+      }
+      if (companies.length >= 1) {
+        return `${companies.join(', ')} are hiring engineers like you`;
+      }
+    }
+
+    if (variant === 1) {
+      const seniorCount = jobs.filter((j) => (j.score ?? 0) >= 0.8).length;
+      const n = seniorCount > 0 ? seniorCount : total;
+      return `${n} senior roles match your resume today`;
+    }
+
+    // variant === 2: most recent posting
+    const sorted = [...jobs].sort((a, b) => {
+      const at = a.scrapedAt ? new Date(a.scrapedAt).getTime() : 0;
+      const bt = b.scrapedAt ? new Date(b.scrapedAt).getTime() : 0;
+      return bt - at;
+    });
+    const top = sorted[0];
+    if (top?.title && top?.company) {
+      return `Posted today: ${top.title} at ${top.company}`;
+    }
+  } catch {
+    // fall through to fallback
+  }
+
+  return fallback;
 }
 
 export const sendJobDigest = async ({
   to,
   userName,
   unsubscribeToken,
+  frequency,
   jobs,
 }: SendDigestParams) => {
   if (!process.env.RESEND_API_KEY) {
@@ -63,7 +123,7 @@ export const sendJobDigest = async ({
     const { data, error } = await resend.emails.send({
       from: EMAIL_FROM,
       to: [to],
-      subject: `${jobs.length} new job matches for you`,
+      subject: generateDigestSubject(jobs),
       react: JobDigestEmail({
         userName,
         matchCount: jobs.length,
@@ -77,6 +137,10 @@ export const sendJobDigest = async ({
         }?subject=unsubscribe&body=${encodeURIComponent(unsubscribeToken)}>`,
         'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
       },
+      tags: [
+        { name: 'campaign', value: 'digest' },
+        { name: 'frequency', value: frequency || 'daily' },
+      ],
     });
 
     if (error) {
@@ -99,11 +163,7 @@ interface ScrapedJob {
   url: string;
 }
 
-export const sendScrapeCompleteEmail = async (
-  to: string,
-  jobs: ScrapedJob[],
-  source: string
-) => {
+export const sendScrapeCompleteEmail = async (to: string, jobs: ScrapedJob[], source: string) => {
   const count = jobs.length;
   if (!process.env.RESEND_API_KEY || process.env.NODE_ENV === 'development') {
     log.info(
@@ -121,7 +181,9 @@ export const sendScrapeCompleteEmail = async (
         <p style="margin: 0 0 8px 0; color: #4b5563; font-weight: 500;">${sanitizeHtml(job.company, { allowedTags: [], allowedAttributes: {} })} • ${sanitizeHtml(job.location || 'Remote', { allowedTags: [], allowedAttributes: {} })}</p>
         ${job.salary ? `<p style="margin: 0 0 8px 0; color: #059669; font-weight: 600;">${sanitizeHtml(job.salary, { allowedTags: [], allowedAttributes: {} })}</p>` : ''}
         <p style="margin: 0 0 16px 0; color: #6b7280; font-size: 14px; line-height: 1.5;">${
-          job.description ? safeHtml(job.description.substring(0, 300)) + '...' : 'No description available.'
+          job.description
+            ? safeHtml(job.description.substring(0, 300)) + '...'
+            : 'No description available.'
         }</p>
         <a href="${job.url}" style="display: inline-block; background-color: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px;">Apply Now</a>
       </div>

@@ -52,7 +52,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const { jobDescription, jobTitle, companyName } = await req.json();
+    const { jobDescription, jobTitle, companyName, tone, customInstructions } = await req.json();
 
     if (!genAI) {
       return NextResponse.json({ error: 'AI service not configured' }, { status: 500 });
@@ -73,7 +73,7 @@ export async function POST(req: Request) {
     // 4. Generate Cover Letter
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
-    const prompt = `
+    let prompt = `
       Write a professional and compelling cover letter for the position of "${jobTitle}" at "${companyName}".
 
       Job Description:
@@ -88,6 +88,10 @@ export async function POST(req: Request) {
       Tone: Professional, enthusiastic, and confident.
       Format: Markdown.
     `;
+
+    if (tone || customInstructions) {
+      prompt += `\n\nTone: ${tone ?? 'default'}. Additional instructions: ${customInstructions ?? 'none'}`;
+    }
 
     const result = await model.generateContent(prompt);
     const text = result.response.text();

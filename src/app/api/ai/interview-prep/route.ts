@@ -1,4 +1,3 @@
-import { log } from '@/lib/log';
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import prisma from '@/lib/db/prisma';
@@ -70,12 +69,25 @@ export async function POST(req: Request) {
     // Clean markdown code blocks if present
     const cleanText = text.replace(/```json\n|\n```/g, '');
 
+    let prep;
+    try {
+      prep = JSON.parse(cleanText);
+    } catch {
+      return NextResponse.json(
+        { error: 'AI returned invalid JSON. Please try again.' },
+        { status: 502 }
+      );
+    }
+
+    if (!prep || !Array.isArray(prep.questions)) {
+      return NextResponse.json({ error: 'AI response missing questions array' }, { status: 502 });
+    }
+
     return NextResponse.json(
-      { prep: JSON.parse(cleanText) },
+      { prep },
       { headers: { 'X-RateLimit-Remaining': remaining.toString() } }
     );
-  } catch (error) {
-    log.error('Interview prep generation error:', error);
+  } catch {
     return NextResponse.json({ error: 'Failed to generate interview prep' }, { status: 500 });
   }
 }

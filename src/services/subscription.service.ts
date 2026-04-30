@@ -1,5 +1,6 @@
 import prisma from '@/lib/db/prisma';
 import { dodo } from '@/lib/payments/dodo';
+import { log } from '@/lib/log';
 
 export const PLANS = {
   FREE: {
@@ -101,4 +102,55 @@ export async function resumeSubscription(userId: string) {
     where: { userId },
     data: { cancelAtPeriodEnd: false },
   });
+}
+
+export type ProGateResult =
+  | { ok: true }
+  | { ok: false; reason: 'free' | 'expired' | 'cancelled' | 'not_found' };
+
+/**
+ * Centralized Pro feature gate. Use in API routes:
+ *
+ *   const gate = await requirePro(userId);
+ *   if (!gate.ok) return NextResponse.json({ error: 'Upgrade to Pro' }, { status: 403 });
+ *
+ * Accepts either the Clerk ID (as returned by `auth()`) or the internal
+ * `User.id`. Resolves the user, inspects their subscription, and returns
+ * `{ ok: true }` only when plan === 'PRO' and status is 'active' or 'trialing'.
+ *
+ * Never throws — on missing user returns `{ ok: false, reason: 'not_found' }`.
+ * Logs `pro_gate_blocked` on every denial so we can surface upgrade-interest
+ * signal later (who tried what).
+ */
+export async function requirePro(userId: string): Promise<ProGateResult> {
+  const user = await prisma.user.findFirst({
+    where: { OR: [{ clerkId: userId }, { id: userId }] },
+    include: { subscription: true },
+  });
+
+  if (!user) {
+    log.info('pro_gate_blocked', { userId, reason: 'not_found' });
+    return { ok: false, reason: 'not_found' };
+  }
+
+  const sub = user.subscription;
+  const plan = sub?.plan;
+  const status = sub?.status;
+
+  if (plan === 'PRO' && (status === 'active' || status === 'trialing')) {
+    return { ok: true };
+  }
+
+  let reason: 'free' | 'expired' | 'cancelled';
+  if (plan !== 'PRO') {
+    reason = 'free';
+  } else if (status === 'cancelled') {
+    reason = 'cancelled';
+  } else {
+    // PRO plan but not active/trialing/cancelled → expired, on_hold, inactive, pending
+    reason = 'expired';
+  }
+
+  log.info('pro_gate_blocked', { userId, reason });
+  return { ok: false, reason };
 }
