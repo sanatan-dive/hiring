@@ -52,7 +52,7 @@ function Header() {
                   <span className="font-poppins text-sm text-white md:text-base dark:text-black">
                     {item.label}
                   </span>
-                  <div className="absolute -bottom-1 left-0 h-0.5 w-0 bg-blue-500 transition-all duration-300 group-hover:w-full"></div>
+                  <div className="absolute -bottom-1 left-0 h-0.5 w-0 bg-indigo-500 transition-all duration-300 group-hover:w-full"></div>
                 </div>
               ))}
             </div>

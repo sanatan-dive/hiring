@@ -53,7 +53,7 @@ const FAQ = () => {
           <motion.div
             key={actualIndex}
             className={`relative border-b-2 ${
-              activeIndex === actualIndex ? 'border-blue-500' : 'border-blue-100'
+              activeIndex === actualIndex ? 'border-indigo-500' : 'border-indigo-100'
             } group transition-all duration-300`}
             initial={{ opacity: 0, y: 40, filter: 'blur(8px)' }}
             whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
@@ -68,13 +68,13 @@ const FAQ = () => {
                 {item.question}
               </span>
               <ChevronRight
-                className={`h-6 w-6 flex-shrink-0 transform text-blue-400 transition-transform duration-300 group-hover:text-blue-600 sm:h-7 sm:w-7 ${
+                className={`h-6 w-6 flex-shrink-0 transform text-indigo-400 transition-transform duration-300 group-hover:text-indigo-600 sm:h-7 sm:w-7 ${
                   activeIndex === actualIndex ? 'rotate-90' : ''
                 } group-hover:translate-x-1`}
               />
             </button>
             <div
-              className={`absolute bottom-0 left-0 h-0.5 origin-left scale-x-0 transform bg-blue-500 transition-all duration-500 group-hover:scale-x-100 ${
+              className={`absolute bottom-0 left-0 h-0.5 origin-left scale-x-0 transform bg-indigo-500 transition-all duration-500 group-hover:scale-x-100 ${
                 activeIndex === actualIndex ? 'scale-x-100' : ''
               }`}
               style={{ width: '100%' }}
@@ -97,8 +97,8 @@ const FAQ = () => {
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-white font-sans">
       {/* Background decorative elements */}
-      <div className="absolute top-16 right-8 h-[200px] w-[200px] rounded-full bg-gradient-to-br from-blue-600 to-blue-800 opacity-10 blur-3xl sm:top-32 sm:right-32 sm:h-[300px] sm:w-[300px] lg:h-[500px] lg:w-[500px]"></div>
-      <div className="absolute bottom-16 left-8 h-[200px] w-[200px] rounded-full bg-gradient-to-br from-blue-600 to-blue-800 opacity-10 blur-3xl sm:bottom-32 sm:left-32 sm:h-[300px] sm:w-[300px] lg:h-[500px] lg:w-[500px]"></div>
+      <div className="absolute top-16 right-8 h-[200px] w-[200px] rounded-full bg-gradient-to-br from-indigo-600 to-indigo-800 opacity-10 blur-3xl sm:top-32 sm:right-32 sm:h-[300px] sm:w-[300px] lg:h-[500px] lg:w-[500px]"></div>
+      <div className="absolute bottom-16 left-8 h-[200px] w-[200px] rounded-full bg-gradient-to-br from-indigo-600 to-indigo-800 opacity-10 blur-3xl sm:bottom-32 sm:left-32 sm:h-[300px] sm:w-[300px] lg:h-[500px] lg:w-[500px]"></div>
 
       <div className="mx-auto w-full max-w-7xl px-4 pt-8 sm:px-6 lg:px-8">
         {/* Main FAQ Content */}
@@ -141,10 +141,10 @@ const FAQ = () => {
             Ready to Start Your Success Story?
           </h3>
           <p className="mx-auto mb-6 max-w-2xl text-base opacity-90 sm:text-lg">
-            Join thousands of students who have transformed their careers with Hir&apos;in
+            Join thousands of students who have transformed their careers with Hirin
           </p>
           <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <button className="w-full rounded-full border border-blue-200 bg-white px-6 py-3 font-semibold text-blue-600 transition-colors hover:bg-gray-100 sm:w-auto sm:px-8">
+            <button className="w-full rounded-full border border-indigo-200 bg-white px-6 py-3 font-semibold text-indigo-600 transition-colors hover:bg-gray-100 sm:w-auto sm:px-8">
               Get Started Today
             </button>
             <GlowButton

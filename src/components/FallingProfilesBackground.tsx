@@ -140,7 +140,7 @@ const FallingProfilesBackground: React.FC = () => {
 
   return (
     <div className="pointer-events-none fixed inset-0 z-[1] overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-purple-50 via-white to-blue-50">
+      <div className="absolute inset-0 bg-gradient-to-br from-purple-50 via-white to-indigo-50">
         {profiles.map((profile) => (
           <div key={profile.id}>
             {/* Trail effect */}

@@ -40,7 +40,7 @@ const PreferenceCard: React.FC<PreferenceCardProps> = ({
       <div className="border-b p-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            {icon && <div className="rounded-lg bg-blue-50 p-2">{icon}</div>}
+            {icon && <div className="rounded-lg bg-indigo-50 p-2">{icon}</div>}
             <div>
               <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
               {description && <p className="mt-1 text-sm text-gray-600">{description}</p>}
@@ -67,7 +67,7 @@ const PreferenceCard: React.FC<PreferenceCardProps> = ({
               onEdit && (
                 <button
                   onClick={onEdit}
-                  className="rounded-lg p-2 text-blue-600 transition-colors hover:bg-blue-50"
+                  className="rounded-lg p-2 text-indigo-600 transition-colors hover:bg-indigo-50"
                 >
                   <Edit2 className="h-4 w-4" />
                 </button>

@@ -130,18 +130,18 @@ export default function PricingPage() {
           transition={{ duration: 0.7, ease: 'easeOut' }}
         >
           <motion.div
-            className="mb-4 inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-4 py-1.5"
+            className="mb-4 inline-flex items-center gap-2 rounded-full border border-indigo-100 bg-indigo-50 px-4 py-1.5"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.2, duration: 0.5 }}
           >
-            <Sparkles className="h-4 w-4 text-blue-600" />
-            <span className="font-poppins text-sm font-medium text-blue-700">Simple Pricing</span>
+            <Sparkles className="h-4 w-4 text-indigo-600" />
+            <span className="font-poppins text-sm font-medium text-indigo-700">Simple Pricing</span>
           </motion.div>
 
           <h1 className="font-poppins mb-4 text-4xl font-bold text-black sm:text-5xl lg:text-6xl">
             Choose Your{' '}
-            <span className="bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-indigo-600 to-indigo-400 bg-clip-text text-transparent">
               Plan
             </span>
           </h1>
@@ -164,7 +164,7 @@ export default function PricingPage() {
               whileHover={{ y: -6, transition: { duration: 0.3 } }}
               className={`relative rounded-2xl p-8 transition-shadow duration-300 ${
                 plan.featured
-                  ? 'border-2 border-blue-500 bg-white shadow-xl shadow-blue-500/10'
+                  ? 'border-2 border-indigo-500 bg-white shadow-xl shadow-indigo-500/10'
                   : 'border border-gray-100 bg-white shadow-sm hover:shadow-md'
               }`}
             >
@@ -172,7 +172,7 @@ export default function PricingPage() {
               {plan.featured && (
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2">
                   <motion.div
-                    className="rounded-full bg-gradient-to-r from-blue-600 to-blue-500 px-4 py-1 text-xs font-bold tracking-wider text-white shadow-lg shadow-blue-500/30"
+                    className="rounded-full bg-gradient-to-r from-indigo-600 to-indigo-500 px-4 py-1 text-xs font-bold tracking-wider text-white shadow-lg shadow-indigo-500/30"
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.5, duration: 0.4 }}
@@ -187,11 +187,11 @@ export default function PricingPage() {
                 <div className="mb-3 flex items-center gap-3">
                   <div
                     className={`flex h-10 w-10 items-center justify-center rounded-xl ${
-                      plan.featured ? 'bg-blue-100' : 'bg-gray-100'
+                      plan.featured ? 'bg-indigo-100' : 'bg-gray-100'
                     }`}
                   >
                     <plan.icon
-                      className={`h-5 w-5 ${plan.featured ? 'text-blue-600' : 'text-gray-600'}`}
+                      className={`h-5 w-5 ${plan.featured ? 'text-indigo-600' : 'text-gray-600'}`}
                     />
                   </div>
                   <h3 className="font-poppins text-2xl font-bold text-black">{plan.name}</h3>
@@ -216,8 +216,8 @@ export default function PricingPage() {
                     transition={{ delay: 0.3 + i * 0.05, duration: 0.3 }}
                   >
                     {feature.included ? (
-                      <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-blue-100">
-                        <Check className="h-3 w-3 text-blue-600" />
+                      <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-indigo-100">
+                        <Check className="h-3 w-3 text-indigo-600" />
                       </div>
                     ) : (
                       <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-gray-100">

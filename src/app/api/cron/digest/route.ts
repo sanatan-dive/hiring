@@ -1,10 +1,11 @@
 import { log } from '@/lib/log';
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/db/prisma';
-import { sendJobDigest } from '@/services/email.service';
+import { sendJobDigest, newUnsubscribeToken } from '@/services/email.service';
 
-// Force dynamic to ensure it runs
 export const dynamic = 'force-dynamic';
+// Vercel cron timeout safety: process in chunks
+const BATCH_SIZE = 25;
 
 function isAuthorizedCron(req: Request): boolean {
   if (req.headers.get('x-vercel-cron') === '1') return true;
@@ -15,92 +16,119 @@ function isAuthorizedCron(req: Request): boolean {
   return false;
 }
 
+interface UserRow {
+  id: string;
+  email: string;
+  name: string | null;
+  emailDigestEnabled: boolean;
+  unsubscribeToken: string | null;
+  subscription: { plan: string } | null;
+}
+
 export async function GET(req: Request) {
   if (!isAuthorizedCron(req)) {
     return new NextResponse('Forbidden', { status: 403 });
   }
 
   try {
-    // 1. Get all users
-    // Optimization: In a real app, you'd batch this or use a queue.
-    const users = await prisma.user.findMany({
+    // Frequency gating: free = weekly (Mondays only), pro = daily.
+    // We send to PRO every day; we send to FREE only if today is Monday (UTC).
+    const today = new Date();
+    const isMonday = today.getUTCDay() === 1;
+
+    const users: UserRow[] = await prisma.user.findMany({
+      where: { emailDigestEnabled: true },
       select: {
         id: true,
         email: true,
         name: true,
+        emailDigestEnabled: true,
+        unsubscribeToken: true,
+        subscription: { select: { plan: true } },
       },
     });
 
+    const eligible = users.filter((u) => {
+      const plan = u.subscription?.plan ?? 'FREE';
+      return plan === 'PRO' || isMonday;
+    });
+
     const results = {
-      usersProcessed: 0,
+      usersSeen: users.length,
+      usersEligible: eligible.length,
       emailsSent: 0,
+      emailsSkippedNoMatches: 0,
       errors: 0,
     };
 
-    // 2. Process each user
-    for (const user of users) {
-      results.usersProcessed++;
+    for (let i = 0; i < eligible.length; i += BATCH_SIZE) {
+      const batch = eligible.slice(i, i + BATCH_SIZE);
+      await Promise.allSettled(
+        batch.map(async (user) => {
+          try {
+            const newMatches = await prisma.jobMatch.findMany({
+              where: { userId: user.id, emailedAt: null, status: { not: 'hidden' } },
+              include: {
+                job: {
+                  select: {
+                    id: true,
+                    title: true,
+                    company: true,
+                    location: true,
+                    salary: true,
+                    url: true,
+                  },
+                },
+              },
+              orderBy: { score: 'desc' },
+              take: 10,
+            });
 
-      // Find new matches that haven't been emailed yet
-      const newMatches = await prisma.jobMatch.findMany({
-        where: {
-          userId: user.id,
-          // status could be 'pending' or 'new'. Let's assume 'pending' is the default for a match.
-          // Adjust based on your match logic.
-          // We also check emailedAt is null
-          emailedAt: null,
-        },
-        include: {
-          job: {
-            select: {
-              id: true,
-              title: true,
-              company: true,
-              location: true,
-              salary: true,
-              url: true,
-            },
-          },
-        },
-        orderBy: {
-          score: 'desc',
-        },
-        take: 10, // Limit to top 10 for the email
-      });
+            if (newMatches.length === 0) {
+              results.emailsSkippedNoMatches++;
+              return;
+            }
 
-      if (newMatches.length > 0) {
-        // Prepare data for email
-        const jobsForEmail = newMatches.map((match) => ({
-          ...match.job,
-          score: match.score || 0,
-        }));
+            // Lazy-create the unsubscribe token on first send
+            let token = user.unsubscribeToken;
+            if (!token) {
+              token = newUnsubscribeToken();
+              await prisma.user.update({
+                where: { id: user.id },
+                data: { unsubscribeToken: token },
+              });
+            }
 
-        // Send Email
-        const { success } = await sendJobDigest({
-          to: user.email,
-          userName: user.name || 'Job Seeker',
-          jobs: jobsForEmail,
-        });
+            const jobsForEmail = newMatches.map((m) => ({
+              ...m.job,
+              score: m.score || 0,
+            }));
 
-        if (success) {
-          results.emailsSent++;
+            const { success } = await sendJobDigest({
+              to: user.email,
+              userName: user.name || 'Job Seeker',
+              unsubscribeToken: token,
+              jobs: jobsForEmail,
+            });
 
-          // Mark as emailed
-          await prisma.jobMatch.updateMany({
-            where: {
-              id: { in: newMatches.map((m) => m.id) },
-            },
-            data: {
-              emailedAt: new Date(),
-            },
-          });
-        } else {
-          results.errors++;
-        }
-      }
+            if (success) {
+              results.emailsSent++;
+              await prisma.jobMatch.updateMany({
+                where: { id: { in: newMatches.map((m) => m.id) } },
+                data: { emailedAt: new Date() },
+              });
+            } else {
+              results.errors++;
+            }
+          } catch (err) {
+            results.errors++;
+            log.error('digest user failed', err, { userId: user.id });
+          }
+        })
+      );
     }
 
-    return NextResponse.json({ success: true, results });
+    return NextResponse.json({ success: true, isMonday, results });
   } catch (error) {
     log.error('Cron digest error:', error);
     return NextResponse.json({ success: false, error: 'Internal Server Error' }, { status: 500 });

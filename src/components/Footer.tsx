@@ -63,7 +63,7 @@ function Footer() {
                 <li key={link.name}>
                   <a
                     href={link.href}
-                    className="text-xs text-gray-600 transition-colors duration-200 hover:text-blue-600"
+                    className="text-xs text-gray-600 transition-colors duration-200 hover:text-indigo-600"
                   >
                     {link.name}
                   </a>
@@ -80,7 +80,7 @@ function Footer() {
                 <li key={link.name}>
                   <a
                     href={link.href}
-                    className="text-xs text-gray-600 transition-colors duration-200 hover:text-blue-600"
+                    className="text-xs text-gray-600 transition-colors duration-200 hover:text-indigo-600"
                   >
                     {link.name}
                   </a>
@@ -103,7 +103,7 @@ function Footer() {
                 key={social.label}
                 href={social.href}
                 aria-label={social.label}
-                className="text-gray-400 transition-colors duration-200 hover:text-blue-600"
+                className="text-gray-400 transition-colors duration-200 hover:text-indigo-600"
               >
                 <social.icon className="h-4 w-4" />
               </a>

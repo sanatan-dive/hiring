@@ -64,7 +64,7 @@ const FileUpload = ({ onUpload }: { onUpload: (data: any) => void }) => {
     <div
       {...getRootProps()}
       className={`relative w-full cursor-pointer rounded-lg border-2 border-dashed p-6 text-center transition-all duration-300 ${
-        isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-400'
+        isDragActive ? 'border-indigo-500 bg-indigo-50' : 'border-gray-300 hover:border-indigo-400'
       }`}
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
@@ -78,7 +78,7 @@ const FileUpload = ({ onUpload }: { onUpload: (data: any) => void }) => {
             exit={{ opacity: 0, scale: 0.8 }}
             className="flex flex-col items-center justify-center"
           >
-            <FileIcon className="h-12 w-12 text-blue-500" />
+            <FileIcon className="h-12 w-12 text-indigo-500" />
             <p className="mt-2 text-sm font-medium text-gray-700">{uploadedFile.name}</p>
             <p className="text-xs text-gray-500">{Math.round(uploadedFile.size / 1024)} KB</p>
             <motion.button
@@ -115,7 +115,7 @@ const FileUpload = ({ onUpload }: { onUpload: (data: any) => void }) => {
             exit={{ opacity: 0, y: 10 }}
             className="absolute bottom-4 left-1/2 -translate-x-1/2"
           >
-            <div className="flex items-center space-x-2 rounded-full bg-blue-500 px-3 py-1 text-xs text-white">
+            <div className="flex items-center space-x-2 rounded-full bg-indigo-500 px-3 py-1 text-xs text-white">
               <span>Upload Resume</span>
             </div>
           </motion.div>

@@ -27,10 +27,10 @@ export default function Page() {
                   headerTitle: 'hidden',
                   headerSubtitle: 'hidden',
                   socialButtonsBlockButton: 'border border-gray-200 hover:bg-gray-50',
-                  formButtonPrimary: 'bg-blue-600 hover:bg-blue-700 text-white rounded-full py-3',
-                  footerActionLink: 'text-blue-600 hover:text-blue-700',
+                  formButtonPrimary: 'bg-indigo-600 hover:bg-indigo-700 text-white rounded-full py-3',
+                  footerActionLink: 'text-indigo-600 hover:text-indigo-700',
                   formFieldInput:
-                    'rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500',
+                    'rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500',
                   dividerLine: 'bg-gray-200',
                   dividerText: 'text-gray-400',
                 },
@@ -40,7 +40,7 @@ export default function Page() {
         </div>
 
         {/* Right Side - Gradient Image */}
-        <div className="object-fit relative m-4 hidden w-1/2 overflow-hidden rounded-2xl bg-[#024BA9] md:block">
+        <div className="object-fit relative m-4 hidden w-1/2 overflow-hidden rounded-2xl bg-indigo-600 md:block">
           <Image
             src="/login.jpg"
             alt="Sign In"

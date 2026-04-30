@@ -32,7 +32,7 @@ function HowItWorks() {
 
       {/* Heading */}
       <div className="mb-4 ml-4 flex items-center gap-1 sm:ml-40">
-        <span className="font-poppins z-10 text-2xl font-bold text-blue-600">—</span>
+        <span className="font-poppins z-10 text-2xl font-bold text-indigo-600">—</span>
         <h1 className="font-poppins z-10 text-2xl font-bold text-black sm:text-4xl">
           How it Works
         </h1>
@@ -41,7 +41,7 @@ function HowItWorks() {
       {/* Descriptions */}
       <div className="mb-8 ml-4 flex flex-col gap-2 sm:ml-44">
         <p className="sm:text-md font-poppins text-sm font-light text-black/60">
-          Hir&apos;in finds jobs that fit your skills and tailors your applications automatically.
+          Hirin finds jobs that fit your skills and tailors your applications automatically.
         </p>
         <p className="sm:text-md font-poppins text-sm font-light text-black/60">
           It optimizes your résumé, identifies gaps, and applies for you in one click.
@@ -65,7 +65,7 @@ function HowItWorks() {
             All your job search details in one place
           </h2>
           <p className="sm:text-md mb-3 text-sm text-gray-600">
-            Hir&apos;in tracks your applications, matches, résumés, and progress — no more messy
+            Hirin tracks your applications, matches, résumés, and progress — no more messy
             spreadsheets.
           </p>
           <p className="sm:text-md mb-3 text-sm text-gray-600">
