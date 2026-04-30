@@ -20,7 +20,7 @@ const DangerZoneSection = () => {
       const res = await fetch('/api/account/delete', { method: 'DELETE' });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error ?? 'Failed');
-      toast.success('Account deleted. Goodbye 👋');
+      toast.success('Account deleted.');
       // Sign out (Clerk session is gone too) and redirect
       await signOut(() => router.push('/'));
     } catch (err) {

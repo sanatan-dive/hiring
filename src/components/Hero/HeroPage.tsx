@@ -244,9 +244,7 @@ function HeroPage() {
         };
 
         const checkDarkMode = () => {
-          isDarkMode =
-            document.documentElement.classList.contains('dark') ||
-            window.matchMedia('(prefers-color-scheme: dark)').matches;
+          isDarkMode = false;
         };
 
         p.draw = () => {
@@ -519,21 +517,21 @@ function HeroPage() {
             variants={containerVariants}
           >
             <motion.div
-              className="space-y-6 rounded-2xl bg-black/55 p-8 text-center backdrop-blur-md md:p-12 dark:bg-white/80"
+              className="space-y-6 rounded-2xl bg-white/90 p-8 text-center shadow-2xl ring-1 ring-black/5 backdrop-blur-md md:p-12"
               variants={itemVariants}
             >
               <motion.div className="flex items-center justify-center" variants={titleVariants}>
                 <motion.h1
-                  className="font-poppins text-3xl font-medium tracking-tight text-white md:text-8xl dark:text-black/85"
+                  className="font-poppins text-3xl font-medium tracking-tight text-gray-900 md:text-8xl"
                   whileHover={{ scale: 1.05 }}
                   transition={{ type: 'spring', stiffness: 300, damping: 20 }}
                 >
-                  Hirin<span className="text-sky-400 dark:text-sky-600">.</span>
+                  Hirin<span className="text-sky-500">.</span>
                 </motion.h1>
               </motion.div>
 
               <motion.p
-                className="font-poppins text-3xl font-medium text-white md:text-8xl dark:text-black/85"
+                className="font-poppins text-3xl font-medium text-gray-900 md:text-8xl"
                 variants={itemVariants}
                 whileHover={{ scale: 1.02 }}
                 transition={{ type: 'spring', stiffness: 300, damping: 20 }}
@@ -542,7 +540,7 @@ function HeroPage() {
               </motion.p>
 
               <motion.p
-                className="font-poppins text-3xl font-medium text-white md:text-8xl dark:text-black/85"
+                className="font-poppins text-3xl font-medium text-gray-900 md:text-8xl"
                 variants={itemVariants}
                 whileHover={{ scale: 1.02 }}
                 transition={{ type: 'spring', stiffness: 300, damping: 20 }}
@@ -551,7 +549,7 @@ function HeroPage() {
               </motion.p>
 
               <motion.p
-                className="text-md font-poppins font-light text-white dark:text-black/85"
+                className="text-md font-poppins font-light text-gray-600"
                 variants={itemVariants}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -564,7 +562,7 @@ function HeroPage() {
             </motion.div>
 
             <motion.div variants={buttonVariants}>
-              <button className="flex h-12 w-36 items-center justify-center bg-black px-6 py-4 text-lg font-light text-white transition-colors duration-300 hover:bg-black/85">
+              <button className="flex h-12 w-40 items-center justify-center rounded-lg bg-sky-500 px-6 py-4 text-lg font-medium text-white shadow-lg shadow-sky-500/30 transition-all duration-300 hover:bg-sky-600 hover:shadow-xl hover:shadow-sky-500/40">
                 Get a Job
               </button>
             </motion.div>

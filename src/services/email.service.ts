@@ -119,7 +119,7 @@ export const sendScrapeCompleteEmail = async (
       <div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-bottom: 16px; background-color: #f9fafb;">
         <h3 style="margin: 0 0 8px 0; font-size: 18px; color: #111827;">${sanitizeHtml(job.title, { allowedTags: [], allowedAttributes: {} })}</h3>
         <p style="margin: 0 0 8px 0; color: #4b5563; font-weight: 500;">${sanitizeHtml(job.company, { allowedTags: [], allowedAttributes: {} })} • ${sanitizeHtml(job.location || 'Remote', { allowedTags: [], allowedAttributes: {} })}</p>
-        ${job.salary ? `<p style="margin: 0 0 8px 0; color: #059669; font-weight: 600;">💰 ${sanitizeHtml(job.salary, { allowedTags: [], allowedAttributes: {} })}</p>` : ''}
+        ${job.salary ? `<p style="margin: 0 0 8px 0; color: #059669; font-weight: 600;">${sanitizeHtml(job.salary, { allowedTags: [], allowedAttributes: {} })}</p>` : ''}
         <p style="margin: 0 0 16px 0; color: #6b7280; font-size: 14px; line-height: 1.5;">${
           job.description ? safeHtml(job.description.substring(0, 300)) + '...' : 'No description available.'
         }</p>
@@ -133,7 +133,7 @@ export const sendScrapeCompleteEmail = async (
     const { data, error } = await resend.emails.send({
       from: EMAIL_FROM,
       to: [to],
-      subject: `🎯 ${count} new jobs from ${source}`,
+      subject: `${count} new jobs from ${source}`,
       html: `
             <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
               <h1 style="color: #111827;">Scrape finished</h1>

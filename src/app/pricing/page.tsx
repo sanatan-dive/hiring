@@ -3,71 +3,86 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@clerk/nextjs';
-import { Check, X, Loader2, Sparkles, Zap, Crown } from 'lucide-react';
+import { Check, Minus, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { motion } from 'framer-motion';
-import GlowButton from '@/components/ui/glow-button';
+import { track } from '@/lib/analytics';
 
-const plans = [
+interface PlanFeature {
+  name: string;
+  included: boolean;
+}
+
+interface Plan {
+  name: string;
+  price: string;
+  period: string;
+  description: string;
+  cta: string;
+  highlight: boolean;
+  features: PlanFeature[];
+}
+
+const plans: Plan[] = [
   {
     name: 'Free',
     price: '$0',
-    period: '/mo',
-    tagline: 'For casual job seekers',
-    icon: Zap,
-    featured: false,
+    period: 'forever',
+    description: 'For passive job searchers.',
+    cta: 'Get started',
+    highlight: false,
     features: [
       { name: 'Weekly email digest', included: true },
-      { name: 'Light scraper (3x/week)', included: true },
-      { name: '1 resume upload', included: true },
-      { name: 'Basic job matching', included: true },
-      { name: 'Application tracker (5 jobs)', included: true },
+      { name: '2 free job sources', included: true },
+      { name: '1 resume', included: true },
+      { name: '5 active applications tracked', included: true },
       { name: '7-day match history', included: true },
-      { name: 'Deep scraper', included: false },
-      { name: 'AI Cover Letter', included: false },
-      { name: 'AI Interview Prep', included: false },
-      { name: 'Priority support', included: false },
+      { name: 'Daily digest', included: false },
+      { name: 'All 6 sources', included: false },
+      { name: 'AI cover letter generator', included: false },
+      { name: 'AI interview prep', included: false },
+      { name: 'LinkedIn paste-URL scrapes', included: false },
     ],
   },
   {
     name: 'Pro',
     price: '$9',
-    period: '/mo',
-    tagline: 'For serious career movers',
-    icon: Crown,
-    featured: true,
+    period: '/month',
+    description: 'For active job switchers.',
+    cta: 'Upgrade to Pro',
+    highlight: true,
     features: [
       { name: 'Daily email digest', included: true },
-      { name: 'Unlimited light scrapes', included: true },
-      { name: '3 resume uploads', included: true },
-      { name: 'AI-powered job matching', included: true },
+      { name: 'All 6 job sources', included: true },
+      { name: '3 resumes', included: true },
       { name: 'Unlimited application tracker', included: true },
       { name: 'Lifetime match history', included: true },
-      { name: 'Deep scraper (2x/month)', included: true },
-      { name: 'AI Cover Letter Generator', included: true },
-      { name: 'AI Interview Prep', included: true },
-      { name: 'Priority support', included: true },
+      { name: 'AI cover letter generator (20/day)', included: true },
+      { name: 'AI interview prep (20/day)', included: true },
+      { name: 'LinkedIn paste-URL scrapes (5/day)', included: true },
+      { name: 'Hide companies and jobs', included: true },
+      { name: 'Why-this-match explanations', included: true },
     ],
   },
 ];
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.15, delayChildren: 0.1 },
+const faq = [
+  {
+    q: 'Can I cancel anytime?',
+    a: 'Yes. You keep Pro access until the end of your billing period. No questions asked.',
   },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 40, filter: 'blur(8px)' },
-  visible: {
-    opacity: 1,
-    y: 0,
-    filter: 'blur(0px)',
-    transition: { duration: 0.6, ease: 'easeOut' as const },
+  {
+    q: 'What payment methods?',
+    a: 'Cards, UPI, netbanking, and most international wallets — handled by Dodo Payments.',
   },
-};
+  {
+    q: 'Do you offer refunds?',
+    a: 'Full refund within 14 days if you have not used Pro features. See the refund policy for detail.',
+  },
+  {
+    q: 'Is the free tier really free?',
+    a: 'Yes. Forever. No credit card to sign up. The free tier is designed to be useful on its own.',
+  },
+];
 
 export default function PricingPage() {
   const { isSignedIn } = useUser();
@@ -81,6 +96,7 @@ export default function PricingPage() {
     }
 
     setLoading(true);
+    track('subscribe_clicked', { plan: 'PRO' });
     try {
       const response = await fetch('/api/payments/create-checkout', {
         method: 'POST',
@@ -93,181 +109,106 @@ export default function PricingPage() {
         throw new Error(data.error || 'Failed to create checkout');
       }
 
-      // Hand off to Dodo's hosted checkout. After payment, Dodo redirects
-      // back to NEXT_PUBLIC_APP_URL/matches?upgraded=1 (set in the API route).
       window.location.href = data.checkoutUrl;
     } catch (error) {
       console.error('Payment error:', error);
       toast.error('Failed to initiate payment');
       setLoading(false);
     }
-    // Note: don't unset loading on success — we're navigating away
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-white">
-      {/* Background glow effects */}
-      <div
-        className="pointer-events-none absolute inset-0"
-        style={{
-          backgroundImage: `
-            radial-gradient(circle at 20% 20%, rgba(18, 111, 255, 0.08), transparent 50%),
-            radial-gradient(circle at 80% 80%, rgba(18, 111, 255, 0.06), transparent 50%)
-          `,
-        }}
-      />
-      <div
-        className="pointer-events-none absolute top-0 right-0 h-[500px] w-[500px] rounded-full opacity-20 blur-[100px]"
-        style={{ background: 'radial-gradient(circle, rgba(18, 111, 255, 0.4), transparent 70%)' }}
-      />
-
-      <div className="relative z-10 mx-auto max-w-6xl px-4 py-20 sm:px-6 lg:px-8">
+    <div className="font-poppins min-h-screen bg-white">
+      <div className="mx-auto max-w-5xl px-4 py-20 sm:px-6 lg:px-8">
         {/* Header */}
-        <motion.div
-          className="mb-16 text-center"
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, ease: 'easeOut' }}
-        >
-          <motion.div
-            className="mb-4 inline-flex items-center gap-2 rounded-full border border-sky-100 bg-sky-50 px-4 py-1.5"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.2, duration: 0.5 }}
-          >
-            <Sparkles className="h-4 w-4 text-sky-600" />
-            <span className="font-poppins text-sm font-medium text-sky-700">Simple Pricing</span>
-          </motion.div>
-
-          <h1 className="font-poppins mb-4 text-4xl font-bold text-black sm:text-5xl lg:text-6xl">
-            Choose Your{' '}
-            <span className="bg-gradient-to-r from-sky-600 to-sky-400 bg-clip-text text-transparent">
-              Plan
-            </span>
+        <div className="mb-16 text-center">
+          <h1 className="text-4xl font-medium tracking-tight text-black sm:text-5xl lg:text-6xl">
+            Pricing<span className="text-sky-500">.</span>
           </h1>
-          <p className="font-poppins mx-auto max-w-2xl text-lg text-gray-500">
-            Start free, upgrade when you&apos;re ready. No hidden fees, cancel anytime.
+          <p className="mx-auto mt-4 max-w-xl text-base text-gray-500 sm:text-lg">
+            Start free. Upgrade when daily matches become worth nine dollars.
           </p>
-        </motion.div>
+        </div>
 
         {/* Pricing Cards */}
-        <motion.div
-          className="mx-auto grid max-w-4xl gap-8 md:grid-cols-2"
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-        >
+        <div className="mx-auto grid max-w-4xl gap-6 md:grid-cols-2">
           {plans.map((plan) => (
-            <motion.div
+            <div
               key={plan.name}
-              variants={itemVariants}
-              whileHover={{ y: -6, transition: { duration: 0.3 } }}
-              className={`relative rounded-2xl p-8 transition-shadow duration-300 ${
-                plan.featured
-                  ? 'border-2 border-sky-500 bg-white shadow-xl shadow-sky-500/10'
-                  : 'border border-gray-100 bg-white shadow-sm hover:shadow-md'
+              className={`relative flex flex-col border border-gray-200 bg-white p-8 ${
+                plan.highlight ? 'border-black' : ''
               }`}
             >
-              {/* Popular badge */}
-              {plan.featured && (
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                  <motion.div
-                    className="rounded-full bg-gradient-to-r from-sky-600 to-sky-500 px-4 py-1 text-xs font-bold tracking-wider text-white shadow-lg shadow-sky-500/30"
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.5, duration: 0.4 }}
-                  >
-                    MOST POPULAR
-                  </motion.div>
-                </div>
+              {plan.highlight && (
+                <span className="absolute -top-3 left-8 bg-black px-3 py-1 text-xs font-medium tracking-wider text-white uppercase">
+                  Recommended
+                </span>
               )}
 
-              {/* Plan header */}
               <div className="mb-6">
-                <div className="mb-3 flex items-center gap-3">
-                  <div
-                    className={`flex h-10 w-10 items-center justify-center rounded-xl ${
-                      plan.featured ? 'bg-sky-100' : 'bg-gray-100'
-                    }`}
-                  >
-                    <plan.icon
-                      className={`h-5 w-5 ${plan.featured ? 'text-sky-600' : 'text-gray-600'}`}
-                    />
-                  </div>
-                  <h3 className="font-poppins text-2xl font-bold text-black">{plan.name}</h3>
-                </div>
-                <p className="font-poppins text-sm text-gray-500">{plan.tagline}</p>
+                <h2 className="text-2xl font-medium text-black">{plan.name}</h2>
+                <p className="mt-1 text-sm text-gray-500">{plan.description}</p>
               </div>
 
-              {/* Price */}
-              <div className="mb-8">
-                <span className="font-poppins text-5xl font-bold text-black">{plan.price}</span>
-                <span className="font-poppins text-lg text-gray-400">{plan.period}</span>
+              <div className="mb-8 flex items-baseline gap-1">
+                <span className="text-5xl font-medium text-black">{plan.price}</span>
+                <span className="text-base text-gray-400">{plan.period}</span>
               </div>
 
-              {/* Features */}
-              <ul className="mb-8 space-y-3">
-                {plan.features.map((feature, i) => (
-                  <motion.li
-                    key={i}
-                    className="flex items-center gap-3"
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.3 + i * 0.05, duration: 0.3 }}
-                  >
+              <ul className="mb-8 flex-1 space-y-3">
+                {plan.features.map((feature) => (
+                  <li key={feature.name} className="flex items-start gap-3 text-sm">
                     {feature.included ? (
-                      <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-sky-100">
-                        <Check className="h-3 w-3 text-sky-600" />
-                      </div>
+                      <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-black" />
                     ) : (
-                      <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-gray-100">
-                        <X className="h-3 w-3 text-gray-400" />
-                      </div>
+                      <Minus className="mt-0.5 h-4 w-4 flex-shrink-0 text-gray-300" />
                     )}
-                    <span
-                      className={`font-poppins text-sm ${
-                        feature.included ? 'text-gray-800' : 'text-gray-400'
-                      }`}
-                    >
+                    <span className={feature.included ? 'text-gray-800' : 'text-gray-400'}>
                       {feature.name}
                     </span>
-                  </motion.li>
+                  </li>
                 ))}
               </ul>
 
-              {/* CTA */}
-              {plan.featured ? (
-                <GlowButton
-                  variant="blue"
+              {plan.highlight ? (
+                <button
                   onClick={handleSubscribe}
-                  className="font-poppins w-full justify-center py-3.5 text-center"
+                  disabled={loading}
+                  className="flex h-12 w-full items-center justify-center bg-black text-base font-light text-white transition-colors duration-300 hover:bg-black/85 disabled:opacity-60"
                 >
-                  {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Upgrade to Pro'}
-                </GlowButton>
+                  {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : plan.cta}
+                </button>
               ) : (
                 <button
-                  className="font-poppins w-full rounded-xl border border-gray-200 bg-gray-50 px-6 py-3.5 text-sm font-semibold text-gray-700 transition-all duration-300 hover:bg-gray-100"
-                  disabled
+                  onClick={() => (isSignedIn ? router.push('/matches') : router.push('/sign-up'))}
+                  className="flex h-12 w-full items-center justify-center border border-black bg-white text-base font-light text-black transition-colors duration-300 hover:bg-gray-50"
                 >
-                  Current Plan
+                  {plan.cta}
                 </button>
               )}
-            </motion.div>
+            </div>
           ))}
-        </motion.div>
+        </div>
 
-        {/* Bottom CTA */}
-        <motion.div
-          className="mt-16 text-center"
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-          viewport={{ once: true }}
-        >
-          <p className="font-poppins text-sm text-gray-500">
-            🔒 Payments secured by Dodo Payments • Cancel anytime • No questions asked
-          </p>
-        </motion.div>
+        {/* FAQ */}
+        <div className="mx-auto mt-24 max-w-3xl">
+          <h2 className="mb-8 text-center text-2xl font-medium text-black">
+            Common questions
+          </h2>
+          <dl className="divide-y divide-gray-200 border-t border-b border-gray-200">
+            {faq.map((item) => (
+              <div key={item.q} className="py-6">
+                <dt className="text-base font-medium text-black">{item.q}</dt>
+                <dd className="mt-2 text-sm text-gray-600">{item.a}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+
+        {/* Trust line */}
+        <p className="mt-16 text-center text-xs text-gray-400">
+          Payments processed by Dodo Payments. Cancel anytime from your profile.
+        </p>
       </div>
     </div>
   );

@@ -204,7 +204,7 @@ export default function PricingSection() {
           viewport={{ once: true }}
         >
           <p className="font-poppins text-sm text-gray-500">
-            🔒 Payments secured by Dodo Payments · Cancel anytime · No questions asked
+            Payments processed by Dodo Payments. Cancel anytime.
           </p>
         </motion.div>
       </div>

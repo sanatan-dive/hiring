@@ -6,7 +6,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: '*',
         allow: '/',
-        disallow: ['/api/', '/Onboard/', '/sign-in/', '/sign-up/'],
+        disallow: ['/api/', '/onboard/', '/sign-in/', '/sign-up/'],
       },
     ],
     sitemap: 'https://hirin.app/sitemap.xml',
