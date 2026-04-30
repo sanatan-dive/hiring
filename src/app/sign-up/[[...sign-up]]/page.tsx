@@ -10,14 +10,8 @@ export default function Page() {
         <div className="flex w-full flex-col justify-center p-8 md:w-1/2 md:p-12">
           <div className="mb-8 text-center">
             <div className="group mb-4 flex items-center justify-center gap-1 transition-all duration-300 hover:scale-105 hover:cursor-pointer">
-              {/* Optional icon */}
-              {/* <Briefcase className="h-8 w-8 lg:h-10 lg:w-10 text-blue-600 group-hover:text-blue-700 transition-colors duration-300" /> */}
-
-              <h1 className="font-sans text-4xl font-bold text-black lg:text-5xl">Hir&apos;</h1>
-
-              {/* 'in' part inside a blue box */}
-              <h1 className="rounded bg-blue-600 px-1 text-4xl font-bold text-white lg:text-5xl dark:bg-blue-600">
-                in
+              <h1 className="font-sans text-4xl font-bold tracking-tight text-black lg:text-5xl">
+                Hirin<span className="text-indigo-600">.</span>
               </h1>
             </div>
             <h1 className="text-3xl font-bold text-gray-900">Get Started</h1>

@@ -10,14 +10,17 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  clerkId   String   @unique
-  email     String   @unique
-  name      String?
-  imageUrl  String?
-  skills    String[] // User's skills (merged from resume + manual)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                  String   @id @default(cuid())
+  clerkId             String   @unique
+  email               String   @unique
+  name                String?
+  imageUrl            String?
+  skills              String[] // User's skills (merged from resume + manual)
+  hiddenCompanies     String[] @default([]) @map("hidden_companies")
+  emailDigestEnabled  Boolean  @default(true) @map("email_digest_enabled")
+  unsubscribeToken    String?  @unique @map("unsubscribe_token")
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 
   resumes        Resume[]
   jobPreferences JobPreferences?
@@ -161,6 +164,7 @@ model Job {
   salary      String?
   description String?
   url         String   @unique
+  contentHash String?  @unique @map("content_hash")
   source      String   // adzuna, jsearch, scraper
   techStack   String[]
   embedding   Unsupported("vector(768)")?

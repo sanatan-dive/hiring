@@ -182,10 +182,6 @@ function HeroPage() {
 
   const logos = [
     {
-      name: 'LinkedIn',
-      src: 'https://blog.waalaxy.com/wp-content/uploads/2021/01/2-2.png.webp',
-    },
-    {
       name: 'Indeed',
       src: 'https://i0.wp.com/verotouch.com/wp-content/uploads/2024/02/Indeed-Logo-Black.png?ssl=1',
     },
@@ -331,9 +327,9 @@ function HeroPage() {
 
                 // Blue hover effect
                 if (isDarkMode) {
-                  p.stroke(0, 100, 255, alpha); // Blue in dark mode
+                  p.stroke(79, 70, 229, alpha); // Indigo in dark mode
                 } else {
-                  p.stroke(100, 150, 255, alpha); // Light blue in light mode
+                  p.stroke(129, 140, 248, alpha); // Light indigo in light mode
                 }
 
                 p.strokeWeight(strokeWeight);
@@ -344,9 +340,9 @@ function HeroPage() {
                 // Add subtle fill for stronger hover effect
                 if (cell.hoverIntensity > 0.3) {
                   if (isDarkMode) {
-                    p.fill(0, 100, 255, alpha * 0.1);
+                    p.fill(79, 70, 229, alpha * 0.1);
                   } else {
-                    p.fill(100, 150, 255, alpha * 0.1);
+                    p.fill(129, 140, 248, alpha * 0.1);
                   }
                   p.rect(cell.x, cell.y, cell.size, cell.size);
                   p.noFill();
@@ -369,9 +365,9 @@ function HeroPage() {
             const alpha = p.noise(i * 0.1 + 300, time * 0.25) * 60 + 30;
 
             if (isDarkMode) {
-              p.fill(150, 180, 255, alpha);
+              p.fill(165, 180, 252, alpha);
             } else {
-              p.fill(100, 150, 255, alpha);
+              p.fill(129, 140, 248, alpha);
             }
             p.noStroke();
             p.circle(x, y, size);
@@ -526,22 +522,11 @@ function HeroPage() {
             >
               <motion.div className="flex items-center justify-center" variants={titleVariants}>
                 <motion.h1
-                  className="font-poppins text-3xl font-medium text-white md:text-8xl dark:text-black/85"
+                  className="font-poppins text-3xl font-medium tracking-tight text-white md:text-8xl dark:text-black/85"
                   whileHover={{ scale: 1.05 }}
                   transition={{ type: 'spring', stiffness: 300, damping: 20 }}
                 >
-                  Hir&apos;
-                </motion.h1>
-                <motion.h1
-                  className="ml-2 rounded bg-blue-600 px-1 text-3xl font-bold text-white lg:text-7xl dark:bg-blue-600"
-                  whileHover={{
-                    scale: 1.1,
-                    rotateZ: [0, -5, 5, 0],
-                    transition: { duration: 0.3 },
-                  }}
-                  transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-                >
-                  in
+                  Hirin<span className="text-indigo-400 dark:text-indigo-600">.</span>
                 </motion.h1>
               </motion.div>
 
@@ -570,9 +555,9 @@ function HeroPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 1, duration: 0.6 }}
               >
-                Hir&apos;in helps you apply smarter and faster to jobs where you can thrive. Whether
+                Hirin helps you apply smarter and faster to jobs where you can thrive. Whether
                 you&apos;re seeking your next opportunity <br /> or looking to land interviews at
-                top companies, Hir&apos;in streamlines the process for you.
+                top companies, Hirin streamlines the process for you.
               </motion.p>
             </motion.div>
 
@@ -598,7 +583,7 @@ function HeroPage() {
           animate="visible"
           transition={{ delay: 1.7 }}
         >
-          Trusted by job seekers
+          Aggregating jobs from
         </motion.h2>
 
         <motion.div

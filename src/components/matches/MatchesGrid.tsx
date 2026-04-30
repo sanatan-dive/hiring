@@ -5,20 +5,33 @@ import { Briefcase } from 'lucide-react';
 import MatchCard from './MatchCard';
 import type { Job } from './types';
 
+interface UserContext {
+  skills: string[];
+  preferredLocations: string[];
+  preferRemote: boolean;
+  salaryMin?: number | null;
+}
+
 interface MatchesGridProps {
   jobs: Job[];
   savedJobs: string[];
   applications: Record<string, string>;
+  userContext?: UserContext;
   onOpenJob: (job: Job) => void;
   onToggleSave: (jobId: string, e?: React.MouseEvent) => void;
+  onHideJob?: (jobId: string, e?: React.MouseEvent) => void;
+  onHideCompany?: (company: string, e?: React.MouseEvent) => void;
 }
 
 const MatchesGrid: React.FC<MatchesGridProps> = ({
   jobs,
   savedJobs,
   applications,
+  userContext,
   onOpenJob,
   onToggleSave,
+  onHideJob,
+  onHideCompany,
 }) => {
   return (
     <div className="space-y-4">
@@ -30,8 +43,11 @@ const MatchesGrid: React.FC<MatchesGridProps> = ({
             index={index}
             isSaved={savedJobs.includes(job.id)}
             applicationStatus={applications[job.id]}
+            userContext={userContext}
             onOpen={onOpenJob}
             onToggleSave={onToggleSave}
+            onHideJob={onHideJob}
+            onHideCompany={onHideCompany}
           />
         ))
       ) : (

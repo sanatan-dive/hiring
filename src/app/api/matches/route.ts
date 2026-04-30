@@ -2,8 +2,10 @@ import { log } from '@/lib/log';
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import prisma from '@/lib/db/prisma';
-import { findSimilarJobs } from '@/services/matching.service';
+import { findSimilarJobs, type ScoredJob } from '@/services/matching.service';
 import { generateEmbedding } from '@/lib/ai/google';
+
+const MAX_LIMIT = 100;
 
 export async function GET(req: Request) {
   try {
@@ -14,84 +16,125 @@ export async function GET(req: Request) {
 
     const { searchParams } = new URL(req.url);
     const query = searchParams.get('query');
-    const limit = parseInt(searchParams.get('limit') || '20');
+    const limit = Math.min(MAX_LIMIT, parseInt(searchParams.get('limit') || '20'));
+    const cursor = searchParams.get('cursor'); // job id of last item
+    const filter = searchParams.get('filter') || 'all'; // all | remote | high | unviewed | applied
+
+    const user = await prisma.user.findUnique({
+      where: { clerkId: userId },
+      include: {
+        resumes: {
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+          include: { parsedSkills: true, parsedExperiences: true },
+        },
+        jobPreferences: true,
+      },
+    });
 
     let embedding: number[] | null = null;
 
     if (query) {
-      // If query provided, generate embedding for it
       embedding = await generateEmbedding(query);
-    } else {
-      // Build a rich profile embedding from user's skills + preferences + resume
-      const user = await prisma.user.findUnique({
-        where: { clerkId: userId },
-        include: {
-          resumes: {
-            orderBy: { createdAt: 'desc' },
-            take: 1,
-            include: {
-              parsedSkills: true,
-              parsedExperiences: true,
-            },
-          },
-          jobPreferences: true,
-        },
-      });
+    } else if (user) {
+      const parts: string[] = [];
+      if (user.skills?.length) parts.push(user.skills.join(', '));
 
-      if (user) {
-        const parts: string[] = [];
+      const resume = user.resumes[0];
+      if (resume?.parsedSkills?.length) {
+        parts.push(resume.parsedSkills.map((s) => s.skill).join(', '));
+      }
+      if (resume?.parsedExperiences?.length) {
+        const expText = resume.parsedExperiences
+          .map(
+            (e) =>
+              `${e.role || ''} at ${e.company || ''} ${(e.description || '').substring(0, 200)}`
+          )
+          .join('. ');
+        parts.push(expText);
+      }
+      const prefs = user.jobPreferences;
+      if (prefs?.desiredRoles?.length) parts.push(prefs.desiredRoles.join(', '));
+      if (prefs?.experienceLevel) parts.push(prefs.experienceLevel);
+      if (prefs?.workLocation) parts.push(prefs.workLocation);
+      if (prefs?.locations?.length) parts.push(prefs.locations.join(', '));
 
-        // User skills (stored directly on user from onboarding)
-        if (user.skills?.length) {
-          parts.push(user.skills.join(', '));
-        }
-
-        // Resume parsed skills
-        const resume = user.resumes[0];
-        if (resume?.parsedSkills?.length) {
-          parts.push(resume.parsedSkills.map((s) => s.skill).join(', '));
-        }
-
-        // Resume experiences (role + company + description snippets)
-        if (resume?.parsedExperiences?.length) {
-          const expText = resume.parsedExperiences
-            .map(
-              (e) =>
-                `${e.role || ''} at ${e.company || ''} ${(e.description || '').substring(0, 200)}`
-            )
-            .join('. ');
-          parts.push(expText);
-        }
-
-        // Job preferences
-        const prefs = user.jobPreferences;
-        if (prefs?.desiredRoles?.length) {
-          parts.push(prefs.desiredRoles.join(', '));
-        }
-        if (prefs?.experienceLevel) parts.push(prefs.experienceLevel);
-        if (prefs?.workLocation) parts.push(prefs.workLocation);
-        if (prefs?.locations?.length) parts.push(prefs.locations.join(', '));
-
-        if (parts.length > 0) {
-          const text = parts.join(' | ').substring(0, 8000);
-          embedding = await generateEmbedding(text);
-        }
+      if (parts.length > 0) {
+        embedding = await generateEmbedding(parts.join(' | ').substring(0, 8000));
       }
     }
 
-    if (!embedding) {
-      // Fallback: just return recent jobs if no context
-      const jobs = await prisma.job.findMany({
-        take: limit,
+    // Pull a wider candidate pool; we filter and paginate after ranking.
+    const candidatePoolSize = Math.min(MAX_LIMIT * 3, 200);
+    let scored: ScoredJob[];
+    if (embedding) {
+      scored = await findSimilarJobs(embedding, candidatePoolSize);
+    } else {
+      const recent = await prisma.job.findMany({
+        take: candidatePoolSize,
         orderBy: { scrapedAt: 'desc' },
       });
-      return NextResponse.json({ jobs });
+      scored = recent.map((j) => ({ ...j, scrapedAt: j.scrapedAt, similarity: 0 }));
     }
 
-    // Perform vector search
-    // We ensured embedding is not null above
-    const jobs = await findSimilarJobs(embedding, limit);
-    return NextResponse.json({ jobs });
+    // Apply user-level hidden-companies filter
+    const hiddenCompanies = new Set(
+      (user?.hiddenCompanies ?? []).map((c) => c.toLowerCase())
+    );
+    if (hiddenCompanies.size > 0) {
+      scored = scored.filter((j) => !hiddenCompanies.has((j.company ?? '').toLowerCase()));
+    }
+
+    // Apply hidden-match filter (per-user JobMatch.status='hidden')
+    if (user) {
+      const hiddenMatches = await prisma.jobMatch.findMany({
+        where: { userId: user.id, status: 'hidden' },
+        select: { jobId: true },
+      });
+      const hiddenIds = new Set(hiddenMatches.map((m) => m.jobId));
+      if (hiddenIds.size > 0) scored = scored.filter((j) => !hiddenIds.has(j.id));
+    }
+
+    // Server-side filter chips
+    if (filter === 'remote') {
+      scored = scored.filter((j) =>
+        (j.location ?? '').toLowerCase().includes('remote')
+      );
+    } else if (filter === 'high') {
+      scored = scored.filter((j) => (j.similarity ?? 0) >= 0.8);
+    } else if (filter === 'applied' && user) {
+      const apps = await prisma.application.findMany({
+        where: { userId: user.id },
+        select: { jobId: true },
+      });
+      const ids = new Set(apps.map((a) => a.jobId));
+      scored = scored.filter((j) => ids.has(j.id));
+    } else if (filter === 'unviewed' && user) {
+      const seen = await prisma.jobMatch.findMany({
+        where: { userId: user.id, status: { in: ['viewed', 'applied', 'rejected'] } },
+        select: { jobId: true },
+      });
+      const ids = new Set(seen.map((m) => m.jobId));
+      scored = scored.filter((j) => !ids.has(j.id));
+    }
+
+    // Cursor pagination over the filtered, ranked list
+    let startIdx = 0;
+    if (cursor) {
+      const idx = scored.findIndex((j) => j.id === cursor);
+      startIdx = idx >= 0 ? idx + 1 : 0;
+    }
+    const page = scored.slice(startIdx, startIdx + limit);
+    const nextCursor =
+      page.length === limit && startIdx + limit < scored.length
+        ? page[page.length - 1].id
+        : null;
+
+    return NextResponse.json({
+      jobs: page,
+      nextCursor,
+      total: scored.length,
+    });
   } catch (error) {
     log.error('Matches API Error:', error);
     return NextResponse.json({ error: 'Failed to fetch matches' }, { status: 500 });

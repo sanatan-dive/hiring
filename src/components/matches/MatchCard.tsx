@@ -9,17 +9,30 @@ import {
   Bookmark,
   BookmarkCheck,
   DollarSign,
+  EyeOff,
+  Building2,
 } from 'lucide-react';
 import MatchScore from './MatchScore';
+import MatchExplanation from './MatchExplanation';
 import type { Job } from './types';
+
+interface UserContext {
+  skills: string[];
+  preferredLocations: string[];
+  preferRemote: boolean;
+  salaryMin?: number | null;
+}
 
 interface MatchCardProps {
   job: Job;
   index: number;
   isSaved: boolean;
   applicationStatus?: string;
+  userContext?: UserContext;
   onOpen: (job: Job) => void;
   onToggleSave: (jobId: string, e?: React.MouseEvent) => void;
+  onHideJob?: (jobId: string, e?: React.MouseEvent) => void;
+  onHideCompany?: (company: string, e?: React.MouseEvent) => void;
 }
 
 const MatchCard: React.FC<MatchCardProps> = ({
@@ -27,8 +40,11 @@ const MatchCard: React.FC<MatchCardProps> = ({
   index,
   isSaved,
   applicationStatus,
+  userContext,
   onOpen,
   onToggleSave,
+  onHideJob,
+  onHideCompany,
 }) => {
   return (
     <motion.div
@@ -80,6 +96,33 @@ const MatchCard: React.FC<MatchCardProps> = ({
           <p className="mt-4 line-clamp-2 text-sm text-gray-600">
             {job.description ? job.description.replace(/<[^>]*>?/gm, '') : ''}
           </p>
+
+          {userContext && <MatchExplanation job={job} user={userContext} />}
+
+          {(onHideJob || onHideCompany) && (
+            <div className="mt-3 flex gap-3 text-xs text-gray-500">
+              {onHideJob && (
+                <button
+                  onClick={(e) => onHideJob(job.id, e)}
+                  className="inline-flex items-center gap-1 hover:text-red-600"
+                  title="Hide this job"
+                >
+                  <EyeOff className="h-3 w-3" />
+                  Hide
+                </button>
+              )}
+              {onHideCompany && (
+                <button
+                  onClick={(e) => onHideCompany(job.company, e)}
+                  className="inline-flex items-center gap-1 hover:text-red-600"
+                  title={`Hide all jobs from ${job.company}`}
+                >
+                  <Building2 className="h-3 w-3" />
+                  Hide all from {job.company}
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="ml-4 flex flex-col gap-2">

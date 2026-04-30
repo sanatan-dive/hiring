@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import { log } from '@/lib/log';
 import prisma from '@/lib/db/prisma';
 import { searchAdzunaJobs } from '@/lib/api/adzuna';
@@ -9,6 +10,53 @@ import { publishJob } from '@/lib/queue/client';
 import { scrapeLinkedIn } from '@/lib/scrapers/linkedin';
 import { scrapeIndeed } from '@/lib/scrapers/indeed';
 import { sendScrapeCompleteEmail } from '@/services/email.service';
+
+/**
+ * Stable hash of (title|company|location) for duplicate detection across
+ * UTM-tagged URLs. Same job from two sources collapses to one row.
+ */
+export function jobContentHash(input: {
+  title: string;
+  company: string;
+  location?: string | null;
+}) {
+  const norm = (s: string) => s.toLowerCase().trim().replace(/\s+/g, ' ');
+  return crypto
+    .createHash('sha256')
+    .update(`${norm(input.title)}|${norm(input.company)}|${norm(input.location ?? '')}`)
+    .digest('hex');
+}
+
+/**
+ * Compute the unique fetch keys (query + location pairs) for a batch of users
+ * based on their JobPreferences. Deduplicates so we make N API calls, not 1
+ * per user. Also enforces a small fan-out cap to stay inside free-tier quotas.
+ */
+export async function buildPerUserFetchPlan(maxUnique = 25): Promise<
+  Array<{ query: string; location: string }>
+> {
+  const users = await prisma.user.findMany({
+    where: { jobPreferences: { isNot: null } },
+    include: { jobPreferences: true },
+    take: 500, // hard cap; chunking happens above this
+  });
+
+  const uniq = new Map<string, { query: string; location: string }>();
+  for (const u of users) {
+    const prefs = u.jobPreferences;
+    if (!prefs) continue;
+    const role = prefs.desiredRoles?.[0]?.trim();
+    if (!role) continue;
+    const location =
+      prefs.workLocation === 'remote'
+        ? 'remote'
+        : (prefs.locations?.[0]?.trim() ?? 'remote');
+    const key = `${role.toLowerCase()}|${location.toLowerCase()}`;
+    if (!uniq.has(key)) uniq.set(key, { query: role, location });
+    if (uniq.size >= maxUnique) break;
+  }
+  return Array.from(uniq.values());
+}
 
 // Helper interface for jobs before they are saved to DB
 interface JobInput {
@@ -114,12 +162,28 @@ export async function saveJobs(jobs: JobInput[]) {
   for (const job of jobs) {
     if (!job.url) continue;
     try {
+      const contentHash = jobContentHash(job);
+
+      // Skip if a different URL already represents this exact title+company+location
+      const existing = await prisma.job.findUnique({ where: { contentHash } });
+      if (existing && existing.url !== job.url) {
+        // Don't insert a duplicate, but freshen the salary if missing
+        if (!existing.salary && job.salary) {
+          await prisma.job.update({
+            where: { id: existing.id },
+            data: { salary: job.salary },
+          });
+        }
+        continue;
+      }
+
       await prisma.job.upsert({
         where: { url: job.url },
         update: {
           title: job.title,
           description: job.description,
           salary: job.salary,
+          contentHash,
         },
         create: {
           title: job.title,
@@ -127,6 +191,7 @@ export async function saveJobs(jobs: JobInput[]) {
           location: job.location,
           description: job.description,
           url: job.url,
+          contentHash,
           salary: job.salary,
           source: job.source,
           techStack: [],

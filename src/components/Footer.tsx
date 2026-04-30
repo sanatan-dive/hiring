@@ -36,9 +36,8 @@ function Footer() {
               className="group mb-3 flex items-center gap-1 transition-all duration-300 hover:scale-105 hover:cursor-pointer"
               onClick={() => router.push('/')}
             >
-              <h1 className="font-sans text-xl font-bold text-black lg:text-2xl">Hir&apos;</h1>
-              <h1 className="rounded bg-blue-600 px-1 text-xl font-bold text-white lg:text-2xl">
-                in
+              <h1 className="font-sans text-xl font-bold tracking-tight text-black lg:text-2xl">
+                Hirin<span className="text-indigo-600">.</span>
               </h1>
             </div>
             <p className="mb-3 max-w-sm text-sm text-gray-600">
@@ -94,7 +93,7 @@ function Footer() {
         {/* Bottom footer */}
         <div className="flex flex-col items-center justify-between border-t border-gray-200 py-3 md:flex-row">
           <div className="mb-2 text-xs text-gray-600 md:mb-0">
-            © 2026 Hir&apos;in. All rights reserved.
+            © 2026 Hirin. All rights reserved.
           </div>
 
           {/* Social Links */}

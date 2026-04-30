@@ -14,7 +14,12 @@ interface RawJobRow {
   similarity: unknown; // Prisma returns BigDecimal as Decimal/string
 }
 
-export async function findSimilarJobs(embedding: number[], limit = 20) {
+export type ScoredJob = Omit<RawJobRow, 'similarity'> & { similarity: number };
+
+export async function findSimilarJobs(
+  embedding: number[],
+  limit = 20
+): Promise<ScoredJob[]> {
   if (!embedding || embedding.length === 0) return [];
 
   // Use raw SQL for pgvector similarity search
