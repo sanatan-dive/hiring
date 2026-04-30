@@ -21,28 +21,51 @@ export const RATELIMIT_CONFIG = {
   },
 } as const;
 
+// Unified ratelimit object. Limiters are lazily resolved so that the module
+// stays importable when Redis env vars are missing (dev / preview).
+type Limiter = {
+  limit: (
+    identifier: string
+  ) => Promise<{ success: boolean; limit: number; remaining: number; reset: number }>;
+};
+
+const noopLimiter: Limiter = {
+  limit: async () => ({ success: true, limit: 0, remaining: 0, reset: 0 }),
+};
+
+function makeLimiter(
+  count: number,
+  window: Parameters<typeof Ratelimit.slidingWindow>[1],
+  prefix: string
+): Limiter {
+  if (!redis) return noopLimiter;
+  return new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(count, window),
+    analytics: true,
+    prefix,
+  });
+}
+
+export const ratelimit = {
+  jobsFreeWeekly: makeLimiter(3, '7 d', 'rl:jobs:free'),
+  jobsProDaily: makeLimiter(100, '1 d', 'rl:jobs:pro'),
+  aiPro: makeLimiter(20, '1 d', 'rl:ai'),
+  scrape: makeLimiter(5, '1 d', 'rl:scrape'),
+  payments: makeLimiter(10, '1 d', 'rl:pay'),
+};
+
 export async function checkRateLimit(
   userId: string,
   plan: 'FREE' | 'PRO' = 'FREE'
 ): Promise<{ success: boolean; limit: number; remaining: number; reset: number }> {
-  // If no Redis, decide fail-open or fail-closed.
-  // Fail-open (allow request) is usually safer for UX if infra is missing in dev.
+  // Fail-open in dev / when Redis missing.
   if (!redis) {
-    console.warn('⚠️ Rate limiting disabled: UPSTASH_REDIS keys missing');
+    console.warn('Rate limiting disabled: UPSTASH_REDIS keys missing');
     return { success: true, limit: 100, remaining: 100, reset: 0 };
   }
 
-  const config = RATELIMIT_CONFIG[plan];
-
-  // Create a new ratelimiter, that allows {config.max} requests per {config.window}
-  const ratelimit = new Ratelimit({
-    redis,
-    limiter: Ratelimit.slidingWindow(config.max, config.window as '1 d' | '7 d'),
-    analytics: true,
-    prefix: '@upstash/ratelimit',
-  });
-
-  const { success, limit, remaining, reset } = await ratelimit.limit(`job_fetch:${userId}`);
-
+  const limiter = plan === 'PRO' ? ratelimit.jobsProDaily : ratelimit.jobsFreeWeekly;
+  const { success, limit, remaining, reset } = await limiter.limit(`job_fetch:${userId}`);
   return { success, limit, remaining, reset };
 }

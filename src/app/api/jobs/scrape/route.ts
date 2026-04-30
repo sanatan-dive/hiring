@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { currentUser } from '@clerk/nextjs/server';
 import prisma from '@/lib/db/prisma';
 import { triggerDeepScrape } from '@/services/job.service';
+import { ratelimit } from '@/lib/ratelimit';
 
 export async function POST(req: Request) {
   try {
@@ -18,6 +19,20 @@ export async function POST(req: Request) {
     const isPro = dbUser?.subscription?.plan === 'PRO' && dbUser?.subscription?.status === 'active';
     if (!isPro) {
       return NextResponse.json({ error: 'Deep scraping is a Pro feature.' }, { status: 403 });
+    }
+
+    // Enforce 5 deep scrapes per day per Pro user.
+    const { success, remaining, reset } = await ratelimit.scrape.limit(`scrape:${user.id}`);
+    if (!success) {
+      return NextResponse.json(
+        { error: '5 deep scrapes per day max', retryAfter: reset },
+        {
+          status: 429,
+          headers: {
+            'X-RateLimit-Remaining': remaining.toString(),
+          },
+        }
+      );
     }
 
     // Default to user preferences if not provided

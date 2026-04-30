@@ -1,12 +1,18 @@
 import { NextResponse } from 'next/server';
 import { fetchAndSaveJobs } from '@/services/job.service';
 
-export async function GET(req: Request) {
-  // Verify authentication
-  // In development, you might want to bypass this or use a local secret
+function isAuthorizedCron(req: Request): boolean {
+  if (req.headers.get('x-vercel-cron') === '1') return true;
   const authHeader = req.headers.get('authorization');
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return new NextResponse('Unauthorized', { status: 401 });
+  if (process.env.CRON_SECRET && authHeader === `Bearer ${process.env.CRON_SECRET}`) {
+    return true;
+  }
+  return false;
+}
+
+export async function GET(req: Request) {
+  if (!isAuthorizedCron(req)) {
+    return new NextResponse('Forbidden', { status: 403 });
   }
 
   try {

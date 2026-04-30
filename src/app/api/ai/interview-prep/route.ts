@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import prisma from '@/lib/db/prisma';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { checkRateLimit } from '@/lib/rate-limit';
+import { ratelimit } from '@/lib/ratelimit';
 
 const genAI = process.env.GEMINI_API_KEY
   ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
@@ -15,8 +15,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    await checkRateLimit(userId);
-
     // 1. Check Subscription
     const user = await prisma.user.findUnique({
       where: { clerkId: userId },
@@ -28,18 +26,32 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Pro subscription required' }, { status: 403 });
     }
 
+    // 2. Enforce per-user daily AI rate limit (20/day)
+    const { success, remaining, reset } = await ratelimit.aiPro.limit(`ai:interview:${userId}`);
+    if (!success) {
+      return NextResponse.json(
+        { error: 'Daily limit reached (20/day)', retryAfter: reset },
+        {
+          status: 429,
+          headers: {
+            'X-RateLimit-Remaining': remaining.toString(),
+          },
+        }
+      );
+    }
+
     const { jobDescription, jobTitle, companyName } = await req.json();
 
     if (!genAI) {
       return NextResponse.json({ error: 'AI service not configured' }, { status: 500 });
     }
 
-    // 2. Generate Interview Prep
+    // 3. Generate Interview Prep
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
     const prompt = `
       I am interviewing for the role of "${jobTitle}" at "${companyName}".
-      
+
       Job Description:
       ${jobDescription.substring(0, 1000)}...
 
@@ -57,7 +69,10 @@ export async function POST(req: Request) {
     // Clean markdown code blocks if present
     const cleanText = text.replace(/```json\n|\n```/g, '');
 
-    return NextResponse.json({ prep: JSON.parse(cleanText) });
+    return NextResponse.json(
+      { prep: JSON.parse(cleanText) },
+      { headers: { 'X-RateLimit-Remaining': remaining.toString() } }
+    );
   } catch (error) {
     console.error('Interview prep generation error:', error);
     return NextResponse.json({ error: 'Failed to generate interview prep' }, { status: 500 });

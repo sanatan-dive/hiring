@@ -29,6 +29,7 @@
     "clsx": "^2.1.1",
     "dodopayments": "^1.30.0",
     "embla-carousel-react": "^8.6.0",
+    "file-type": "^22.0.1",
     "framer-motion": "^12.23.0",
     "lucide-react": "^0.525.0",
     "mammoth": "^1.11.0",
