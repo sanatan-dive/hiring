@@ -14,18 +14,23 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ['pdf-parse', '@napi-rs/canvas'],
 };
 
-// Only wrap with Sentry when DSN is available
-const sentryConfig = process.env.NEXT_PUBLIC_SENTRY_DSN
+// Wrap with Sentry only when DSN is set. Source-map upload is also gated on
+// SENTRY_AUTH_TOKEN — without it, withSentryConfig fails the Vercel build
+// trying to push source maps. We still capture errors at runtime via DSN even
+// when AUTH_TOKEN is missing; we just skip uploading maps.
+const hasSentryDsn = Boolean(process.env.NEXT_PUBLIC_SENTRY_DSN);
+const hasSentryAuth = Boolean(process.env.SENTRY_AUTH_TOKEN);
+
+const sentryConfig = hasSentryDsn
   ? withSentryConfig(nextConfig, {
       org: process.env.SENTRY_ORG,
       project: process.env.SENTRY_PROJECT,
+      authToken: process.env.SENTRY_AUTH_TOKEN,
       silent: true,
       widenClientFileUpload: true,
       disableLogger: true,
       tunnelRoute: '/monitoring',
-      sourcemaps: {
-        deleteSourcemapsAfterUpload: true,
-      },
+      sourcemaps: hasSentryAuth ? { deleteSourcemapsAfterUpload: true } : { disable: true },
     })
   : nextConfig;
 
