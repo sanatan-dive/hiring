@@ -3,7 +3,10 @@ import React, { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { UploadCloud, File as FileIcon, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import toast from 'react-hot-toast';
 
+// Each consumer narrows the parsed-resume shape themselves; we just hand off
+// whatever the parse-resume API returns.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const FileUpload = ({ onUpload }: { onUpload: (data: any) => void }) => {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
@@ -22,13 +25,12 @@ const FileUpload = ({ onUpload }: { onUpload: (data: any) => void }) => {
 
         const data = await response.json();
         if (data.success) {
-          console.log('Parsed Resume JSON:', data.resume);
           onUpload(data.resume);
         } else {
-          console.error('Error parsing file:', data.error);
+          toast.error(data.error || 'Could not parse resume — try a different file.');
         }
-      } catch (error) {
-        console.error('Error uploading file:', error);
+      } catch {
+        toast.error('Network error uploading resume. Please try again.');
       }
     },
     [onUpload]

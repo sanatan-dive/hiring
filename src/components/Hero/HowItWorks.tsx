@@ -3,7 +3,7 @@ import JobSearchDashboard from '../Dashboard';
 import { ArrowRight } from 'lucide-react';
 import GlowButton from '../ui/glow-button';
 
-const varian = [
+const variants = [
   {
     name: 'blue',
     color: '#126fff',
@@ -11,7 +11,7 @@ const varian = [
 ];
 
 function HowItWorks() {
-  const selectedVariant = varian[0];
+  const selectedVariant = variants[0];
   return (
     <div className="relative z-10 min-h-screen w-full bg-white dark:bg-white dark:text-white">
       {/* Sky Glow Left */}

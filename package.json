@@ -34,6 +34,7 @@
     "framer-motion": "^12.23.0",
     "lucide-react": "^0.525.0",
     "mammoth": "^1.11.0",
+    "msedge-tts": "^2.0.5",
     "next": "15.3.8",
     "officeparser": "^6.0.4",
     "p5": "^2.0.3",

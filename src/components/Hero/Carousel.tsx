@@ -95,7 +95,7 @@ const Carousel: React.FC<CarouselProps> = ({
   };
 
   return (
-    <div className="relative flex min-h-screen flex-col bg-white font-sans">
+    <div className="relative z-20 flex min-h-screen flex-col bg-white font-sans">
       <div
         className="absolute inset-0 z-10"
         style={{

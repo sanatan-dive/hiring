@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   MapPin,
@@ -13,6 +13,44 @@ import {
   DollarSign,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import sanitizeHtml from 'sanitize-html';
+
+const DESCRIPTION_SANITIZE_CONFIG: sanitizeHtml.IOptions = {
+  allowedTags: [
+    'p',
+    'br',
+    'strong',
+    'em',
+    'b',
+    'i',
+    'u',
+    'a',
+    'ul',
+    'ol',
+    'li',
+    'h1',
+    'h2',
+    'h3',
+    'h4',
+    'h5',
+    'h6',
+    'blockquote',
+    'code',
+    'pre',
+    'hr',
+    'span',
+    'div',
+  ],
+  allowedAttributes: {
+    a: ['href', 'title', 'target', 'rel'],
+    span: ['class'],
+    div: ['class'],
+  },
+  allowedSchemes: ['http', 'https', 'mailto'],
+  transformTags: {
+    a: sanitizeHtml.simpleTransform('a', { rel: 'nofollow noopener', target: '_blank' }),
+  },
+};
 
 interface Job {
   id: string;
@@ -56,6 +94,11 @@ export default function JobDetailModal({
   onUpdateStatus,
 }: JobDetailModalProps) {
   const [currentStatus, setCurrentStatus] = useState(applicationStatus || 'pending');
+
+  const sanitizedDescription = useMemo(
+    () => sanitizeHtml(job.description || '', DESCRIPTION_SANITIZE_CONFIG),
+    [job.description]
+  );
 
   const handleStatusChange = (newStatus: string) => {
     setCurrentStatus(newStatus);
@@ -164,7 +207,7 @@ export default function JobDetailModal({
               <div className="prose prose-blue max-w-none text-gray-600">
                 <div
                   className="leading-relaxed"
-                  dangerouslySetInnerHTML={{ __html: job.description || '' }}
+                  dangerouslySetInnerHTML={{ __html: sanitizedDescription }}
                 />
               </div>
             </div>

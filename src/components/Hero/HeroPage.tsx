@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 import React, { useEffect, useRef, useState } from 'react';
-import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Variants } from 'framer-motion';
 // Dynamically import p5 to avoid SSR issues
@@ -180,15 +179,13 @@ function HeroPage() {
   const canvasRef = useRef<HTMLDivElement>(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  const logos = [
-    {
-      name: 'Indeed',
-      src: 'https://i0.wp.com/verotouch.com/wp-content/uploads/2024/02/Indeed-Logo-Black.png?ssl=1',
-    },
-    {
-      name: 'Naukri',
-      src: 'https://fontslogo.com/wp-content/uploads/2013/04/M-2p-black_Naukri-Logo-Font.jpg',
-    },
+  const sources = [
+    { name: 'Indeed', initial: 'in', bg: 'bg-[#2557A7]', text: 'text-white' },
+    { name: 'Naukri', initial: 'na', bg: 'bg-[#5C36F1]', text: 'text-white' },
+    { name: 'Adzuna', initial: 'ad', bg: 'bg-[#0F172A]', text: 'text-white' },
+    { name: 'JSearch', initial: 'js', bg: 'bg-emerald-600', text: 'text-white' },
+    { name: 'RemoteOK', initial: 'ro', bg: 'bg-rose-500', text: 'text-white' },
+    { name: 'WeWorkRemotely', initial: 'ww', bg: 'bg-sky-500', text: 'text-white' },
   ];
 
   useEffect(() => {
@@ -556,9 +553,8 @@ function HeroPage() {
                 transition={{ delay: 1, duration: 0.6 }}
               >
                 Hirin helps you apply smarter and faster to jobs where you can thrive. Whether
-                you&apos;re seeking your next opportunity{' '}
-                <br className="hidden sm:inline" /> or looking to land interviews at top companies,
-                Hirin streamlines the process for you.
+                you&apos;re seeking your next opportunity <br className="hidden sm:inline" /> or
+                looking to land interviews at top companies, Hirin streamlines the process for you.
               </motion.p>
             </motion.div>
 
@@ -588,32 +584,32 @@ function HeroPage() {
         </motion.h2>
 
         <motion.div
-          className="mx-auto mb-10 flex max-w-5xl flex-wrap items-center justify-center gap-12 md:gap-24"
+          className="mx-auto mb-10 flex max-w-5xl flex-wrap items-center justify-center gap-4 sm:gap-6 md:gap-8"
           variants={containerVariants}
           initial="hidden"
           animate="visible"
         >
-          {logos.map((logo, index) => (
+          {sources.map((source, index) => (
             <motion.div
-              key={logo.name}
-              className="flex items-center justify-center"
+              key={source.name}
+              className="flex items-center gap-3 rounded-full border border-gray-200 bg-white px-4 py-2.5 shadow-sm transition-all hover:border-sky-300 hover:shadow-md sm:px-5 sm:py-3"
               variants={logoVariants}
               whileHover={{
-                scale: 1.1,
-                y: -5,
+                scale: 1.05,
+                y: -4,
                 transition: { type: 'spring', stiffness: 300, damping: 20 },
               }}
               custom={index}
             >
-              <motion.div whileHover={{ filter: 'grayscale(0%)' }} transition={{ duration: 0.3 }}>
-                <Image
-                  src={logo.src}
-                  alt={logo.name}
-                  width={150}
-                  height={150}
-                  className="h-20 w-20 object-contain grayscale filter transition-all duration-300 hover:grayscale-0 sm:h-40 sm:w-40"
-                />
-              </motion.div>
+              <span
+                className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${source.bg} ${source.text}`}
+                aria-hidden="true"
+              >
+                {source.initial}
+              </span>
+              <span className="font-poppins text-sm font-medium text-gray-900 sm:text-base">
+                {source.name}
+              </span>
             </motion.div>
           ))}
         </motion.div>

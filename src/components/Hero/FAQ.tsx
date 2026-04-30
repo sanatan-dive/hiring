@@ -23,12 +23,12 @@ const faqData: FAQItem[] = [
   {
     question: 'Can I track my job applications and interviews on Hirin?',
     answer:
-      'Absolutely! Hirin includes a built-in dashboard that helps you monitor your applications, interview schedules, status updates, and feedback — all in one place. No more juggling spreadsheets or losing track of where youve applied.',
+      'Absolutely! Hirin includes a built-in dashboard that helps you monitor your applications, interview schedules, status updates, and feedback — all in one place. No more juggling spreadsheets or losing track of where you&apos;ve applied.',
   },
   {
     question: 'Is Hirin suitable for freshers and experienced professionals?',
     answer:
-      'Yes! Whether youre a fresher starting your career or an experienced professional seeking your next challenge, Hirin customizes job matches and application strategies based on your level, skills, and goals. It ensures your applications stand out, no matter where you are in your career.',
+      'Yes! Whether you&apos;re a fresher starting your career or an experienced professional seeking your next challenge, Hirin customizes job matches and application strategies based on your level, skills, and goals. It ensures your applications stand out, no matter where you are in your career.',
   },
 ];
 
@@ -81,7 +81,7 @@ const FAQ = () => {
             />
             <div
               className={`overflow-hidden transition-all duration-500 ${
-                activeIndex === actualIndex ? 'max-h-96 sm:max-h-48' : 'max-h-0'
+                activeIndex === actualIndex ? 'max-h-96 sm:max-h-[32rem]' : 'max-h-0'
               }`}
             >
               <p className="p-4 text-base leading-relaxed text-gray-600 sm:text-lg">

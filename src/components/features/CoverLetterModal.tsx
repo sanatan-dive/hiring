@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { X, Copy, Check, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
@@ -14,6 +14,38 @@ interface CoverLetterModalProps {
   jobDescription?: string;
 }
 
+type Tone = 'enthusiastic' | 'concise' | 'technical';
+
+interface DraftEntry {
+  at: number;
+  text: string;
+}
+
+const HISTORY_LIMIT = 3;
+
+const storageKey = (jobId: string) => `hirin:cover-letter:${jobId}`;
+
+const readHistory = (jobId: string): DraftEntry[] => {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = window.localStorage.getItem(storageKey(jobId));
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
+const writeHistory = (jobId: string, entries: DraftEntry[]) => {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(storageKey(jobId), JSON.stringify(entries));
+  } catch {
+    // ignore quota errors
+  }
+};
+
 const CoverLetterModal: React.FC<CoverLetterModalProps> = ({
   isOpen,
   onClose,
@@ -26,9 +58,30 @@ const CoverLetterModal: React.FC<CoverLetterModalProps> = ({
   const [coverLetter, setCoverLetter] = useState('');
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState('');
+  const [customInstructions, setCustomInstructions] = useState('');
+  const [history, setHistory] = useState<DraftEntry[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
   const router = useRouter();
 
-  const generateLetter = async () => {
+  useEffect(() => {
+    if (isOpen) {
+      setHistory(readHistory(jobId));
+    }
+  }, [isOpen, jobId]);
+
+  const wordCount = useMemo(
+    () => (coverLetter.trim() ? coverLetter.trim().split(/\s+/).length : 0),
+    [coverLetter]
+  );
+
+  const persistDraft = (text: string) => {
+    if (!text.trim()) return;
+    const next: DraftEntry[] = [{ at: Date.now(), text }, ...history].slice(0, HISTORY_LIMIT);
+    setHistory(next);
+    writeHistory(jobId, next);
+  };
+
+  const generateLetter = async (opts?: { tone?: Tone; customInstructions?: string }) => {
     setLoading(true);
     setError('');
     try {
@@ -40,6 +93,8 @@ const CoverLetterModal: React.FC<CoverLetterModalProps> = ({
           jobTitle,
           companyName,
           jobDescription: jobDescription || '',
+          tone: opts?.tone,
+          customInstructions: opts?.customInstructions,
         }),
       });
 
@@ -55,9 +110,9 @@ const CoverLetterModal: React.FC<CoverLetterModalProps> = ({
       }
 
       setCoverLetter(data.coverLetter);
-    } catch (err) {
+      persistDraft(data.coverLetter);
+    } catch {
       setError('An error occurred. Please try again.');
-      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -67,6 +122,11 @@ const CoverLetterModal: React.FC<CoverLetterModalProps> = ({
     navigator.clipboard.writeText(coverLetter);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const loadDraft = (entry: DraftEntry) => {
+    setCoverLetter(entry.text);
+    setShowHistory(false);
   };
 
   if (!isOpen) return null;
@@ -109,7 +169,7 @@ const CoverLetterModal: React.FC<CoverLetterModalProps> = ({
               )}
 
               <button
-                onClick={generateLetter}
+                onClick={() => generateLetter()}
                 disabled={loading}
                 className="inline-flex items-center gap-2 rounded-lg bg-sky-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-sky-700 disabled:opacity-50"
               >
@@ -122,18 +182,135 @@ const CoverLetterModal: React.FC<CoverLetterModalProps> = ({
                   <>Generate Cover Letter</>
                 )}
               </button>
+
+              {history.length > 0 && (
+                <div className="mt-6 text-left">
+                  <button
+                    type="button"
+                    onClick={() => setShowHistory((v) => !v)}
+                    className="text-sm font-medium text-sky-600 hover:underline"
+                  >
+                    Previous drafts ({history.length})
+                  </button>
+                  {showHistory && (
+                    <ul className="mt-2 divide-y rounded-lg border bg-gray-50">
+                      {history.map((entry) => (
+                        <li key={entry.at} className="flex items-center justify-between gap-2 p-2">
+                          <span className="truncate text-xs text-gray-600">
+                            {new Date(entry.at).toLocaleString()} — {entry.text.slice(0, 60).trim()}
+                            …
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => loadDraft(entry)}
+                            className="shrink-0 rounded border bg-white px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-100"
+                          >
+                            Load
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
             </div>
           ) : (
             <div className="relative">
-              <div className="mb-4 max-h-[60vh] overflow-y-auto rounded-lg border bg-gray-50 p-4 text-sm whitespace-pre-wrap text-gray-800">
-                {coverLetter}
+              {error && (
+                <div className="mb-3 rounded-lg bg-red-50 p-3 text-sm text-red-600">{error}</div>
+              )}
+
+              <textarea
+                value={coverLetter}
+                onChange={(e) => setCoverLetter(e.target.value)}
+                className="mb-1 max-h-[50vh] min-h-[260px] w-full resize-y overflow-y-auto rounded-lg border bg-gray-50 p-4 text-sm whitespace-pre-wrap text-gray-800 focus:ring-2 focus:ring-sky-500 focus:outline-none"
+              />
+              <div className="mb-3 flex items-center justify-between text-xs text-gray-500">
+                <span>{wordCount} words</span>
+                {history.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setShowHistory((v) => !v)}
+                    className="font-medium text-sky-600 hover:underline"
+                  >
+                    Previous drafts ({history.length})
+                  </button>
+                )}
               </div>
+
+              {showHistory && history.length > 0 && (
+                <ul className="mb-3 divide-y rounded-lg border bg-gray-50">
+                  {history.map((entry) => (
+                    <li key={entry.at} className="flex items-center justify-between gap-2 p-2">
+                      <span className="truncate text-xs text-gray-600">
+                        {new Date(entry.at).toLocaleString()} — {entry.text.slice(0, 60).trim()}…
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => loadDraft(entry)}
+                        className="shrink-0 rounded border bg-white px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-100"
+                      >
+                        Load
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              <div className="mb-3 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => generateLetter({ tone: 'enthusiastic' })}
+                  disabled={loading}
+                  className="rounded-lg border px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                >
+                  More Enthusiastic
+                </button>
+                <button
+                  type="button"
+                  onClick={() => generateLetter({ tone: 'concise' })}
+                  disabled={loading}
+                  className="rounded-lg border px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                >
+                  More Concise
+                </button>
+                <button
+                  type="button"
+                  onClick={() => generateLetter({ tone: 'technical' })}
+                  disabled={loading}
+                  className="rounded-lg border px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                >
+                  More Technical
+                </button>
+              </div>
+
+              <div className="mb-4 flex gap-2">
+                <input
+                  type="text"
+                  value={customInstructions}
+                  onChange={(e) => setCustomInstructions(e.target.value)}
+                  placeholder="Refine with custom instructions..."
+                  className="flex-1 rounded-lg border px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!customInstructions.trim()) return;
+                    generateLetter({ customInstructions });
+                  }}
+                  disabled={loading || !customInstructions.trim()}
+                  className="rounded-lg bg-sky-600 px-3 py-2 text-sm font-medium text-white hover:bg-sky-700 disabled:opacity-50"
+                >
+                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Regenerate'}
+                </button>
+              </div>
+
               <div className="flex justify-end gap-3">
                 <button
                   onClick={() => setCoverLetter('')}
                   className="rounded-lg border px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50"
                 >
-                  Regenerate
+                  Start Over
                 </button>
                 <button
                   onClick={copyToClipboard}
