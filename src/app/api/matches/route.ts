@@ -1,3 +1,4 @@
+import { log } from '@/lib/log';
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import prisma from '@/lib/db/prisma';
@@ -92,7 +93,7 @@ export async function GET(req: Request) {
     const jobs = await findSimilarJobs(embedding, limit);
     return NextResponse.json({ jobs });
   } catch (error) {
-    console.error('Matches API Error:', error);
+    log.error('Matches API Error:', error);
     return NextResponse.json({ error: 'Failed to fetch matches' }, { status: 500 });
   }
 }

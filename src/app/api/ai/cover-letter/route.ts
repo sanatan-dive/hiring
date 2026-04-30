@@ -1,3 +1,4 @@
+import { log } from '@/lib/log';
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import prisma from '@/lib/db/prisma';
@@ -96,7 +97,7 @@ export async function POST(req: Request) {
       { headers: { 'X-RateLimit-Remaining': remaining.toString() } }
     );
   } catch (error) {
-    console.error('Cover letter generation error:', error);
+    log.error('Cover letter generation error:', error);
     return NextResponse.json({ error: 'Failed to generate cover letter' }, { status: 500 });
   }
 }

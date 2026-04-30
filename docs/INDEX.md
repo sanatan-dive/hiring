@@ -21,7 +21,7 @@ Follow them in this exact order. Each doc is a self-contained phase. Don't skip 
 ### Phase 2: Build the Business Layer (Week 3-4)
 
 5. **[Pricing Strategy](pricing.md)** — Tiers, INR vs USD, competitor comparison, per-feature gating
-6. **[Payment Integration](payment.md)** — Razorpay subscriptions (not one-shot orders), webhook handling, plan lifecycle, DB schema changes
+6. **[Payment Integration](payment.md)** — Dodo Payments (merchant-of-record) hosted checkout, webhook-driven activation, plan lifecycle, DB schema
 
 ### Phase 3: Make It Sellable (Week 5-6)
 

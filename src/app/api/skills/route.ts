@@ -1,3 +1,4 @@
+import { log } from '@/lib/log';
 import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/db/prisma';
@@ -22,7 +23,7 @@ export async function GET() {
 
     return NextResponse.json({ skills: user.skills });
   } catch (error) {
-    console.error('Error fetching skills:', error);
+    log.error('Error fetching skills:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -46,7 +47,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error saving skills:', error);
+    log.error('Error saving skills:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

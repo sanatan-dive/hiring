@@ -1,3 +1,4 @@
+import { log } from '@/lib/log';
 import { NextResponse } from 'next/server';
 import { fetchAndSaveJobs, getJobs } from '@/services/job.service';
 import { auth } from '@clerk/nextjs/server';
@@ -62,7 +63,7 @@ export async function POST(req: Request) {
     const count = await fetchAndSaveJobs(query, location);
     return NextResponse.json({ success: true, count });
   } catch (error) {
-    console.error('Job fetch error:', error);
+    log.error('Job fetch error:', error);
     return NextResponse.json({ error: 'Failed to fetch jobs' }, { status: 500 });
   }
 }
@@ -76,7 +77,7 @@ export async function GET(req: Request) {
     const jobs = await getJobs(page, limit);
     return NextResponse.json({ jobs });
   } catch (error) {
-    console.error('Get jobs error:', error);
+    log.error('Get jobs error:', error);
     return NextResponse.json({ error: 'Failed to get jobs' }, { status: 500 });
   }
 }

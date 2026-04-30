@@ -1,10 +1,11 @@
+import { log } from '@/lib/log';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import config from '@/config';
 
 const apiKey = config.google.apiKey;
 
 if (!apiKey) {
-  console.warn('GOOGLE_API_KEY is not set. Embeddings will fail.');
+  log.warn('GOOGLE_API_KEY is not set. Embeddings will fail.');
 }
 
 // Initialize Gemini Client
@@ -23,7 +24,7 @@ export async function generateEmbedding(text: string): Promise<number[] | null> 
     const vector = result.embedding.values;
     return vector;
   } catch (error) {
-    console.error('Error generating Gemini embedding:', error);
+    log.error('Error generating Gemini embedding:', error);
     return null;
   }
 }

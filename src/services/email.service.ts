@@ -1,3 +1,4 @@
+import { log } from '@/lib/log';
 import { Resend } from 'resend';
 import JobDigestEmail from '@/lib/email/templates/JobDigest';
 
@@ -22,7 +23,7 @@ export const sendJobDigest = async ({ to, userName, jobs }: SendDigestParams) =>
   // const recipient = process.env.NODE_ENV === 'development' ? 'your-test-email@example.com' : to;
 
   if (!process.env.RESEND_API_KEY) {
-    console.warn('⚠️ RESEND_API_KEY missing. Skipping email send.');
+    log.warn('⚠️ RESEND_API_KEY missing. Skipping email send.');
     return { success: false, error: 'Missing API Key' };
   }
 
@@ -35,13 +36,13 @@ export const sendJobDigest = async ({ to, userName, jobs }: SendDigestParams) =>
     });
 
     if (error) {
-      console.error('Email sending failed:', error);
+      log.error('Email sending failed:', error);
       return { success: false, error };
     }
 
     return { success: true, data };
   } catch (err) {
-    console.error('Email service error:', err);
+    log.error('Email service error:', err);
     return { success: false, error: err };
   }
 };
@@ -57,7 +58,7 @@ interface ScrapedJob {
 export const sendScrapeCompleteEmail = async (to: string, jobs: ScrapedJob[], source: string) => {
   const count = jobs.length;
   if (!process.env.RESEND_API_KEY || process.env.NODE_ENV === 'development') {
-    console.log(
+    log.info(
       `[DEV] Mock sending email to ${to}: Deep Scrape Finished. Found ${count} jobs from ${source}.`
     );
     if (!process.env.RESEND_API_KEY) return { success: true };
@@ -101,12 +102,12 @@ export const sendScrapeCompleteEmail = async (to: string, jobs: ScrapedJob[], so
     });
 
     if (error) {
-      console.error('Scrape email failed:', error);
+      log.error('Scrape email failed:', error);
       return { success: false, error };
     }
     return { success: true, data };
   } catch (err) {
-    console.error('Email error:', err);
+    log.error('Email error:', err);
     return { success: false, error: err };
   }
 };

@@ -1,3 +1,4 @@
+import { log } from '@/lib/log';
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/db/prisma';
 import { sendJobDigest } from '@/services/email.service';
@@ -101,7 +102,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json({ success: true, results });
   } catch (error) {
-    console.error('Cron digest error:', error);
+    log.error('Cron digest error:', error);
     return NextResponse.json({ success: false, error: 'Internal Server Error' }, { status: 500 });
   }
 }

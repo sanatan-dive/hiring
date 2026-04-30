@@ -1,3 +1,4 @@
+import { log } from '@/lib/log';
 import prisma from '@/lib/db/prisma';
 import { searchAdzunaJobs } from '@/lib/api/adzuna';
 import { searchJSearchJobs } from '@/lib/api/jsearch';
@@ -22,7 +23,7 @@ interface JobInput {
 }
 
 export async function fetchAndSaveJobs(query: string, location: string = 'us') {
-  console.log(`Fetching jobs for: ${query} in ${location}`);
+  log.info(`Fetching jobs for: ${query} in ${location}`);
 
   // Fetch from sources in parallel
   const [adzunaJobs, jsearchJobs, remoteOkJobs, wwrJobs] = await Promise.all([
@@ -32,7 +33,7 @@ export async function fetchAndSaveJobs(query: string, location: string = 'us') {
     getWeWorkRemotelyJobs(20).catch(() => []),
   ]);
 
-  console.log(
+  log.info(
     `Found ${adzunaJobs.length} Adzuna, ${jsearchJobs.length} JSearch, ${remoteOkJobs.length} RemoteOK, ${wwrJobs.length} WWR jobs`
   );
 
@@ -149,7 +150,7 @@ export async function saveJobs(jobs: JobInput[]) {
 
       savedCount++;
     } catch (err) {
-      console.error(`Failed to save job ${job.url}:`, err);
+      log.error(`Failed to save job ${job.url}:`, err);
     }
   }
   return savedCount;
@@ -168,7 +169,7 @@ export async function triggerDeepScrape(
     destinationUrl.includes('::1') ||
     process.env.NODE_ENV === 'development'
   ) {
-    console.warn(
+    log.warn(
       '⚠️ Localhost detected. Bypassing QStash and running deep scrape directly in background.'
     );
 
@@ -180,7 +181,7 @@ export async function triggerDeepScrape(
           await sendScrapeCompleteEmail(email, jobs, source);
         }
       } catch (err) {
-        console.error('Background scrape failed (Local Mode):', err);
+        log.error('Background scrape failed (Local Mode):', err);
       }
     })();
     return;

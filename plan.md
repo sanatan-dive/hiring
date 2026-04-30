@@ -16,7 +16,7 @@ User uploads resume → We find jobs everywhere → Match with AI → Deliver vi
 
 | Feature             | Free      | Pro       |
 | ------------------- | --------- | --------- |
-| **Pricing**         | $0        | $8/mo     |
+| **Pricing**         | $0        | $9/mo     |
 | Job digest          | Weekly    | Daily     |
 | Light scraper       | 3x/week   | Unlimited |
 | Deep scraper        | ❌        | 2x/month  |
@@ -26,7 +26,7 @@ User uploads resume → We find jobs everywhere → Match with AI → Deliver vi
 | Application Tracker | Basic (5) | Unlimited |
 | Job match history   | 7 days    | Forever   |
 
-### Payment: Razorpay (India + International)
+### Payment: Dodo Payments (merchant-of-record, global)
 
 ---
 
@@ -179,8 +179,8 @@ Cron (daily/weekly):
 
 ### Phase 6: Payments + Pro Features ✅ (Done)
 
-- [x] Integrate Razorpay
-- [x] Build subscription management
+- [x] Integrate Dodo Payments (merchant-of-record)
+- [x] Build subscription management (hosted checkout + webhook source-of-truth)
 - [x] Implement tier-based rate limiting
 - [x] Build AI Cover Letter (Gemini)
 - [x] Build AI Interview Prep
@@ -264,13 +264,16 @@ model JobMatch {
 }
 
 model Subscription {
-  id        String   @id @default(cuid())
-  userId    String   @unique
-  plan      String   // free, pro
-  razorpayId String?
-  status    String   // active, cancelled, expired
-  expiresAt DateTime?
-  createdAt DateTime @default(now())
+  id                   String   @id @default(cuid())
+  userId               String   @unique
+  plan                 String   // free, pro
+  status               String   // pending, active, cancelled, expired, on_hold
+  dodoSubscriptionId   String?  @unique
+  dodoCustomerId       String?  @unique
+  dodoProductId        String?
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean  @default(false)
+  createdAt            DateTime @default(now())
 
   user User @relation(...)
 }

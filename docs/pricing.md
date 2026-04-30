@@ -93,16 +93,17 @@ Job-seekers in active search mode often pay annually because "I'll be looking fo
 
 ## India-Specific Pricing (₹)
 
-Use Razorpay's multi-currency support. Indian users see INR prices:
+Two ways to localize INR pricing with Dodo:
 
-| Tier | USD | INR    |
-| ---- | --- | ------ |
-| Pro  | $9  | ₹699   |
-| Pro+ | $19 | ₹1,499 |
+1. **Adaptive Pricing (recommended, easiest):** Enable per-product in the Dodo dashboard. Dodo auto-converts the base USD price to INR (and other local currencies) at checkout based on the buyer's IP. UPI, netbanking, and cards all work. Zero code changes.
+2. **Separate INR product:** Create a second Dodo product priced in INR (e.g., ₹699/mo) and route Indian users to a different `DODO_PRO_PRODUCT_ID_INR`. Use Vercel headers (`x-vercel-ip-country`) or Clerk metadata to choose which product id to pass to `createProCheckoutSession`. Default to the USD product elsewhere.
+
+| Tier | USD | INR (target) |
+| ---- | --- | ------------ |
+| Pro  | $9  | ₹699         |
+| Pro+ | $19 | ₹1,499       |
 
 INR prices are ~22% lower than USD equivalent — purchasing power parity. An Indian engineer who would never pay $9 will pay ₹699.
-
-**Detection:** geolocate via Vercel headers (`x-vercel-ip-country`) or Clerk metadata. Default to USD elsewhere.
 
 ---
 
@@ -164,22 +165,21 @@ At 100 paying users ($900/mo MRR), gross margin is ~60-70%. Once over 200 users,
 
 ### Database Schema Changes
 
-Update `prisma/schema.prisma`:
+Already shipped — see `prisma/schema.prisma`. The current shape:
 
 ```prisma
 model Subscription {
   id        String   @id @default(uuid())
   userId    String   @unique
   plan      Plan     @default(FREE)
-  status    String   @default("inactive")
-  expiresAt DateTime?
+  status    SubscriptionStatus @default(inactive)
 
-  // Razorpay subscription fields (NOT one-shot order fields)
-  razorpaySubscriptionId String?  @unique @map("razorpay_subscription_id")
-  razorpayPlanId         String?  @map("razorpay_plan_id")
-  razorpayCustomerId     String?  @unique @map("razorpay_customer_id")
-  currentPeriodEnd       DateTime? @map("current_period_end")
-  cancelAtPeriodEnd      Boolean   @default(false) @map("cancel_at_period_end")
+  // Dodo Payments fields
+  dodoSubscriptionId String?  @unique @map("dodo_subscription_id")
+  dodoCustomerId     String?  @unique @map("dodo_customer_id")
+  dodoProductId      String?  @map("dodo_product_id")
+  currentPeriodEnd   DateTime? @map("current_period_end")
+  cancelAtPeriodEnd  Boolean   @default(false) @map("cancel_at_period_end")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -194,19 +194,17 @@ enum Plan {
 }
 
 model SubscriptionEvent {
-  id              String   @id @default(uuid())
-  razorpayEventId String   @unique @map("razorpay_event_id")
-  userId          String?  @map("user_id")
-  eventType       String   @map("event_type")
-  payload         Json
-  createdAt       DateTime @default(now()) @map("created_at")
+  id          String   @id @default(uuid())
+  webhookId   String   @unique @map("webhook_id")  // Dodo webhook-id header — for idempotency
+  userId      String?  @map("user_id")
+  eventType   String   @map("event_type")
+  payload     Json
+  createdAt   DateTime @default(now()) @map("created_at")
 
   @@index([userId])
   @@map("subscription_events")
 }
 ```
-
-Drop `stripeCustomerId` field — unused.
 
 ### Plan Gating Logic
 

@@ -1,3 +1,4 @@
+import { log } from '@/lib/log';
 import { NextResponse } from 'next/server';
 import { currentUser } from '@clerk/nextjs/server';
 import prisma from '@/lib/db/prisma';
@@ -53,7 +54,7 @@ export async function POST(req: Request) {
       message: 'Scraping started. You will be notified via email.',
     });
   } catch (error) {
-    console.error('Trigger scrape error:', error);
+    log.error('Trigger scrape error:', error);
     return NextResponse.json({ error: 'Failed to trigger scrape' }, { status: 500 });
   }
 }

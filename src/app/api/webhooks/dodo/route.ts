@@ -1,3 +1,4 @@
+import { log } from '@/lib/log';
 import { NextRequest, NextResponse } from 'next/server';
 import { Webhook } from 'standardwebhooks';
 import { Prisma } from '@prisma/client';
@@ -30,7 +31,7 @@ const PAYMENT_EVENTS = ['payment.succeeded', 'payment.failed'] as const;
 export async function POST(req: NextRequest) {
   const secret = process.env.DODO_PAYMENTS_WEBHOOK_KEY;
   if (!secret) {
-    console.error('[dodo-webhook] DODO_PAYMENTS_WEBHOOK_KEY not set');
+    log.error('[dodo-webhook] DODO_PAYMENTS_WEBHOOK_KEY not set');
     return new NextResponse('webhook not configured', { status: 500 });
   }
 
@@ -53,7 +54,7 @@ export async function POST(req: NextRequest) {
     const wh = new Webhook(secret);
     payload = wh.verify(rawBody, headers) as DodoWebhookPayload;
   } catch (err) {
-    console.error('[dodo-webhook] signature verification failed', err);
+    log.error('[dodo-webhook] signature verification failed', err);
     return new NextResponse('invalid signature', { status: 400 });
   }
 
@@ -89,7 +90,7 @@ export async function POST(req: NextRequest) {
   try {
     await applyEvent({ eventType, data, userId });
   } catch (err) {
-    console.error('[dodo-webhook] processing error', err);
+    log.error('[dodo-webhook] processing error', err);
     return new NextResponse('processing error', { status: 500 });
   }
 

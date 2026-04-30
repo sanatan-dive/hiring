@@ -103,9 +103,9 @@ So I built [Hirin](https://hirin.app) for myself. Upload resume, AI ranks
 matches by semantic similarity (not keywords), daily email digest with the
 top 10. Pulls from 6 sources so I'm not stuck in LinkedIn's algorithm.
 
-Tech: Next.js + pgvector + Gemini embeddings + Razorpay
+Tech: Next.js + pgvector + Gemini embeddings + Dodo Payments
 Free tier: weekly digest, 1 resume
-Pro: $9/mo (₹699 for India), daily digest + AI cover letters
+Pro: $9/mo (Dodo handles INR/UPI for India via adaptive pricing), daily digest + AI cover letters
 
 Looking for beta testers. Roast it.
 ```
@@ -145,11 +145,11 @@ you paste in.
 
 Free tier: weekly digest, 1 resume, basic tracker.
 Pro: $9/mo ($7.20 annual) — daily digest, AI cover letters, AI interview
-prep, unlimited tracker. ₹699/mo for Indian users.
+prep, unlimited tracker. Dodo's adaptive pricing localizes for India (₹).
 
-Built solo over [N] weeks. Razorpay for payments (works globally).
-This is my first SaaS — I'd love your honest feedback. What jobs would
-you want to find?
+Built solo over [N] weeks. Dodo Payments for billing — they're merchant
+of record so they handle global tax (GST, EU VAT) for me. This is my
+first SaaS — I'd love your honest feedback. What jobs would you want to find?
 ```
 
 ### Launch Day
@@ -188,8 +188,8 @@ Stack: Next.js 15 + Postgres with pgvector + Clerk + Gemini text-embedding-004.
 Daily Vercel cron pulls from 6 APIs, dedupes, embeds, then matches against
 each user's resume embedding via cosine similarity.
 
-Razorpay for billing (Indian founder targeting global). $9/mo Pro,
-weekly digest free forever.
+Dodo Payments for billing (merchant-of-record so I don't deal with
+global tax compliance). $9/mo Pro, weekly digest free forever.
 
 Honest about limits:
 - LinkedIn / Indeed are paste-URL only (compliance concerns with bulk scraping)
@@ -233,7 +233,7 @@ HN hates:
 
 ### Dev.to / Medium / Hashnode
 
-- "How I built an AI job matcher with Next.js, pgvector, and Razorpay" — technical post
+- "How I built an AI job matcher with Next.js, pgvector, and Dodo Payments" — technical post
 - Cross-post everywhere
 - Gets indexed by Google for years
 
@@ -311,7 +311,7 @@ Reach out to mid-tier career creators (10K-100K followers):
 | Resumes uploaded (activation)  | Umami event        | 350+ (70% of signups)   |
 | First-match-shown (aha moment) | Umami event        | 280+ (80% of activated) |
 | Free → Pro conversion          | Subscription rows  | 5-12%                   |
-| MRR                            | Razorpay dashboard | $200-800                |
+| MRR                            | Dodo dashboard     | $200-800                |
 | Daily email open rate          | Resend dashboard   | 30%+ (industry avg 25%) |
 | Click-through to apply         | Job URL clicks     | 15%+                    |
 

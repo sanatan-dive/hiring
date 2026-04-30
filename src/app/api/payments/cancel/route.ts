@@ -1,3 +1,4 @@
+import { log } from '@/lib/log';
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { cancelSubscription } from '@/services/subscription.service';
@@ -26,7 +27,7 @@ export async function POST(req: Request) {
     const sub = await cancelSubscription(user.id, reason);
     return NextResponse.json({ success: true, subscription: sub });
   } catch (err) {
-    console.error('[cancel-subscription] failed', err);
+    log.error('[cancel-subscription] failed', err);
     return NextResponse.json(
       { error: err instanceof Error ? err.message : 'Failed to cancel' },
       { status: 500 }

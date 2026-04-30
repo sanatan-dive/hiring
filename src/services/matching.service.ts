@@ -1,3 +1,4 @@
+import { log } from '@/lib/log';
 import prisma from '@/lib/db/prisma';
 
 interface RawJobRow {
@@ -47,7 +48,7 @@ export async function findSimilarJobs(embedding: number[], limit = 20) {
       similarity: Number(job.similarity),
     }));
   } catch (error) {
-    console.error('Error finding similar jobs:', error);
+    log.error('Error finding similar jobs:', error);
     return [];
   }
 }

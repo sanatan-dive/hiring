@@ -10,7 +10,7 @@ Frontend (Next.js 15 App Router)         Backend (Same Next.js — API routes)
 │ Tailwind CSS 4             │──HTTP──▶│ pgvector (768-dim embeddings)  │
 │ Clerk Auth                 │         │ Gemini text-embedding-004 (AI) │
 │ Framer Motion              │         │ Resend (email)                 │
-│ Embla Carousel             │         │ Razorpay (payments)            │
+│ Embla Carousel             │         │ Dodo Payments (MoR billing)    │
 │ Sentry (client)            │         │ Upstash Redis (rate limit)     │
 └────────────────────────────┘         │ Upstash QStash (async jobs)    │
                                        │ Playwright (LinkedIn/Indeed)   │
@@ -24,7 +24,7 @@ Frontend (Next.js 15 App Router)         Backend (Same Next.js — API routes)
 src/
 ├── app/
 │   ├── page.tsx                  # Landing (Hero, How-it-works, Pricing, FAQ, Testimonials)
-│   ├── pricing/page.tsx          # Pricing page + Razorpay checkout
+│   ├── pricing/page.tsx          # Pricing page + Dodo hosted checkout
 │   ├── matches/page.tsx          # Job match dashboard (631 lines, vector ranked)
 │   ├── Onboard/page.tsx          # 4-step onboarding (resume → prefs → socials → projects)
 │   ├── profile/page.tsx          # Profile + saved jobs + experience editor
@@ -51,8 +51,9 @@ src/
 │       ├── projects/             # Portfolio projects CRUD
 │       ├── skills/               # Skills CRUD
 │       ├── social-links/         # GitHub/LinkedIn/Twitter CRUD
-│       ├── payments/create-order/# Razorpay order
-│       ├── payments/verify/      # Signature verify
+│       ├── payments/create-checkout/ # Dodo hosted checkout session
+│       ├── payments/cancel/      # User-initiated cancel-at-period-end
+│       ├── webhooks/dodo/        # Dodo webhook (subscription lifecycle)
 │       ├── queue/process-job/    # QStash worker (async scrapers)
 │       ├── cron/jobs/            # Daily 0 0 * * * — fetch jobs
 │       └── cron/digest/          # Daily 0 9 * * * — send digest emails
@@ -70,7 +71,7 @@ src/
 │   ├── resume.service.ts         # parse + persist
 │   ├── matching.service.ts       # findSimilarJobs (pgvector)
 │   ├── user.service.ts           # User CRUD + sub sync
-│   ├── subscription.service.ts   # Razorpay + plan logic
+│   ├── subscription.service.ts   # Dodo checkout/cancel + plan logic
 │   ├── preferences.service.ts    # JobPreferences CRUD
 │   └── email.service.ts          # Resend digests
 ├── components/
@@ -128,8 +129,12 @@ SocialLink (unique [userId, platform]) — platform, url
 Project — userId, name, description, url, techUsed[]
 
 Subscription (1:1 with User)
-├── plan (FREE|PRO), status, expiresAt
-├── razorpayId, stripeCustomerId  ← Stripe field present but unused
+├── plan (FREE|PRO), status (pending|active|cancelled|expired|on_hold)
+├── dodoSubscriptionId, dodoCustomerId, dodoProductId
+├── currentPeriodEnd, cancelAtPeriodEnd
+
+SubscriptionEvent (idempotency log)
+├── webhookId (unique), userId, eventType, payload, createdAt
 ```
 
 ## API Endpoints
@@ -150,8 +155,9 @@ Subscription (1:1 with User)
 | POST   | `/api/applications`          | Clerk                | No                           | Track application         |
 | POST   | `/api/bookmarks`             | Clerk                | No                           | Save job                  |
 | POST   | `/api/preferences`           | Clerk                | No                           | Save preferences          |
-| POST   | `/api/payments/create-order` | Clerk                | No (gap!)                    | Razorpay order            |
-| POST   | `/api/payments/verify`       | Clerk + HMAC         | No                           | Signature verify          |
+| POST   | `/api/payments/create-checkout` | Clerk             | Yes (10/day)                 | Dodo hosted checkout      |
+| POST   | `/api/payments/cancel`       | Clerk                | No                           | Cancel at period end      |
+| POST   | `/api/webhooks/dodo`         | Standard Webhooks sig | No                          | Dodo subscription events  |
 | POST   | `/api/queue/process-job`     | QStash sig           | No                           | Async worker              |
 | GET    | `/api/cron/jobs`             | Bearer (CRON_SECRET) | No                           | Daily fetch (00:00 UTC)   |
 | GET    | `/api/cron/digest`           | Bearer               | No                           | Daily emails (09:00 UTC)  |
@@ -218,9 +224,9 @@ Both protected by `Authorization: Bearer ${CRON_SECRET}`.
 
 - `GOOGLE_API_KEY` and/or `GEMINI_API_KEY` (currently both used — consolidate)
 
-**Razorpay:**
+**Dodo Payments:**
 
-- `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET`
+- `DODO_PAYMENTS_API_KEY`, `DODO_PAYMENTS_WEBHOOK_KEY`, `DODO_PAYMENTS_ENV` (test_mode|live_mode), `DODO_PRO_PRODUCT_ID`
 
 **Email:**
 
@@ -249,15 +255,12 @@ Both protected by `Authorization: Bearer ${CRON_SECRET}`.
 
 ## Current Limitations
 
-- **Razorpay model is one-shot orders, not subscriptions** — No recurring billing wired up. PRO users have to manually re-pay each month.
-- **No webhook handler for Razorpay payment events** — `/api/payments/verify` is the only path; if a verify call drops, the user pays but nothing flips.
 - **Email sender is `onboarding@resend.dev`** — Resend test domain, will deliver to spam in production.
 - **Same job set for all users** — `cron/jobs` doesn't filter by user preferences (no `desiredRoles` query passed to Adzuna/JSearch).
 - **LinkedIn/Indeed scrapers have no proxy rotation** — Will get blocked within hours of public traffic.
 - **AI rate limits commented out** — `/api/ai/cover-letter` and `/api/ai/interview-prep` allow unlimited calls per Pro user.
 - **Two duplicate parse-resume endpoints** — `/api/resume/parse` and `/api/parse-resume` — pick one.
 - **Two rate-limit modules** — `lib/ratelimit.ts` and `lib/rate-limit.ts` — consolidate.
-- **Stripe customer ID field on Subscription** — Unused. Razorpay is primary; remove or leave for future MoR migration.
 - **No tests** — Zero unit, integration, or e2e tests. CI workflow is empty.
 - **No pagination on `/matches`** — All matches loaded at once. Will slow down past ~200 matches.
 - **No unsubscribe link on digest emails** — CAN-SPAM / GDPR liability.

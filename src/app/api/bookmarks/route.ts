@@ -1,3 +1,4 @@
+import { log } from '@/lib/log';
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import prisma from '@/lib/db/prisma';
@@ -26,7 +27,7 @@ export async function GET() {
 
     return NextResponse.json({ bookmarks: user.bookmarks });
   } catch (error) {
-    console.error('Error fetching bookmarks:', error);
+    log.error('Error fetching bookmarks:', error);
     return NextResponse.json({ error: 'Failed to fetch bookmarks' }, { status: 500 });
   }
 }
@@ -63,7 +64,7 @@ export async function POST(req: Request) {
     if ((error as { code?: string })?.code === 'P2002') {
       return NextResponse.json({ error: 'Already bookmarked' }, { status: 409 });
     }
-    console.error('Error creating bookmark:', error);
+    log.error('Error creating bookmark:', error);
     return NextResponse.json({ error: 'Failed to create bookmark' }, { status: 500 });
   }
 }
@@ -98,7 +99,7 @@ export async function DELETE(req: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error deleting bookmark:', error);
+    log.error('Error deleting bookmark:', error);
     return NextResponse.json({ error: 'Failed to delete bookmark' }, { status: 500 });
   }
 }

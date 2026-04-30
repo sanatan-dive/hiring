@@ -1,3 +1,4 @@
+import { log } from '@/lib/log';
 import { NextResponse } from 'next/server';
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { createProCheckoutSession } from '@/services/subscription.service';
@@ -42,7 +43,7 @@ export async function POST() {
       checkoutUrl: session.checkoutUrl,
     });
   } catch (err) {
-    console.error('[create-checkout] failed', err);
+    log.error('[create-checkout] failed', err);
     return NextResponse.json({ error: 'Failed to create checkout session' }, { status: 500 });
   }
 }

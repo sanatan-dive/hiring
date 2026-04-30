@@ -1,3 +1,4 @@
+import { log } from '@/lib/log';
 import config from '@/config';
 
 const JSEARCH_BASE_URL = 'https://jsearch.p.rapidapi.com/search';
@@ -21,7 +22,7 @@ export async function searchJSearchJobs(query: string, page: number = 1): Promis
   const { jsearchApiKey } = config.jobApis;
 
   if (!jsearchApiKey) {
-    console.warn('JSearch API key missing');
+    log.warn('JSearch API key missing');
     return [];
   }
 
@@ -44,7 +45,7 @@ export async function searchJSearchJobs(query: string, page: number = 1): Promis
     const data = await response.json();
     return data.data || [];
   } catch (error) {
-    console.error('Failed to fetch from JSearch:', error);
+    log.error('Failed to fetch from JSearch:', error);
     return [];
   }
 }

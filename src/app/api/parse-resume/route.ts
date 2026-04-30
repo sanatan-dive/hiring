@@ -1,3 +1,4 @@
+import { log } from '@/lib/log';
 export const runtime = 'nodejs';
 
 import { NextResponse } from 'next/server';
@@ -92,7 +93,7 @@ ${text}
       resume: resumeJSON,
     });
   } catch (error) {
-    console.error('Parse error:', error);
+    log.error('Parse error:', error);
     return NextResponse.json({ error: 'Failed to parse resume' }, { status: 500 });
   } finally {
     if (tempPath) {

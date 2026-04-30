@@ -1,3 +1,4 @@
+import { log } from '@/lib/log';
 import { NextResponse } from 'next/server';
 import { fetchAndSaveJobs } from '@/services/job.service';
 
@@ -21,7 +22,7 @@ export async function GET(req: Request) {
     const count = await fetchAndSaveJobs('software engineer', 'remote');
     return NextResponse.json({ success: true, count });
   } catch (error) {
-    console.error('Cron job failed:', error);
+    log.error('Cron job failed:', error);
     return NextResponse.json({ success: false, error: 'Internal Server Error' }, { status: 500 });
   }
 }

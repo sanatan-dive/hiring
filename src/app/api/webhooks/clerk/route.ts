@@ -1,3 +1,4 @@
+import { log } from '@/lib/log';
 import { Webhook } from 'svix';
 import { headers } from 'next/headers';
 import { WebhookEvent } from '@clerk/nextjs/server';
@@ -8,7 +9,7 @@ export async function POST(req: Request) {
   const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
 
   if (!WEBHOOK_SECRET) {
-    console.error('Missing CLERK_WEBHOOK_SECRET');
+    log.error('Missing CLERK_WEBHOOK_SECRET');
     return new NextResponse('Missing webhook secret', { status: 500 });
   }
 
@@ -38,7 +39,7 @@ export async function POST(req: Request) {
       'svix-signature': svix_signature,
     }) as WebhookEvent;
   } catch (err) {
-    console.error('Error verifying webhook:', err);
+    log.error('Error verifying webhook:', err);
     return new NextResponse('Error verifying webhook', { status: 400 });
   }
 
@@ -67,9 +68,9 @@ export async function POST(req: Request) {
         },
       });
 
-      console.log(`User ${eventType}: ${id}`);
+      log.info(`User ${eventType}: ${id}`);
     } catch (error) {
-      console.error('Error upserting user:', error);
+      log.error('Error upserting user:', error);
       return new NextResponse('Error processing user', { status: 500 });
     }
   }
@@ -81,9 +82,9 @@ export async function POST(req: Request) {
       await prisma.user.delete({
         where: { clerkId: id },
       });
-      console.log(`User deleted: ${id}`);
+      log.info(`User deleted: ${id}`);
     } catch (error) {
-      console.error('Error deleting user:', error);
+      log.error('Error deleting user:', error);
       // User might not exist, that's ok
     }
   }

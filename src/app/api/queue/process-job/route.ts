@@ -1,3 +1,4 @@
+import { log } from '@/lib/log';
 import { NextResponse } from 'next/server';
 import { Receiver } from '@upstash/qstash';
 import { performDeepScrape } from '@/services/job.service';
@@ -21,7 +22,7 @@ export async function POST(req: Request) {
     const rawBody = await req.text();
 
     if (!receiver) {
-      console.error('QStash signing keys are not configured');
+      log.error('QStash signing keys are not configured');
       return NextResponse.json({ error: 'Server misconfiguration' }, { status: 500 });
     }
 
@@ -35,14 +36,14 @@ export async function POST(req: Request) {
         body: rawBody,
       });
     } catch (err) {
-      console.error('QStash signature verification failed:', err);
+      log.error('QStash signature verification failed:', err);
       return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
     }
 
     const body = JSON.parse(rawBody);
     const { source, query, location } = body;
 
-    console.log(`Processing queue job: ${source} - ${query} in ${location}`);
+    log.info(`Processing queue job: ${source} - ${query} in ${location}`);
 
     if (!source || !query) {
       return NextResponse.json({ error: 'Missing source or query' }, { status: 400 });
@@ -57,7 +58,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true, count: jobs.length });
   } catch (error) {
-    console.error('Queue job failed:', error);
+    log.error('Queue job failed:', error);
     return NextResponse.json({ success: false, error: 'Internal Server Error' }, { status: 500 });
   }
 }

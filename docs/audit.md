@@ -20,7 +20,7 @@ No sugarcoating. What's good, what's broken, what will lose you customers (or ge
 
 7. **Sentry, Husky, commitlint, Prettier, ESLint** — the production polish layer is set up early. Most side projects never get this far.
 
-8. **Razorpay over Stripe** — correct call for Indian founder targeting global. Stripe doesn't onboard Indian businesses without GST + 6 months of incorporation.
+8. **Dodo Payments over Stripe** — correct call for an Indian founder targeting global. Dodo is merchant-of-record (handles tax + global cards) and doesn't require US/EU incorporation or GST setup the way Stripe does.
 
 9. **Application tracker exists** — most "job board" tools forget this and lose retention.
 
@@ -72,15 +72,17 @@ No sugarcoating. What's good, what's broken, what will lose you customers (or ge
 | Errors swallowed in cron loop                      | One bad email kills nothing, but no visibility                                 | Log to Sentry, increment a failure counter                   |
 | No retry logic                                     | If Resend has a blip, those users miss their digest                            | Wrap in `try/catch` with one retry                           |
 
-### Payments (`src/services/subscription.service.ts`)
+### Payments (`src/services/subscription.service.ts`) — historical (now migrated to Dodo)
 
-| Problem                                                                           | Why It Matters                                                                | Fix                                                                  |
-| --------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| **Uses Razorpay one-shot orders, not Subscriptions API**                          | User pays once, gets PRO, never charged again. You're a free trial generator. | Migrate to `/v1/subscriptions/` and create monthly Plans             |
-| No webhook for `subscription.charged`, `subscription.cancelled`, `payment.failed` | If `/payments/verify` request drops, user pays but stays free                 | Add `/api/webhooks/razorpay` with `X-Razorpay-Signature` HMAC verify |
-| `expiresAt` set on activation, never updated by webhook                           | PRO users silently expire mid-month                                           | Update `expiresAt` on each `subscription.charged` event              |
-| `stripeCustomerId` field on `Subscription` model is dead weight                   | Schema noise                                                                  | Drop field, run migration                                            |
-| No idempotency on webhook handler                                                 | Razorpay retries → double credit / state corruption                           | Persist `razorpay_event_id` (unique), check before processing        |
+This section is kept for context. Originally the codebase used Razorpay one-shot orders with no webhook handler. The migration to Dodo Payments addressed all of the issues below — see [DODO_INTEGRATION_GUIDE.md](../DODO_INTEGRATION_GUIDE.md) for the post-migration architecture.
+
+| Past problem (pre-Dodo)                          | How Dodo migration resolved it                                                            |
+| ------------------------------------------------ | ----------------------------------------------------------------------------------------- |
+| One-shot orders instead of recurring billing     | Dodo subscription products with `subscription.renewed` events extending `currentPeriodEnd` |
+| No webhook handler                                | `/api/webhooks/dodo` is now the source of truth for plan changes                          |
+| `expiresAt` never updated by webhook              | Replaced with `currentPeriodEnd`, refreshed on every `subscription.renewed` event         |
+| `stripeCustomerId` dead field                     | Dropped from schema; replaced by `dodoCustomerId`                                         |
+| No idempotency                                    | `SubscriptionEvent.webhookId @unique` blocks duplicate processing                         |
 
 ### Scrapers (`src/lib/scrapers/`)
 
@@ -114,13 +116,11 @@ No sugarcoating. What's good, what's broken, what will lose you customers (or ge
 - **Sender domain `onboarding@resend.dev`** — emails will be spam-filtered AND it's a Resend test domain. Set up custom domain DKIM/SPF day 1.
 - **No unsubscribe link in digest** — CAN-SPAM Act violation in US, GDPR violation in EU. Resend has automatic suppression built in but you must wire `<List-Unsubscribe>` headers. **One report = your domain rep tanks.**
 - **Scraping LinkedIn jobs** — LinkedIn's hiQ Labs lawsuit (2017-2022) ended with hiQ losing on contract grounds. Public data scraping is _probably_ legal but LinkedIn will IP-block you and may send a cease-and-desist. **Consider only scraping LinkedIn job posts that the user explicitly pastes a URL for, not bulk scraping.**
-- **No Terms of Service or Privacy Policy** — Razorpay rejects merchants without these. **You cannot accept payments without them.**
+- **No Terms of Service or Privacy Policy** — Dodo (like every payment processor) requires these for KYC/live-mode approval, and the Dodo checkout page links to them. **You cannot accept payments without them.**
 - **Storing resumes (PII)** — GDPR right-to-deletion required. Add a "Delete my account" button that actually deletes Resume rows and embeddings.
 
 ### Business
 
-- **Razorpay one-shot orders, not subscriptions** — see Payments section. You are running a free product right now and don't know it.
-- **No webhook = lost revenue** — every payment that doesn't make it back to `/payments/verify` is a paying user who looks free in your DB.
 - **No analytics on the funnel** — Umami is wired but no events are tracked. You don't know where users drop off in onboarding.
 - **No email capture on landing page for non-signups** — visitors who aren't ready to commit walk away forever.
 - **Pro plan features (cover letter, interview prep) are unlimited** — one abuser hits Gemini API hard, your costs spike.
@@ -136,7 +136,7 @@ No sugarcoating. What's good, what's broken, what will lose you customers (or ge
 
 ### Security
 
-- **Razorpay HMAC signature uses `RAZORPAY_KEY_SECRET`** — correct for `verify`, but webhook needs `RAZORPAY_WEBHOOK_SECRET` (separate secret). Don't reuse.
+- **Dodo webhook signature must be verified with `DODO_PAYMENTS_WEBHOOK_KEY`** — separate from `DODO_PAYMENTS_API_KEY`. Use the `standardwebhooks` library against the raw request body — don't trim or re-serialize before verifying.
 - **CRON_SECRET is the only auth on `/api/cron/*`** — if leaked (config commit, log dump), anyone can trigger your daily fetch repeatedly. Add IP allowlist to Vercel cron source IPs.
 - **Resume upload — no MIME sniff, just header trust** — attacker uploads `.exe` renamed `.pdf`. Validate magic bytes.
 - **Resume upload — no max file size** — 100MB resume will OOM your serverless function.

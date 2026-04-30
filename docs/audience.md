@@ -85,7 +85,7 @@ Engineers churn naturally when they get hired. Goal: get them to come back next 
 | Need                                             | Current State     | Required Change                                             |
 | ------------------------------------------------ | ----------------- | ----------------------------------------------------------- |
 | INR pricing                                      | Not implemented   | Geo-detect via `x-vercel-ip-country`, show ₹                |
-| UPI as payment method                            | Razorpay supports | Just enable in Razorpay dashboard                           |
+| UPI as payment method                            | Dodo supports     | Enable UPI in Dodo dashboard (or use Adaptive Pricing)      |
 | Indian job sources (Naukri, Instahyre, Cutshort) | None integrated   | Add at least Cutshort (has API), maybe Naukri scraper       |
 | International remote jobs (RemoteOK ✓)           | Already have      | Promote this — it's a major draw                            |
 | Filter by visa-friendly companies                | Not built         | Tag jobs that say "H1B sponsorship" or "Visa support"       |

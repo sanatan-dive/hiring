@@ -11,7 +11,7 @@
 - **AI Cover Letter** — Generate tailored cover letters with Gemini
 - **AI Interview Prep** — Role-specific mock interview questions
 - **Application Tracker** — Track status across all your applications
-- **Payments** — Razorpay-powered Pro subscriptions (₹800/mo)
+- **Payments** — Dodo Payments (merchant-of-record) Pro subscriptions ($9/mo)
 
 ## 🏗️ Tech Stack
 
@@ -22,7 +22,7 @@
 | Database   | NeonDB + Prisma + pgvector         |
 | Queue      | Upstash Redis + QStash             |
 | Email      | Resend + React Email               |
-| Payments   | Razorpay                           |
+| Payments   | Dodo Payments (merchant-of-record) |
 | AI         | Google Gemini                      |
 | Scraping   | Playwright                         |
 | Analytics  | Umami (optional)                   |
@@ -75,7 +75,9 @@ See `.env.example` for the full list. Key variables:
 | `ADZUNA_APP_ID` / `ADZUNA_APP_KEY`        | ✅       | Adzuna job API               |
 | `JSEARCH_API_KEY`                         | ✅       | JSearch via RapidAPI         |
 | `RESEND_API_KEY`                          | ✅       | Resend email service         |
-| `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` | ✅       | Razorpay payments            |
+| `DODO_PAYMENTS_API_KEY`                   | ✅       | Dodo Payments API key        |
+| `DODO_PAYMENTS_WEBHOOK_KEY`               | ✅       | Dodo webhook signing secret  |
+| `DODO_PRO_PRODUCT_ID`                     | ✅       | Dodo Pro product ID          |
 | `UPSTASH_REDIS_REST_URL`                  | ✅       | Upstash Redis                |
 | `NEXT_PUBLIC_UMAMI_WEBSITE_ID`            | ❌       | Umami analytics (optional)   |
 | `NEXT_PUBLIC_SENTRY_DSN`                  | ❌       | Sentry monitoring (optional) |

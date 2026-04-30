@@ -1,3 +1,4 @@
+import { log } from '@/lib/log';
 import { chromium } from 'playwright';
 
 export interface ScrapedJob {
@@ -11,7 +12,7 @@ export interface ScrapedJob {
 }
 
 export async function scrapeLinkedIn(query: string, location: string): Promise<ScrapedJob[]> {
-  console.log(`Starting LinkedIn scrape for ${query} in ${location}`);
+  log.info(`Starting LinkedIn scrape for ${query} in ${location}`);
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({
     userAgent:
@@ -33,7 +34,7 @@ export async function scrapeLinkedIn(query: string, location: string): Promise<S
     await page.waitForTimeout(2000);
 
     const jobCards = await page.$$('.jobs-search__results-list li');
-    console.log(`Found ${jobCards.length} potential job cards on LinkedIn`);
+    log.info(`Found ${jobCards.length} potential job cards on LinkedIn`);
 
     for (const card of jobCards.slice(0, 10)) {
       // Limit to 10 for safety/speed in this phase
@@ -58,12 +59,12 @@ export async function scrapeLinkedIn(query: string, location: string): Promise<S
           });
         }
       } catch (e) {
-        console.error('Error parsing a LinkedIn job card:', e);
+        log.error('Error parsing a LinkedIn job card:', e);
       }
     }
 
     // Step 2: Fetch details for each job
-    console.log(`Fetching details for ${jobs.length} jobs...`);
+    log.info(`Fetching details for ${jobs.length} jobs...`);
     for (const job of jobs) {
       try {
         await page.goto(job.url, { waitUntil: 'domcontentloaded', timeout: 15000 });
@@ -80,12 +81,12 @@ export async function scrapeLinkedIn(query: string, location: string): Promise<S
         // Random delay to be polite
         await page.waitForTimeout(1000 + Math.random() * 2000);
       } catch (err) {
-        console.warn(`Failed to fetch details for ${job.url}`, err);
+        log.warn(`Failed to fetch details for ${job.url}`, err);
         job.description = 'View job post for details.';
       }
     }
   } catch (error) {
-    console.error('LinkedIn scrape failed:', error);
+    log.error('LinkedIn scrape failed:', error);
   } finally {
     await browser.close();
   }

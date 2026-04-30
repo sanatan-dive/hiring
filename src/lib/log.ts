@@ -13,33 +13,49 @@ import * as Sentry from '@sentry/nextjs';
  */
 const isDev = process.env.NODE_ENV !== 'production';
 
-type Data = Record<string, unknown> | undefined;
+function toBreadcrumbData(extras: unknown[]): Record<string, unknown> | undefined {
+  if (extras.length === 0) return undefined;
+  if (extras.length === 1 && extras[0] && typeof extras[0] === 'object') {
+    return extras[0] as Record<string, unknown>;
+  }
+  return { args: extras };
+}
 
 export const log = {
-  info(msg: string, data?: Data) {
+  info(msg: string, ...extras: unknown[]) {
     if (isDev) {
-      console.log(`[info] ${msg}`, data ?? '');
+      console.log(`[info] ${msg}`, ...extras);
       return;
     }
-    Sentry.addBreadcrumb({ category: 'app', level: 'info', message: msg, data });
+    Sentry.addBreadcrumb({
+      category: 'app',
+      level: 'info',
+      message: msg,
+      data: toBreadcrumbData(extras),
+    });
   },
 
-  warn(msg: string, data?: Data) {
+  warn(msg: string, ...extras: unknown[]) {
     if (isDev) {
-      console.warn(`[warn] ${msg}`, data ?? '');
+      console.warn(`[warn] ${msg}`, ...extras);
       return;
     }
-    Sentry.addBreadcrumb({ category: 'app', level: 'warning', message: msg, data });
+    Sentry.addBreadcrumb({
+      category: 'app',
+      level: 'warning',
+      message: msg,
+      data: toBreadcrumbData(extras),
+    });
   },
 
-  error(msg: string, err: unknown, data?: Data) {
+  error(msg: string, err?: unknown, ...extras: unknown[]) {
     if (isDev) {
-      console.error(`[error] ${msg}`, err, data ?? '');
+      console.error(`[error] ${msg}`, err, ...extras);
       return;
     }
-    Sentry.captureException(err, {
+    Sentry.captureException(err ?? new Error(msg), {
       tags: { msg: msg.slice(0, 100) },
-      extra: data,
+      extra: toBreadcrumbData(extras),
     });
   },
 };
