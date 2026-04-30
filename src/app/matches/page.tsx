@@ -1,5 +1,6 @@
 'use client';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Target, TrendingUp, MapPin, Sparkles, type LucideIcon } from 'lucide-react';
 import JobDetailModal from '@/components/ui/JobDetailModal';
 import toast from 'react-hot-toast';
 import MatchesHeader from '@/components/matches/MatchesHeader';
@@ -9,6 +10,14 @@ import MatchFilters, { type FilterKey } from '@/components/matches/MatchFilters'
 import type { Job } from '@/components/matches/types';
 import { log } from '@/lib/log';
 import { track } from '@/lib/analytics';
+
+interface StatCard {
+  label: string;
+  value: string;
+  subtext: string;
+  icon: LucideIcon;
+  color: string;
+}
 
 interface UserContext {
   skills: string[];
@@ -103,8 +112,7 @@ const MatchesPage = () => {
           setSavedJobs(data.bookmarks.map((b) => b.jobId));
         }
         if (!cancelled && appsRes.ok) {
-          const data: { applications: { jobId: string; status: string }[] } =
-            await appsRes.json();
+          const data: { applications: { jobId: string; status: string }[] } = await appsRes.json();
           const appMap: Record<string, string> = {};
           data.applications.forEach((app) => (appMap[app.jobId] = app.status));
           setApplications(appMap);
@@ -114,18 +122,16 @@ const MatchesPage = () => {
           // Build the context the MatchExplanation component expects
           const skills: string[] = [
             ...((u.user?.skills as string[]) ?? []),
-            ...(((u.user?.resumes?.[0]?.parsedSkills ?? []) as { skill: string }[]).map(
+            ...((u.user?.resumes?.[0]?.parsedSkills ?? []) as { skill: string }[]).map(
               (s) => s.skill
-            )),
+            ),
           ]
             .filter(Boolean)
             .map((s) => s.toLowerCase());
           const prefs = u.user?.jobPreferences;
           setUserContext({
             skills: Array.from(new Set(skills)),
-            preferredLocations: ((prefs?.locations as string[]) ?? []).map((l) =>
-              l.toLowerCase()
-            ),
+            preferredLocations: ((prefs?.locations as string[]) ?? []).map((l) => l.toLowerCase()),
             preferRemote: prefs?.workLocation === 'remote',
             salaryMin: prefs?.salaryMin ?? null,
           });
@@ -273,6 +279,48 @@ const MatchesPage = () => {
     setIsModalOpen(true);
   };
 
+  const stats = useMemo<StatCard[]>(() => {
+    const total = jobs.length;
+    const highMatch = jobs.filter((j) => (j.similarity ?? 0) >= 0.8).length;
+    const remote = jobs.filter((j) => (j.location ?? '').toLowerCase().includes('remote')).length;
+    const withSim = jobs.filter((j) => typeof j.similarity === 'number');
+    const avg =
+      withSim.length > 0
+        ? withSim.reduce((sum, j) => sum + (j.similarity ?? 0), 0) / withSim.length
+        : 0;
+
+    return [
+      {
+        label: 'Job Matches',
+        value: String(total),
+        subtext: total === 1 ? '1 result' : `${total} results`,
+        icon: Target,
+        color: 'bg-sky-500',
+      },
+      {
+        label: 'High Match',
+        value: String(highMatch),
+        subtext: '≥80% similarity',
+        icon: TrendingUp,
+        color: 'bg-emerald-500',
+      },
+      {
+        label: 'Remote',
+        value: String(remote),
+        subtext: 'remote-friendly',
+        icon: MapPin,
+        color: 'bg-amber-500',
+      },
+      {
+        label: 'Avg. Match',
+        value: `${Math.round(avg * 100)}%`,
+        subtext: 'across results',
+        icon: Sparkles,
+        color: 'bg-violet-500',
+      },
+    ];
+  }, [jobs]);
+
   return (
     <div className="font-poppins min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
       <div className="mx-auto max-w-5xl">
@@ -284,6 +332,31 @@ const MatchesPage = () => {
           onRefresh={handleRefresh}
           onDeepScrape={handleDeepScrape}
         />
+
+        <div className="mb-4 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+          {stats.map((stat) => {
+            const Icon = stat.icon;
+            return (
+              <div
+                key={stat.label}
+                className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md sm:p-5"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-xs font-medium text-gray-600 sm:text-sm">{stat.label}</p>
+                    <p className="mt-1 text-2xl font-bold text-gray-900 sm:text-3xl">
+                      {stat.value}
+                    </p>
+                    <p className="mt-1 truncate text-xs text-gray-500 sm:text-sm">{stat.subtext}</p>
+                  </div>
+                  <div className={`${stat.color} shrink-0 rounded-xl p-2 sm:p-3`}>
+                    <Icon className="h-4 w-4 text-white sm:h-6 sm:w-6" />
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
 
         <MatchFilters active={filter} onChange={setFilter} total={total} />
 

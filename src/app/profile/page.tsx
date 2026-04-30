@@ -1,5 +1,6 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import {
   Briefcase,
   MapPin,
@@ -111,12 +112,34 @@ const Skeleton = ({ className }: { className?: string }) => (
   <div className={`animate-pulse rounded bg-gray-200 ${className}`} />
 );
 
-const ProfilePage = () => {
+type TabKey = 'profile' | 'resumes' | 'subscription' | 'notifications' | 'danger';
+const VALID_TABS: TabKey[] = ['profile', 'resumes', 'subscription', 'notifications', 'danger'];
+const TABS: { key: TabKey; label: string }[] = [
+  { key: 'profile', label: 'Profile' },
+  { key: 'resumes', label: 'Resumes' },
+  { key: 'subscription', label: 'Subscription' },
+  { key: 'notifications', label: 'Notifications' },
+  { key: 'danger', label: 'Danger' },
+];
+
+const ProfilePageInner = () => {
   const { user: clerkUser, isLoaded: clerkLoaded } = useUser();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const initialTab = (() => {
+    const t = searchParams.get('tab');
+    return t && (VALID_TABS as string[]).includes(t) ? (t as TabKey) : 'profile';
+  })();
+  const [activeTab, setActiveTab] = useState<TabKey>(initialTab);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+
+  const handleTabChange = (tab: TabKey) => {
+    setActiveTab(tab);
+    router.replace(`?tab=${tab}`, { scroll: false });
+  };
 
   // Edit states
   const [editSkills, setEditSkills] = useState<string[]>([]);
@@ -343,7 +366,7 @@ const ProfilePage = () => {
               <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">
                 {clerkUser?.fullName || profile?.name || 'Your Profile'}
               </h1>
-              <p className="mt-1 break-all text-sm text-gray-500 sm:text-base">
+              <p className="mt-1 text-sm break-all text-gray-500 sm:text-base">
                 {clerkUser?.primaryEmailAddress?.emailAddress || profile?.email}
               </p>
             </div>
@@ -376,413 +399,472 @@ const ProfilePage = () => {
           </div>
         </div>
 
-        {/* Social Links */}
-        <div className="mb-8 rounded-2xl border bg-white p-6 shadow-sm">
-          <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold text-black">
-            <Globe className="h-5 w-5 text-sky-600" />
-            Social Links
-          </h2>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            {SOCIAL_PLATFORMS.map((platform) => {
-              const link = (isEditing ? editSocialLinks : profile?.socialLinks || []).find(
-                (l) => l.platform === platform.id
-              );
-              const Icon = platform.icon;
-              return (
-                <div
-                  key={platform.id}
-                  className="flex items-center gap-3 rounded-lg bg-gray-50 p-3"
-                >
-                  <Icon className="h-5 w-5 text-gray-600" />
-                  {isEditing ? (
-                    <input
-                      type="url"
-                      value={link?.url || ''}
-                      onChange={(e) => updateSocialLink(platform.id, e.target.value)}
-                      placeholder={platform.placeholder}
-                      className="flex-1 rounded-lg border bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:ring-2 focus:ring-sky-500 focus:outline-none"
-                    />
-                  ) : link?.url ? (
-                    <a
-                      href={link.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1 text-sky-600 hover:underline"
-                    >
-                      {platform.label} <ExternalLink className="h-3 w-3" />
-                    </a>
-                  ) : (
-                    <span className="text-sm text-gray-400">Not set</span>
-                  )}
-                </div>
-              );
-            })}
+        {/* Tab bar */}
+        <div className="mb-6 overflow-x-auto sm:mb-8">
+          <div className="flex gap-2 whitespace-nowrap">
+            {TABS.map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => handleTabChange(tab.key)}
+                className={`flex-shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                  activeTab === tab.key
+                    ? 'bg-sky-600 text-white'
+                    : 'border bg-white text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* Skills */}
-        <div className="mb-8 rounded-2xl border bg-white p-6 shadow-sm">
-          <PreferenceCard
-            title="Skills & Tech Stack"
-            icon={<Award className="h-5 w-5 text-sky-600" />}
-          >
-            {isEditing ? (
-              <MultiSelect
-                options={COMMON_TECH_STACKS}
-                selected={editSkills}
-                onChange={setEditSkills}
-                placeholder="Add skills..."
-                maxItems={20}
-                allowCustom={true}
-              />
-            ) : (
-              <div className="flex flex-wrap gap-2">
-                {(profile?.skills || []).map((skill, idx) => (
-                  <span
-                    key={idx}
-                    className="rounded-full bg-sky-100 px-3 py-1.5 text-sm font-medium text-sky-800"
-                  >
-                    {skill}
-                  </span>
-                ))}
-                {!profile?.skills?.length && (
-                  <span className="text-sm text-gray-400">No skills added</span>
-                )}
+        {activeTab === 'profile' && (
+          <>
+            {/* Social Links */}
+            <div className="mb-8 rounded-2xl border bg-white p-6 shadow-sm">
+              <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold text-black">
+                <Globe className="h-5 w-5 text-sky-600" />
+                Social Links
+              </h2>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                {SOCIAL_PLATFORMS.map((platform) => {
+                  const link = (isEditing ? editSocialLinks : profile?.socialLinks || []).find(
+                    (l) => l.platform === platform.id
+                  );
+                  const Icon = platform.icon;
+                  return (
+                    <div
+                      key={platform.id}
+                      className="flex items-center gap-3 rounded-lg bg-gray-50 p-3"
+                    >
+                      <Icon className="h-5 w-5 text-gray-600" />
+                      {isEditing ? (
+                        <input
+                          type="url"
+                          value={link?.url || ''}
+                          onChange={(e) => updateSocialLink(platform.id, e.target.value)}
+                          placeholder={platform.placeholder}
+                          className="flex-1 rounded-lg border bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:ring-2 focus:ring-sky-500 focus:outline-none"
+                        />
+                      ) : link?.url ? (
+                        <a
+                          href={link.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-sky-600 hover:underline"
+                        >
+                          {platform.label} <ExternalLink className="h-3 w-3" />
+                        </a>
+                      ) : (
+                        <span className="text-sm text-gray-400">Not set</span>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
-            )}
-          </PreferenceCard>
-        </div>
-
-        {/* Experience */}
-        <div className="mb-8 rounded-2xl border bg-white p-6 shadow-sm">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="flex items-center gap-2 text-xl font-semibold text-black">
-              <FileText className="h-5 w-5 text-sky-600" />
-              Experience
-            </h2>
-            {isEditing && (
-              <button
-                onClick={addExperience}
-                className="flex items-center gap-1 text-sm font-medium text-sky-600 hover:text-sky-700"
-              >
-                <Plus className="h-4 w-4" /> Add Experience
-              </button>
-            )}
-          </div>
-
-          {isEditing ? (
-            <div className="space-y-4">
-              {editExperiences.map((exp, idx) => (
-                <div key={idx} className="rounded-xl border bg-gray-50 p-4">
-                  <div className="mb-3 flex justify-between">
-                    <input
-                      type="text"
-                      value={exp.role}
-                      onChange={(e) => updateExperience(idx, 'role', e.target.value)}
-                      placeholder="Job title"
-                      className="mr-2 flex-1 rounded-lg border bg-white px-3 py-2 font-semibold text-gray-900 placeholder:text-gray-500"
-                    />
-                    <button
-                      onClick={() => removeExperience(idx)}
-                      className="text-red-500 hover:text-red-600"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                  <input
-                    type="text"
-                    value={exp.company}
-                    onChange={(e) => updateExperience(idx, 'company', e.target.value)}
-                    placeholder="Company name"
-                    className="mb-2 w-full rounded-lg border bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500"
-                  />
-                  <input
-                    type="text"
-                    value={exp.duration}
-                    onChange={(e) => updateExperience(idx, 'duration', e.target.value)}
-                    placeholder="Duration (e.g., Jan 2022 - Present)"
-                    className="mb-2 w-full rounded-lg border bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500"
-                  />
-                  <textarea
-                    value={exp.description}
-                    onChange={(e) => updateExperience(idx, 'description', e.target.value)}
-                    placeholder="Brief description of your role"
-                    className="w-full rounded-lg border bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500"
-                    rows={2}
-                  />
-                </div>
-              ))}
-              {editExperiences.length === 0 && (
-                <p className="py-4 text-center text-sm text-gray-400">
-                  No experience yet. Click &quot;Add Experience&quot; to get started.
-                </p>
-              )}
             </div>
-          ) : (
-            <div className="space-y-4">
-              {(profile?.resume?.experiences || []).map((exp, idx) => (
-                <div key={idx} className="rounded-xl border-l-4 border-sky-500 bg-gray-50 p-4">
-                  <p className="font-semibold text-gray-900">{exp.role}</p>
-                  <p className="text-sm text-sky-600">{exp.company}</p>
-                  {exp.duration && <p className="text-xs text-gray-500">{exp.duration}</p>}
-                  {exp.description && (
-                    <p className="mt-2 text-sm text-gray-600">{exp.description}</p>
-                  )}
-                </div>
-              ))}
-              {!profile?.resume?.experiences?.length && (
-                <p className="text-sm text-gray-400">No experience added</p>
-              )}
-            </div>
-          )}
-        </div>
 
-        {/* Projects */}
-        <div className="mb-8 rounded-2xl border bg-white p-6 shadow-sm">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="flex items-center gap-2 text-xl font-semibold text-black">
-              <FolderGit2 className="h-5 w-5 text-sky-600" />
-              Projects
-            </h2>
-            {isEditing && (
-              <button
-                onClick={addProject}
-                className="flex items-center gap-1 text-sm font-medium text-sky-600 hover:text-sky-700"
+            {/* Skills */}
+            <div className="mb-8 rounded-2xl border bg-white p-6 shadow-sm">
+              <PreferenceCard
+                title="Skills & Tech Stack"
+                icon={<Award className="h-5 w-5 text-sky-600" />}
               >
-                <Plus className="h-4 w-4" /> Add Project
-              </button>
-            )}
-          </div>
-
-          {isEditing ? (
-            <div className="space-y-4">
-              {editProjects.map((project, idx) => (
-                <div key={idx} className="rounded-xl border bg-gray-50 p-4">
-                  <div className="mb-3 flex justify-between">
-                    <input
-                      type="text"
-                      value={project.name}
-                      onChange={(e) => updateProject(idx, 'name', e.target.value)}
-                      placeholder="Project name"
-                      className="mr-2 flex-1 rounded-lg border bg-white px-3 py-2 font-semibold text-gray-900 placeholder:text-gray-500"
-                    />
-                    <button
-                      onClick={() => removeProject(idx)}
-                      className="text-red-500 hover:text-red-600"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                  <textarea
-                    value={project.description}
-                    onChange={(e) => updateProject(idx, 'description', e.target.value)}
-                    placeholder="Brief description"
-                    className="mb-2 w-full rounded-lg border bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500"
-                    rows={2}
-                  />
-                  <input
-                    type="url"
-                    value={project.url}
-                    onChange={(e) => updateProject(idx, 'url', e.target.value)}
-                    placeholder="Project URL (GitHub, live demo, etc.)"
-                    className="mb-2 w-full rounded-lg border bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500"
-                  />
+                {isEditing ? (
                   <MultiSelect
                     options={COMMON_TECH_STACKS}
-                    selected={project.techUsed}
-                    onChange={(values) => updateProject(idx, 'techUsed', values)}
-                    placeholder="Technologies used..."
-                    maxItems={10}
+                    selected={editSkills}
+                    onChange={setEditSkills}
+                    placeholder="Add skills..."
+                    maxItems={20}
                     allowCustom={true}
                   />
-                </div>
-              ))}
-              {editProjects.length === 0 && (
-                <p className="py-4 text-center text-sm text-gray-400">
-                  No projects yet. Click &quot;Add Project&quot; to get started.
-                </p>
-              )}
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {(profile?.projects || []).map((project, idx) => (
-                <div key={idx} className="rounded-xl border-l-4 border-sky-500 bg-gray-50 p-4">
-                  <div className="flex items-start justify-between">
-                    <h3 className="font-semibold text-gray-900">{project.name}</h3>
-                    {project.url && (
-                      <a
-                        href={project.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sky-600 hover:text-sky-700"
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {(profile?.skills || []).map((skill, idx) => (
+                      <span
+                        key={idx}
+                        className="rounded-full bg-sky-100 px-3 py-1.5 text-sm font-medium text-sky-800"
                       >
-                        <ExternalLink className="h-4 w-4" />
-                      </a>
+                        {skill}
+                      </span>
+                    ))}
+                    {!profile?.skills?.length && (
+                      <span className="text-sm text-gray-400">No skills added</span>
                     )}
                   </div>
-                  {project.description && (
-                    <p className="mt-1 text-sm text-gray-600">{project.description}</p>
-                  )}
-                  {project.techUsed?.length > 0 && (
-                    <div className="mt-2 flex flex-wrap gap-1">
-                      {project.techUsed.map((tech, i) => (
-                        <span
-                          key={i}
-                          className="rounded bg-gray-200 px-2 py-0.5 text-xs text-gray-700"
+                )}
+              </PreferenceCard>
+            </div>
+
+            {/* Experience */}
+            <div className="mb-8 rounded-2xl border bg-white p-6 shadow-sm">
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="flex items-center gap-2 text-xl font-semibold text-black">
+                  <FileText className="h-5 w-5 text-sky-600" />
+                  Experience
+                </h2>
+                {isEditing && (
+                  <button
+                    onClick={addExperience}
+                    className="flex items-center gap-1 text-sm font-medium text-sky-600 hover:text-sky-700"
+                  >
+                    <Plus className="h-4 w-4" /> Add Experience
+                  </button>
+                )}
+              </div>
+
+              {isEditing ? (
+                <div className="space-y-4">
+                  {editExperiences.map((exp, idx) => (
+                    <div key={idx} className="rounded-xl border bg-gray-50 p-4">
+                      <div className="mb-3 flex justify-between">
+                        <input
+                          type="text"
+                          value={exp.role}
+                          onChange={(e) => updateExperience(idx, 'role', e.target.value)}
+                          placeholder="Job title"
+                          className="mr-2 flex-1 rounded-lg border bg-white px-3 py-2 font-semibold text-gray-900 placeholder:text-gray-500"
+                        />
+                        <button
+                          onClick={() => removeExperience(idx)}
+                          className="text-red-500 hover:text-red-600"
                         >
-                          {tech}
-                        </span>
-                      ))}
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                      <input
+                        type="text"
+                        value={exp.company}
+                        onChange={(e) => updateExperience(idx, 'company', e.target.value)}
+                        placeholder="Company name"
+                        className="mb-2 w-full rounded-lg border bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500"
+                      />
+                      <input
+                        type="text"
+                        value={exp.duration}
+                        onChange={(e) => updateExperience(idx, 'duration', e.target.value)}
+                        placeholder="Duration (e.g., Jan 2022 - Present)"
+                        className="mb-2 w-full rounded-lg border bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500"
+                      />
+                      <textarea
+                        value={exp.description}
+                        onChange={(e) => updateExperience(idx, 'description', e.target.value)}
+                        placeholder="Brief description of your role"
+                        className="w-full rounded-lg border bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500"
+                        rows={2}
+                      />
                     </div>
+                  ))}
+                  {editExperiences.length === 0 && (
+                    <p className="py-4 text-center text-sm text-gray-400">
+                      No experience yet. Click &quot;Add Experience&quot; to get started.
+                    </p>
                   )}
                 </div>
-              ))}
-              {!profile?.projects?.length && (
-                <p className="text-sm text-gray-400">No projects added</p>
+              ) : (
+                <div className="space-y-4">
+                  {(profile?.resume?.experiences || []).map((exp, idx) => (
+                    <div key={idx} className="rounded-xl border-l-4 border-sky-500 bg-gray-50 p-4">
+                      <p className="font-semibold text-gray-900">{exp.role}</p>
+                      <p className="text-sm text-sky-600">{exp.company}</p>
+                      {exp.duration && <p className="text-xs text-gray-500">{exp.duration}</p>}
+                      {exp.description && (
+                        <p className="mt-2 text-sm text-gray-600">{exp.description}</p>
+                      )}
+                    </div>
+                  ))}
+                  {!profile?.resume?.experiences?.length && (
+                    <p className="text-sm text-gray-400">No experience added</p>
+                  )}
+                </div>
               )}
             </div>
-          )}
-        </div>
 
-        {/* Job Preferences */}
-        <div className="space-y-6">
-          <h2 className="text-2xl font-semibold text-gray-900">Job Preferences</h2>
+            {/* Projects */}
+            <div className="mb-8 rounded-2xl border bg-white p-6 shadow-sm">
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="flex items-center gap-2 text-xl font-semibold text-black">
+                  <FolderGit2 className="h-5 w-5 text-sky-600" />
+                  Projects
+                </h2>
+                {isEditing && (
+                  <button
+                    onClick={addProject}
+                    className="flex items-center gap-1 text-sm font-medium text-sky-600 hover:text-sky-700"
+                  >
+                    <Plus className="h-4 w-4" /> Add Project
+                  </button>
+                )}
+              </div>
 
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            <PreferenceCard
-              title="Desired Roles"
-              icon={<Briefcase className="h-5 w-5 text-sky-600" />}
-            >
               {isEditing ? (
-                <MultiSelect
-                  options={COMMON_ROLES}
-                  selected={editPreferences.desiredRoles}
-                  onChange={(values) => setEditPreferences((p) => ({ ...p, desiredRoles: values }))}
-                  placeholder="Search roles..."
-                  maxItems={5}
-                  allowCustom={true}
-                />
-              ) : (
-                <div className="flex flex-wrap gap-2">
-                  {(profile?.preferences?.desiredRoles || []).map((role) => (
-                    <span
-                      key={role}
-                      className="rounded-full bg-sky-100 px-3 py-1.5 text-sm font-medium text-sky-800"
-                    >
-                      {role}
-                    </span>
+                <div className="space-y-4">
+                  {editProjects.map((project, idx) => (
+                    <div key={idx} className="rounded-xl border bg-gray-50 p-4">
+                      <div className="mb-3 flex justify-between">
+                        <input
+                          type="text"
+                          value={project.name}
+                          onChange={(e) => updateProject(idx, 'name', e.target.value)}
+                          placeholder="Project name"
+                          className="mr-2 flex-1 rounded-lg border bg-white px-3 py-2 font-semibold text-gray-900 placeholder:text-gray-500"
+                        />
+                        <button
+                          onClick={() => removeProject(idx)}
+                          className="text-red-500 hover:text-red-600"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                      <textarea
+                        value={project.description}
+                        onChange={(e) => updateProject(idx, 'description', e.target.value)}
+                        placeholder="Brief description"
+                        className="mb-2 w-full rounded-lg border bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500"
+                        rows={2}
+                      />
+                      <input
+                        type="url"
+                        value={project.url}
+                        onChange={(e) => updateProject(idx, 'url', e.target.value)}
+                        placeholder="Project URL (GitHub, live demo, etc.)"
+                        className="mb-2 w-full rounded-lg border bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500"
+                      />
+                      <MultiSelect
+                        options={COMMON_TECH_STACKS}
+                        selected={project.techUsed}
+                        onChange={(values) => updateProject(idx, 'techUsed', values)}
+                        placeholder="Technologies used..."
+                        maxItems={10}
+                        allowCustom={true}
+                      />
+                    </div>
                   ))}
-                  {!profile?.preferences?.desiredRoles?.length && (
-                    <span className="text-sm text-gray-400">No roles selected</span>
+                  {editProjects.length === 0 && (
+                    <p className="py-4 text-center text-sm text-gray-400">
+                      No projects yet. Click &quot;Add Project&quot; to get started.
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {(profile?.projects || []).map((project, idx) => (
+                    <div key={idx} className="rounded-xl border-l-4 border-sky-500 bg-gray-50 p-4">
+                      <div className="flex items-start justify-between">
+                        <h3 className="font-semibold text-gray-900">{project.name}</h3>
+                        {project.url && (
+                          <a
+                            href={project.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sky-600 hover:text-sky-700"
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                          </a>
+                        )}
+                      </div>
+                      {project.description && (
+                        <p className="mt-1 text-sm text-gray-600">{project.description}</p>
+                      )}
+                      {project.techUsed?.length > 0 && (
+                        <div className="mt-2 flex flex-wrap gap-1">
+                          {project.techUsed.map((tech, i) => (
+                            <span
+                              key={i}
+                              className="rounded bg-gray-200 px-2 py-0.5 text-xs text-gray-700"
+                            >
+                              {tech}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                  {!profile?.projects?.length && (
+                    <p className="text-sm text-gray-400">No projects added</p>
                   )}
                 </div>
               )}
-            </PreferenceCard>
+            </div>
 
-            <PreferenceCard
-              title="Experience Level"
-              icon={<Users className="h-5 w-5 text-sky-600" />}
-            >
-              {isEditing ? (
-                <RadioGroup
-                  options={EXPERIENCE_LEVELS}
-                  value={editPreferences.experienceLevel}
-                  onChange={(value) =>
-                    setEditPreferences((p) => ({ ...p, experienceLevel: value }))
-                  }
-                  orientation="vertical"
-                  size="sm"
-                />
+            {/* Job Preferences */}
+            <div className="space-y-6">
+              <h2 className="text-2xl font-semibold text-gray-900">Job Preferences</h2>
+
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                <PreferenceCard
+                  title="Desired Roles"
+                  icon={<Briefcase className="h-5 w-5 text-sky-600" />}
+                >
+                  {isEditing ? (
+                    <MultiSelect
+                      options={COMMON_ROLES}
+                      selected={editPreferences.desiredRoles}
+                      onChange={(values) =>
+                        setEditPreferences((p) => ({ ...p, desiredRoles: values }))
+                      }
+                      placeholder="Search roles..."
+                      maxItems={5}
+                      allowCustom={true}
+                    />
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      {(profile?.preferences?.desiredRoles || []).map((role) => (
+                        <span
+                          key={role}
+                          className="rounded-full bg-sky-100 px-3 py-1.5 text-sm font-medium text-sky-800"
+                        >
+                          {role}
+                        </span>
+                      ))}
+                      {!profile?.preferences?.desiredRoles?.length && (
+                        <span className="text-sm text-gray-400">No roles selected</span>
+                      )}
+                    </div>
+                  )}
+                </PreferenceCard>
+
+                <PreferenceCard
+                  title="Experience Level"
+                  icon={<Users className="h-5 w-5 text-sky-600" />}
+                >
+                  {isEditing ? (
+                    <RadioGroup
+                      options={EXPERIENCE_LEVELS}
+                      value={editPreferences.experienceLevel}
+                      onChange={(value) =>
+                        setEditPreferences((p) => ({ ...p, experienceLevel: value }))
+                      }
+                      orientation="vertical"
+                      size="sm"
+                    />
+                  ) : (
+                    <span className="inline-block rounded-lg border border-sky-100 bg-sky-50 px-4 py-2 text-sm font-medium text-sky-700">
+                      {profile?.preferences?.experienceLevel || 'Not set'}
+                    </span>
+                  )}
+                </PreferenceCard>
+
+                <PreferenceCard
+                  title="Job Type"
+                  icon={<Briefcase className="h-5 w-5 text-sky-600" />}
+                >
+                  {isEditing ? (
+                    <RadioGroup
+                      options={JOB_TYPES}
+                      value={editPreferences.jobType}
+                      onChange={(value) => setEditPreferences((p) => ({ ...p, jobType: value }))}
+                      orientation="vertical"
+                      size="sm"
+                    />
+                  ) : (
+                    <span className="inline-block rounded-lg border border-sky-100 bg-sky-50 px-4 py-2 text-sm font-medium text-sky-700">
+                      {profile?.preferences?.jobType || 'Not set'}
+                    </span>
+                  )}
+                </PreferenceCard>
+
+                <PreferenceCard
+                  title="Work Location"
+                  icon={<MapPin className="h-5 w-5 text-sky-600" />}
+                >
+                  {isEditing ? (
+                    <RadioGroup
+                      options={WORK_LOCATIONS}
+                      value={editPreferences.workLocation}
+                      onChange={(value) =>
+                        setEditPreferences((p) => ({ ...p, workLocation: value }))
+                      }
+                      orientation="horizontal"
+                      size="sm"
+                    />
+                  ) : (
+                    <span className="inline-block rounded-lg border border-sky-100 bg-sky-50 px-4 py-2 text-sm font-medium text-sky-700">
+                      {profile?.preferences?.workLocation || 'Not set'}
+                    </span>
+                  )}
+                </PreferenceCard>
+
+                <PreferenceCard
+                  title="Salary Range"
+                  icon={<DollarSign className="h-5 w-5 text-sky-600" />}
+                >
+                  {isEditing ? (
+                    <SalaryRangeSlider
+                      min={30000}
+                      max={300000}
+                      value={editPreferences.salaryRange}
+                      onChange={(value) =>
+                        setEditPreferences((p) => ({
+                          ...p,
+                          salaryRange: { ...value, currency: 'USD' },
+                        }))
+                      }
+                      currency="$"
+                      step={5000}
+                    />
+                  ) : (
+                    <span className="inline-block rounded-lg border border-green-100 bg-green-50 px-4 py-2 text-sm font-medium text-green-700">
+                      {profile?.preferences?.salaryRange
+                        ? `$${(profile.preferences.salaryRange.min / 1000).toFixed(0)}k - $${(profile.preferences.salaryRange.max / 1000).toFixed(0)}k`
+                        : 'Not set'}
+                    </span>
+                  )}
+                </PreferenceCard>
+              </div>
+            </div>
+
+            {/* Saved Jobs */}
+            <div className="mt-8 rounded-2xl border bg-white p-6 shadow-sm">
+              <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold text-black">
+                <Bookmark className="h-5 w-5 text-sky-600" />
+                Saved Jobs
+              </h2>
+
+              {savedJobs.length > 0 ? (
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  {savedJobs.map((bookmark) => (
+                    <div
+                      key={bookmark.id}
+                      className="rounded-xl border bg-gray-50 p-4 transition-shadow hover:shadow-md"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <h3 className="font-semibold text-gray-900">{bookmark.job.title}</h3>
+                          <p className="text-sm text-sky-600">{bookmark.job.company}</p>
+                        </div>
+                        <a
+                          href={bookmark.job.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-gray-400 hover:text-sky-600"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                        </a>
+                      </div>
+                      <div className="mt-3 flex gap-4 text-xs text-gray-500">
+                        {bookmark.job.location && (
+                          <span className="flex items-center gap-1">
+                            <MapPin className="h-3 w-3" /> {bookmark.job.location}
+                          </span>
+                        )}
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />{' '}
+                          {new Date(bookmark.job.scrapedAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               ) : (
-                <span className="inline-block rounded-lg border border-sky-100 bg-sky-50 px-4 py-2 text-sm font-medium text-sky-700">
-                  {profile?.preferences?.experienceLevel || 'Not set'}
-                </span>
+                <p className="text-sm text-gray-500">No saved jobs yet.</p>
               )}
-            </PreferenceCard>
-
-            <PreferenceCard title="Job Type" icon={<Briefcase className="h-5 w-5 text-sky-600" />}>
-              {isEditing ? (
-                <RadioGroup
-                  options={JOB_TYPES}
-                  value={editPreferences.jobType}
-                  onChange={(value) => setEditPreferences((p) => ({ ...p, jobType: value }))}
-                  orientation="vertical"
-                  size="sm"
-                />
-              ) : (
-                <span className="inline-block rounded-lg border border-sky-100 bg-sky-50 px-4 py-2 text-sm font-medium text-sky-700">
-                  {profile?.preferences?.jobType || 'Not set'}
-                </span>
-              )}
-            </PreferenceCard>
-
-            <PreferenceCard
-              title="Work Location"
-              icon={<MapPin className="h-5 w-5 text-sky-600" />}
-            >
-              {isEditing ? (
-                <RadioGroup
-                  options={WORK_LOCATIONS}
-                  value={editPreferences.workLocation}
-                  onChange={(value) => setEditPreferences((p) => ({ ...p, workLocation: value }))}
-                  orientation="horizontal"
-                  size="sm"
-                />
-              ) : (
-                <span className="inline-block rounded-lg border border-sky-100 bg-sky-50 px-4 py-2 text-sm font-medium text-sky-700">
-                  {profile?.preferences?.workLocation || 'Not set'}
-                </span>
-              )}
-            </PreferenceCard>
-
-            <PreferenceCard
-              title="Salary Range"
-              icon={<DollarSign className="h-5 w-5 text-sky-600" />}
-            >
-              {isEditing ? (
-                <SalaryRangeSlider
-                  min={30000}
-                  max={300000}
-                  value={editPreferences.salaryRange}
-                  onChange={(value) =>
-                    setEditPreferences((p) => ({
-                      ...p,
-                      salaryRange: { ...value, currency: 'USD' },
-                    }))
-                  }
-                  currency="$"
-                  step={5000}
-                />
-              ) : (
-                <span className="inline-block rounded-lg border border-green-100 bg-green-50 px-4 py-2 text-sm font-medium text-green-700">
-                  {profile?.preferences?.salaryRange
-                    ? `$${(profile.preferences.salaryRange.min / 1000).toFixed(0)}k - $${(profile.preferences.salaryRange.max / 1000).toFixed(0)}k`
-                    : 'Not set'}
-                </span>
-              )}
-            </PreferenceCard>
-          </div>
-        </div>
-
-        {/* Subscription / Email prefs / Resume manager — Phase 3 */}
-        {profile?.subscription && (
-          <SubscriptionSection
-            subscription={{
-              ...profile.subscription,
-              currentPeriodEnd:
-                profile.subscription.currentPeriodEnd
-                  ? new Date(profile.subscription.currentPeriodEnd).toISOString()
-                  : null,
-            }}
-            onChange={refreshProfile}
-          />
+            </div>
+          </>
         )}
 
-        {profile && (
-          <EmailPreferencesSection initialEnabled={profile.emailDigestEnabled ?? true} />
-        )}
-
-        {profile?.resumes && (
+        {activeTab === 'resumes' && profile?.resumes && (
           <ResumeManagerSection
             resumes={profile.resumes.map((r) => ({
               ...r,
@@ -793,60 +875,46 @@ const ProfilePage = () => {
           />
         )}
 
-        {/* Saved Jobs */}
-        <div className="mt-8 rounded-2xl border bg-white p-6 shadow-sm">
-          <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold text-black">
-            <Bookmark className="h-5 w-5 text-sky-600" />
-            Saved Jobs
-          </h2>
+        {activeTab === 'subscription' && profile?.subscription && (
+          <SubscriptionSection
+            subscription={{
+              ...profile.subscription,
+              currentPeriodEnd: profile.subscription.currentPeriodEnd
+                ? new Date(profile.subscription.currentPeriodEnd).toISOString()
+                : null,
+            }}
+            onChange={refreshProfile}
+          />
+        )}
 
-          {savedJobs.length > 0 ? (
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              {savedJobs.map((bookmark) => (
-                <div
-                  key={bookmark.id}
-                  className="rounded-xl border bg-gray-50 p-4 transition-shadow hover:shadow-md"
-                >
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="font-semibold text-gray-900">{bookmark.job.title}</h3>
-                      <p className="text-sm text-sky-600">{bookmark.job.company}</p>
-                    </div>
-                    <a
-                      href={bookmark.job.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-gray-400 hover:text-sky-600"
-                    >
-                      <ExternalLink className="h-4 w-4" />
-                    </a>
-                  </div>
-                  <div className="mt-3 flex gap-4 text-xs text-gray-500">
-                    {bookmark.job.location && (
-                      <span className="flex items-center gap-1">
-                        <MapPin className="h-3 w-3" /> {bookmark.job.location}
-                      </span>
-                    )}
-                    <span className="flex items-center gap-1">
-                      <Clock className="h-3 w-3" />{' '}
-                      {new Date(bookmark.job.scrapedAt).toLocaleDateString()}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm text-gray-500">No saved jobs yet.</p>
-          )}
-        </div>
+        {activeTab === 'notifications' && profile && (
+          <EmailPreferencesSection initialEnabled={profile.emailDigestEnabled ?? true} />
+        )}
 
-        {/* Danger zone — Phase 3 (always last) */}
-        <div className="mt-8">
-          <DangerZoneSection />
-        </div>
+        {activeTab === 'danger' && (
+          <div className="mt-8">
+            <DangerZoneSection />
+          </div>
+        )}
       </div>
     </div>
   );
 };
+
+const ProfilePage = () => (
+  <Suspense
+    fallback={
+      <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
+        <div className="mx-auto max-w-5xl">
+          <div className="rounded-2xl border bg-white p-8">
+            <Skeleton className="h-24 w-full" />
+          </div>
+        </div>
+      </div>
+    }
+  >
+    <ProfilePageInner />
+  </Suspense>
+);
 
 export default ProfilePage;
