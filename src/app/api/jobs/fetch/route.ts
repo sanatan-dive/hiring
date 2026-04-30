@@ -4,7 +4,9 @@ import { auth } from '@clerk/nextjs/server';
 
 export async function POST(req: Request) {
   try {
-    const { query, location } = await req.json();
+    const body = await req.json();
+    const query: string | undefined = body.query;
+    let location: string | undefined = body.location;
 
     if (!query) {
       return NextResponse.json({ error: 'Query is required' }, { status: 400 });
@@ -19,6 +21,16 @@ export async function POST(req: Request) {
     // We actually need to fetch the DB user to get the plan
     const { getUserByClerkId } = await import('@/services/user.service');
     const dbUser = await getUserByClerkId(userId);
+
+    // Auto-fill location from user preferences if not provided
+    if (!location && dbUser) {
+      const { default: prisma } = await import('@/lib/db/prisma');
+      const prefs = await prisma.jobPreferences.findUnique({ where: { userId: dbUser.id } });
+      if (prefs?.locations && prefs.locations.length > 0) {
+        location = prefs.locations[0];
+      }
+    }
+    if (!location) location = 'us';
 
     const plan = (dbUser?.subscription?.plan as 'FREE' | 'PRO') || 'FREE';
 

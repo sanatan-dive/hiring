@@ -2,6 +2,7 @@ import Carousel from '@/components/Hero/Carousel';
 import FAQ from '@/components/Hero/FAQ';
 import HeroPage from '@/components/Hero/HeroPage';
 import HowItWorks from '@/components/Hero/HowItWorks';
+import PricingSection from '@/components/Hero/Pricing';
 interface CarouselItem {
   id: number;
   name: string;
@@ -83,6 +84,7 @@ export default function Home() {
       <HeroPage />
       <HowItWorks />
       <Carousel items={defaultItems} />
+      <PricingSection />
       <FAQ />
     </div>
   );

@@ -19,10 +19,12 @@ export const config = {
     apiKey: process.env.GOOGLE_API_KEY,
   },
 
-  // Razorpay (future)
-  razorpay: {
-    keyId: process.env.RAZORPAY_KEY_ID,
-    keySecret: process.env.RAZORPAY_KEY_SECRET,
+  // Dodo Payments
+  dodo: {
+    apiKey: process.env.DODO_PAYMENTS_API_KEY,
+    webhookKey: process.env.DODO_PAYMENTS_WEBHOOK_KEY,
+    environment: (process.env.DODO_PAYMENTS_ENV ?? 'test_mode') as 'test_mode' | 'live_mode',
+    proProductId: process.env.DODO_PRO_PRODUCT_ID,
   },
 
   // Email (future)

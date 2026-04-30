@@ -21,19 +21,58 @@ export async function GET(req: Request) {
       // If query provided, generate embedding for it
       embedding = await generateEmbedding(query);
     } else {
-      // Otherwise, try to use user's resume embedding
-      // First get the user's latest resume
+      // Build a rich profile embedding from user's skills + preferences + resume
       const user = await prisma.user.findUnique({
         where: { clerkId: userId },
-        include: { resumes: { orderBy: { createdAt: 'desc' }, take: 1 } },
+        include: {
+          resumes: {
+            orderBy: { createdAt: 'desc' },
+            take: 1,
+            include: {
+              parsedSkills: true,
+              parsedExperiences: true,
+            },
+          },
+          jobPreferences: true,
+        },
       });
 
       if (user) {
-        // Use Preferences first if no query
-        const prefs = await prisma.jobPreferences.findUnique({ where: { userId: user.id } });
-        // Use optional chaining and null check
-        if (prefs && prefs.desiredRoles && prefs.desiredRoles.length > 0) {
-          const text = `${prefs.desiredRoles.join(' ')} ${prefs.experienceLevel || ''} ${prefs.workLocation || ''}`;
+        const parts: string[] = [];
+
+        // User skills (stored directly on user from onboarding)
+        if (user.skills?.length) {
+          parts.push(user.skills.join(', '));
+        }
+
+        // Resume parsed skills
+        const resume = user.resumes[0];
+        if (resume?.parsedSkills?.length) {
+          parts.push(resume.parsedSkills.map((s) => s.skill).join(', '));
+        }
+
+        // Resume experiences (role + company + description snippets)
+        if (resume?.parsedExperiences?.length) {
+          const expText = resume.parsedExperiences
+            .map(
+              (e) =>
+                `${e.role || ''} at ${e.company || ''} ${(e.description || '').substring(0, 200)}`
+            )
+            .join('. ');
+          parts.push(expText);
+        }
+
+        // Job preferences
+        const prefs = user.jobPreferences;
+        if (prefs?.desiredRoles?.length) {
+          parts.push(prefs.desiredRoles.join(', '));
+        }
+        if (prefs?.experienceLevel) parts.push(prefs.experienceLevel);
+        if (prefs?.workLocation) parts.push(prefs.workLocation);
+        if (prefs?.locations?.length) parts.push(prefs.locations.join(', '));
+
+        if (parts.length > 0) {
+          const text = parts.join(' | ').substring(0, 8000);
           embedding = await generateEmbedding(text);
         }
       }

@@ -91,6 +91,22 @@ const OnboardingPage = () => {
     }
   }, [isInView, controls]);
 
+  // If user already exists in backend, skip onboarding → go to matches
+  useEffect(() => {
+    const checkExistingUser = async () => {
+      try {
+        const res = await fetch('/api/user');
+        const data = await res.json();
+        if (data.user) {
+          router.replace('/matches');
+        }
+      } catch {
+        // Ignore — let them onboard
+      }
+    };
+    checkExistingUser();
+  }, [router]);
+
   const sections = [
     {
       id: 'work-process',

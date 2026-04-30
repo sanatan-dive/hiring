@@ -1,5 +1,18 @@
 import prisma from '@/lib/db/prisma';
 
+interface RawJobRow {
+  id: string;
+  title: string;
+  company: string;
+  location: string | null;
+  salary: string | null;
+  description: string | null;
+  url: string;
+  source: string;
+  scrapedAt: Date;
+  similarity: unknown; // Prisma returns BigDecimal as Decimal/string
+}
+
 export async function findSimilarJobs(embedding: number[], limit = 20) {
   if (!embedding || embedding.length === 0) return [];
 
@@ -9,7 +22,7 @@ export async function findSimilarJobs(embedding: number[], limit = 20) {
   const vectorQuery = `[${embedding.join(',')}]`;
 
   try {
-    const jobs = await prisma.$queryRaw`
+    const jobs = await prisma.$queryRaw<RawJobRow[]>`
       SELECT 
         id, 
         title, 
@@ -27,7 +40,12 @@ export async function findSimilarJobs(embedding: number[], limit = 20) {
       LIMIT ${limit};
     `;
 
-    return jobs;
+    // Prisma returns computed numeric columns as Decimal/BigDecimal strings
+    // Convert to plain JS numbers for frontend consumption
+    return jobs.map((job) => ({
+      ...job,
+      similarity: Number(job.similarity),
+    }));
   } catch (error) {
     console.error('Error finding similar jobs:', error);
     return [];

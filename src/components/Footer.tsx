@@ -94,7 +94,7 @@ function Footer() {
         {/* Bottom footer */}
         <div className="flex flex-col items-center justify-between border-t border-gray-200 py-3 md:flex-row">
           <div className="mb-2 text-xs text-gray-600 md:mb-0">
-            © 2024 Hir&apos;in. All rights reserved.
+            © 2026 Hir&apos;in. All rights reserved.
           </div>
 
           {/* Social Links */}
