@@ -30,8 +30,7 @@ export async function POST(req: Request) {
       include: { subscription: true },
     });
 
-    const isPro =
-      dbUser?.subscription?.plan === 'PRO' && dbUser?.subscription?.status === 'active';
+    const isPro = dbUser?.subscription?.plan === 'PRO' && dbUser?.subscription?.status === 'active';
     if (!isPro) {
       return NextResponse.json({ error: 'Deep scraping is a Pro feature.' }, { status: 403 });
     }
@@ -56,11 +55,41 @@ export async function POST(req: Request) {
       if (!url || !isLinkedInJobUrl(url)) {
         return NextResponse.json(
           {
-            error:
-              'Provide a valid LinkedIn job URL (https://www.linkedin.com/jobs/view/...)',
+            error: 'Provide a valid LinkedIn job URL (https://www.linkedin.com/jobs/view/...)',
           },
           { status: 400 }
         );
+      }
+
+      // Prefer the off-Vercel Railway scraper when configured. Fall back to
+      // in-process Playwright (works locally; unstable on Vercel).
+      const scraperUrl = process.env.SCRAPER_URL;
+      const scraperToken = process.env.SCRAPER_AUTH_TOKEN;
+      if (scraperUrl && scraperToken) {
+        const jobRequestId = `scrape_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+        try {
+          const r = await fetch(`${scraperUrl.replace(/\/$/, '')}/scrape`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${scraperToken}`,
+            },
+            body: JSON.stringify({ url, jobRequestId, userId: user.id }),
+          });
+          if (r.status === 202) {
+            return NextResponse.json({
+              success: true,
+              async: true,
+              jobRequestId,
+              message: 'Scrape queued. The job will appear in your matches in a few seconds.',
+            });
+          }
+          const errBody = await r.json().catch(() => ({}));
+          log.warn('Railway scraper non-202', { status: r.status, errBody });
+          // fall through to in-process fallback
+        } catch (err) {
+          log.warn('Railway scraper unreachable, falling back to in-process', err);
+        }
       }
 
       const scraped = await scrapeLinkedInJobUrl(url);

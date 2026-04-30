@@ -1,0 +1,20 @@
+# Railway config for the Hirin scraper service.
+#
+# To deploy:
+#   1. Create a new Railway project: railway login && railway init
+#   2. Set env vars in the Railway dashboard:
+#        SCRAPER_AUTH_TOKEN  — shared secret with the Next.js app
+#        CALLBACK_URL        — https://hirin.app/api/webhooks/scraper-callback
+#        CALLBACK_SECRET     — shared secret used to sign callbacks (HMAC-SHA256)
+#        SENTRY_DSN          — optional, recommended for production
+#   3. railway up
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3
+healthcheckPath = "/health"
+healthcheckTimeout = 30
