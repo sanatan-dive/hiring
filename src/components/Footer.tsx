@@ -7,16 +7,15 @@ function Footer() {
   const router = useRouter();
 
   const navigationLinks = [
-    { name: 'About', href: '/about' },
-    { name: 'Services', href: '/services' },
-    { name: 'Careers', href: '/careers' },
+    { name: 'Pricing', href: '/pricing' },
+    { name: 'Sign in', href: '/sign-in' },
     { name: 'Contact', href: '/contact' },
   ];
 
   const legalLinks = [
     { name: 'Privacy Policy', href: '/privacy' },
     { name: 'Terms of Service', href: '/terms' },
-    { name: 'Cookie Policy', href: '/cookies' },
+    { name: 'Refund Policy', href: '/refund' },
   ];
 
   const socialLinks = [

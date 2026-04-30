@@ -1,6 +1,6 @@
-import crypto from 'node:crypto';
 import { log } from '@/lib/log';
 import prisma from '@/lib/db/prisma';
+import { jobContentHash } from '@/lib/jobs/hash';
 import { searchAdzunaJobs } from '@/lib/api/adzuna';
 import { searchJSearchJobs } from '@/lib/api/jsearch';
 import { getRemoteOkJobs } from '@/lib/api/remoteok';
@@ -11,21 +11,8 @@ import { scrapeLinkedIn } from '@/lib/scrapers/linkedin';
 import { scrapeIndeed } from '@/lib/scrapers/indeed';
 import { sendScrapeCompleteEmail } from '@/services/email.service';
 
-/**
- * Stable hash of (title|company|location) for duplicate detection across
- * UTM-tagged URLs. Same job from two sources collapses to one row.
- */
-export function jobContentHash(input: {
-  title: string;
-  company: string;
-  location?: string | null;
-}) {
-  const norm = (s: string) => s.toLowerCase().trim().replace(/\s+/g, ' ');
-  return crypto
-    .createHash('sha256')
-    .update(`${norm(input.title)}|${norm(input.company)}|${norm(input.location ?? '')}`)
-    .digest('hex');
-}
+// jobContentHash is now in @/lib/jobs/hash — re-export for back-compat
+export { jobContentHash };
 
 /**
  * Compute the unique fetch keys (query + location pairs) for a batch of users
