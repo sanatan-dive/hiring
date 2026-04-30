@@ -19,6 +19,14 @@
     {
       "path": "/api/cron/streaks",
       "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron/re-engagement",
+      "schedule": "0 16 * * 2"
+    },
+    {
+      "path": "/api/cron/weekly-cohort",
+      "schedule": "0 22 * * 0"
     }
   ]
 }
