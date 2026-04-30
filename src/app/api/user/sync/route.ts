@@ -1,3 +1,4 @@
+import { log } from '@/lib/log';
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/db/prisma';
@@ -35,7 +36,7 @@ export async function POST() {
 
     return NextResponse.json({ user });
   } catch (error) {
-    console.error('Error syncing user:', error);
+    log.error('Error syncing user:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

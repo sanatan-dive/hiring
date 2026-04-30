@@ -1,4 +1,6 @@
+import { log } from '@/lib/log';
 import prisma from '@/lib/db/prisma';
+import { jobContentHash } from '@/lib/jobs/hash';
 import { searchAdzunaJobs } from '@/lib/api/adzuna';
 import { searchJSearchJobs } from '@/lib/api/jsearch';
 import { getRemoteOkJobs } from '@/lib/api/remoteok';
@@ -8,6 +10,40 @@ import { publishJob } from '@/lib/queue/client';
 import { scrapeLinkedIn } from '@/lib/scrapers/linkedin';
 import { scrapeIndeed } from '@/lib/scrapers/indeed';
 import { sendScrapeCompleteEmail } from '@/services/email.service';
+
+// jobContentHash is now in @/lib/jobs/hash — re-export for back-compat
+export { jobContentHash };
+
+/**
+ * Compute the unique fetch keys (query + location pairs) for a batch of users
+ * based on their JobPreferences. Deduplicates so we make N API calls, not 1
+ * per user. Also enforces a small fan-out cap to stay inside free-tier quotas.
+ */
+export async function buildPerUserFetchPlan(maxUnique = 25): Promise<
+  Array<{ query: string; location: string }>
+> {
+  const users = await prisma.user.findMany({
+    where: { jobPreferences: { isNot: null } },
+    include: { jobPreferences: true },
+    take: 500, // hard cap; chunking happens above this
+  });
+
+  const uniq = new Map<string, { query: string; location: string }>();
+  for (const u of users) {
+    const prefs = u.jobPreferences;
+    if (!prefs) continue;
+    const role = prefs.desiredRoles?.[0]?.trim();
+    if (!role) continue;
+    const location =
+      prefs.workLocation === 'remote'
+        ? 'remote'
+        : (prefs.locations?.[0]?.trim() ?? 'remote');
+    const key = `${role.toLowerCase()}|${location.toLowerCase()}`;
+    if (!uniq.has(key)) uniq.set(key, { query: role, location });
+    if (uniq.size >= maxUnique) break;
+  }
+  return Array.from(uniq.values());
+}
 
 // Helper interface for jobs before they are saved to DB
 interface JobInput {
@@ -22,7 +58,7 @@ interface JobInput {
 }
 
 export async function fetchAndSaveJobs(query: string, location: string = 'us') {
-  console.log(`Fetching jobs for: ${query} in ${location}`);
+  log.info(`Fetching jobs for: ${query} in ${location}`);
 
   // Fetch from sources in parallel
   const [adzunaJobs, jsearchJobs, remoteOkJobs, wwrJobs] = await Promise.all([
@@ -32,7 +68,7 @@ export async function fetchAndSaveJobs(query: string, location: string = 'us') {
     getWeWorkRemotelyJobs(20).catch(() => []),
   ]);
 
-  console.log(
+  log.info(
     `Found ${adzunaJobs.length} Adzuna, ${jsearchJobs.length} JSearch, ${remoteOkJobs.length} RemoteOK, ${wwrJobs.length} WWR jobs`
   );
 
@@ -113,12 +149,28 @@ export async function saveJobs(jobs: JobInput[]) {
   for (const job of jobs) {
     if (!job.url) continue;
     try {
+      const contentHash = jobContentHash(job);
+
+      // Skip if a different URL already represents this exact title+company+location
+      const existing = await prisma.job.findUnique({ where: { contentHash } });
+      if (existing && existing.url !== job.url) {
+        // Don't insert a duplicate, but freshen the salary if missing
+        if (!existing.salary && job.salary) {
+          await prisma.job.update({
+            where: { id: existing.id },
+            data: { salary: job.salary },
+          });
+        }
+        continue;
+      }
+
       await prisma.job.upsert({
         where: { url: job.url },
         update: {
           title: job.title,
           description: job.description,
           salary: job.salary,
+          contentHash,
         },
         create: {
           title: job.title,
@@ -126,6 +178,7 @@ export async function saveJobs(jobs: JobInput[]) {
           location: job.location,
           description: job.description,
           url: job.url,
+          contentHash,
           salary: job.salary,
           source: job.source,
           techStack: [],
@@ -149,7 +202,7 @@ export async function saveJobs(jobs: JobInput[]) {
 
       savedCount++;
     } catch (err) {
-      console.error(`Failed to save job ${job.url}:`, err);
+      log.error(`Failed to save job ${job.url}:`, err);
     }
   }
   return savedCount;
@@ -168,7 +221,7 @@ export async function triggerDeepScrape(
     destinationUrl.includes('::1') ||
     process.env.NODE_ENV === 'development'
   ) {
-    console.warn(
+    log.warn(
       '⚠️ Localhost detected. Bypassing QStash and running deep scrape directly in background.'
     );
 
@@ -180,7 +233,7 @@ export async function triggerDeepScrape(
           await sendScrapeCompleteEmail(email, jobs, source);
         }
       } catch (err) {
-        console.error('Background scrape failed (Local Mode):', err);
+        log.error('Background scrape failed (Local Mode):', err);
       }
     })();
     return;

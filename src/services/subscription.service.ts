@@ -1,26 +1,17 @@
-import Razorpay from 'razorpay';
-import crypto from 'crypto';
 import prisma from '@/lib/db/prisma';
-
-// Initialize Razorpay
-const razorpay =
-  process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET
-    ? new Razorpay({
-        key_id: process.env.RAZORPAY_KEY_ID,
-        key_secret: process.env.RAZORPAY_KEY_SECRET,
-      })
-    : null;
+import { dodo } from '@/lib/payments/dodo';
 
 export const PLANS = {
   FREE: {
     name: 'Free',
     price: 0,
+    currency: 'USD',
     features: ['Weekly Digest', '3 Scrapes/Week', '1 Resume'],
   },
   PRO: {
     name: 'Pro',
-    price: 800, // INR 800 (approx $9-10) for simplicity, or stick to USD if Razorpay supports international well. Let's assume INR for Razorpay standard.
-    currency: 'INR',
+    price: 9, // $9/mo (price actually set on the Dodo Product, this is for display)
+    currency: 'USD',
     features: [
       'Daily Digest',
       'Unlimited Scrapes',
@@ -29,70 +20,85 @@ export const PLANS = {
       'AI Interview Prep',
     ],
   },
-};
+} as const;
 
-export async function createOrder(userId: string, plan: 'PRO') {
-  if (!razorpay) {
-    throw new Error('Razorpay not initialized');
+export type PlanKey = keyof typeof PLANS;
+
+/**
+ * Create a Dodo Payments hosted checkout session for the Pro subscription.
+ * Returns a URL to redirect the user to.
+ */
+export async function createProCheckoutSession(params: {
+  userId: string;
+  email: string;
+  name?: string | null;
+  returnUrl: string;
+}) {
+  if (!dodo) throw new Error('Dodo Payments not initialized');
+  if (!process.env.DODO_PRO_PRODUCT_ID) {
+    throw new Error('DODO_PRO_PRODUCT_ID is not set');
   }
 
-  const options = {
-    amount: PLANS[plan].price * 100, // amount in smallest currency unit (paise)
-    currency: PLANS[plan].currency,
-    receipt: `receipt_${userId}_${Date.now()}`,
-    notes: {
-      userId,
-      plan,
+  const session = await dodo.checkoutSessions.create({
+    product_cart: [{ product_id: process.env.DODO_PRO_PRODUCT_ID, quantity: 1 }],
+    customer: {
+      email: params.email,
+      name: params.name ?? params.email.split('@')[0],
     },
+    return_url: params.returnUrl,
+    metadata: {
+      user_id: params.userId,
+      plan: 'PRO',
+    },
+  });
+
+  return {
+    sessionId: session.session_id,
+    checkoutUrl: session.checkout_url,
   };
-
-  try {
-    const order = await razorpay.orders.create(options);
-    return order;
-  } catch (error) {
-    console.error('Razorpay create order error:', error);
-    throw error;
-  }
 }
 
-export function verifyPaymentSignature(
-  orderId: string,
-  paymentId: string,
-  signature: string
-): boolean {
-  if (!process.env.RAZORPAY_KEY_SECRET) {
-    throw new Error('Razorpay secret not found');
+/**
+ * Cancel a Dodo subscription at the end of the current billing period.
+ */
+export async function cancelSubscription(userId: string, reason?: string) {
+  if (!dodo) throw new Error('Dodo Payments not initialized');
+
+  const sub = await prisma.subscription.findUnique({ where: { userId } });
+  if (!sub?.dodoSubscriptionId) {
+    throw new Error('No active subscription to cancel');
   }
 
-  const generatedSignature = crypto
-    .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
-    .update(orderId + '|' + paymentId)
-    .digest('hex');
+  await dodo.subscriptions.update(sub.dodoSubscriptionId, {
+    cancel_at_next_billing_date: true,
+    ...(reason ? { metadata: { cancellation_reason: reason } } : {}),
+  });
 
-  return generatedSignature === signature;
-}
-
-export async function upgradeUserToPro(userId: string, razorpayPaymentId: string) {
-  // Update or create subscription
-  // We'll set expiry to 30 days from now for this one-time payment MVP
-  const expiresAt = new Date();
-  expiresAt.setDate(expiresAt.getDate() + 30);
-
-  return prisma.subscription.upsert({
+  // The webhook will fire `subscription.cancelled` and update the DB.
+  // We optimistically reflect the user-facing flag here.
+  return prisma.subscription.update({
     where: { userId },
-    update: {
-      plan: 'PRO',
-      status: 'active',
-      razorpayId: razorpayPaymentId, // Storing last payment ID for reference or order ID
-      expiresAt,
-      updatedAt: new Date(),
-    },
-    create: {
-      userId,
-      plan: 'PRO',
-      status: 'active',
-      razorpayId: razorpayPaymentId,
-      expiresAt,
-    },
+    data: { cancelAtPeriodEnd: true },
+  });
+}
+
+/**
+ * Resume a previously-cancelled subscription that hasn't yet expired.
+ */
+export async function resumeSubscription(userId: string) {
+  if (!dodo) throw new Error('Dodo Payments not initialized');
+
+  const sub = await prisma.subscription.findUnique({ where: { userId } });
+  if (!sub?.dodoSubscriptionId) {
+    throw new Error('No subscription found');
+  }
+
+  await dodo.subscriptions.update(sub.dodoSubscriptionId, {
+    cancel_at_next_billing_date: false,
+  });
+
+  return prisma.subscription.update({
+    where: { userId },
+    data: { cancelAtPeriodEnd: false },
   });
 }

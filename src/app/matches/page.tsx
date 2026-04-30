@@ -1,131 +1,164 @@
 'use client';
-import React, { useEffect, useState } from 'react';
-import {
-  MapPin,
-  Clock,
-  Search,
-  ExternalLink,
-  Bookmark,
-  BookmarkCheck,
-  Briefcase,
-  RefreshCw,
-  DollarSign,
-} from 'lucide-react';
-import { motion } from 'framer-motion';
-import { useAsync } from '@/hooks/useAsync';
-
-interface Job {
-  id: string;
-  title: string;
-  company: string;
-  location: string | null;
-  salary: string | null;
-  description: string | null;
-  url: string;
-  source: string;
-  scrapedAt: string;
-  matches: unknown[];
-  similarity?: number;
-}
-
+import React, { useCallback, useEffect, useState } from 'react';
 import JobDetailModal from '@/components/ui/JobDetailModal';
 import toast from 'react-hot-toast';
+import MatchesHeader from '@/components/matches/MatchesHeader';
+import MatchesGrid from '@/components/matches/MatchesGrid';
+import MatchSkeleton from '@/components/matches/MatchSkeleton';
+import MatchFilters, { type FilterKey } from '@/components/matches/MatchFilters';
+import type { Job } from '@/components/matches/types';
+import { log } from '@/lib/log';
+import { track } from '@/lib/analytics';
+
+interface UserContext {
+  skills: string[];
+  preferredLocations: string[];
+  preferRemote: boolean;
+  salaryMin?: number | null;
+}
+
+interface MatchesResponse {
+  jobs: Job[];
+  nextCursor: string | null;
+  total: number;
+}
+
+const PAGE_SIZE = 20;
 
 const MatchesPage = () => {
-  // const { profile } = useProfile(); // Removed as unused
-  const [loading, setLoading] = useState(true); // Added
+  const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
-  // const [location, setLocation] = useState(''); // Removed as unused
+  const [filter, setFilter] = useState<FilterKey>('all');
   const [savedJobs, setSavedJobs] = useState<string[]>([]);
   const [applications, setApplications] = useState<Record<string, string>>({});
+
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [total, setTotal] = useState(0);
+  const [isLoadingJobs, setIsLoadingJobs] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [hasTrackedFirstMatch, setHasTrackedFirstMatch] = useState(false);
+
+  const [userContext, setUserContext] = useState<UserContext | undefined>();
 
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const {
-    data: fetchedJobs,
-    isLoading: isLoadingJobs,
-    execute: fetchJobs,
-  } = useAsync<{ jobs: Job[] }>();
-
-  const { isLoading: isRefreshing, execute: refreshJobs } = useAsync<{
-    success: boolean;
-    count: number;
-  }>();
-
-  useEffect(() => {
-    // Initial fetch from DB (Semantic Match)
-    fetchJobs(async () => {
-      // Pass query if exists, otherwise backend uses profile
-      const params = new URLSearchParams({ limit: '20' });
-      if (query) params.append('query', query);
-
-      const res = await fetch(`/api/matches?${params.toString()}`);
-      return res.json();
-    });
-
-    // Fetch bookmarks and applications
-    const fetchUserData = async () => {
+  const loadPage = useCallback(
+    async (opts: { reset: boolean; cursor?: string | null }) => {
+      const { reset, cursor } = opts;
+      const setter = reset ? setIsLoadingJobs : setIsLoadingMore;
+      setter(true);
       try {
-        const [bookmarksRes, appsRes] = await Promise.all([
+        const params = new URLSearchParams({
+          limit: String(PAGE_SIZE),
+          filter,
+        });
+        if (query) params.append('query', query);
+        if (!reset && cursor) params.append('cursor', cursor);
+
+        const res = await fetch(`/api/matches?${params.toString()}`);
+        const data: MatchesResponse = await res.json();
+        setJobs((prev) => (reset ? (data.jobs ?? []) : [...prev, ...(data.jobs ?? [])]));
+        setNextCursor(data.nextCursor ?? null);
+        setTotal(data.total ?? 0);
+        if (reset && (data.jobs?.length ?? 0) > 0 && !hasTrackedFirstMatch) {
+          track('first_match_shown', { count: data.jobs.length });
+          setHasTrackedFirstMatch(true);
+        }
+      } catch (err) {
+        log.error('matches fetch failed', err);
+      } finally {
+        setter(false);
+      }
+    },
+    // hasTrackedFirstMatch intentionally omitted — we only want the
+    // "fired once" semantics, recreating loadPage on each track would
+    // cancel pagination requests in flight.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [query, filter]
+  );
+
+  // Initial load + when filter/query changes via the buttons (NOT on each keystroke).
+  // We re-fetch when `filter` flips because the API filters server-side.
+  useEffect(() => {
+    loadPage({ reset: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filter]);
+
+  // Bootstrap: bookmarks, applications, user context for "why this match?"
+  useEffect(() => {
+    let cancelled = false;
+    const bootstrap = async () => {
+      try {
+        const [bookmarksRes, appsRes, userRes] = await Promise.all([
           fetch('/api/bookmarks'),
           fetch('/api/applications'),
+          fetch('/api/user'),
         ]);
 
-        if (bookmarksRes.ok) {
-          const data = await bookmarksRes.json();
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          setSavedJobs(data.bookmarks.map((b: any) => b.jobId));
+        if (!cancelled && bookmarksRes.ok) {
+          const data: { bookmarks: { jobId: string }[] } = await bookmarksRes.json();
+          setSavedJobs(data.bookmarks.map((b) => b.jobId));
         }
-
-        if (appsRes.ok) {
-          const data = await appsRes.json();
+        if (!cancelled && appsRes.ok) {
+          const data: { applications: { jobId: string; status: string }[] } =
+            await appsRes.json();
           const appMap: Record<string, string> = {};
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          data.applications.forEach((app: any) => {
-            appMap[app.jobId] = app.status;
-          });
+          data.applications.forEach((app) => (appMap[app.jobId] = app.status));
           setApplications(appMap);
         }
-      } catch (error) {
-        console.error('Error fetching user data', error);
+        if (!cancelled && userRes.ok) {
+          const u = await userRes.json();
+          // Build the context the MatchExplanation component expects
+          const skills: string[] = [
+            ...((u.user?.skills as string[]) ?? []),
+            ...(((u.user?.resumes?.[0]?.parsedSkills ?? []) as { skill: string }[]).map(
+              (s) => s.skill
+            )),
+          ]
+            .filter(Boolean)
+            .map((s) => s.toLowerCase());
+          const prefs = u.user?.jobPreferences;
+          setUserContext({
+            skills: Array.from(new Set(skills)),
+            preferredLocations: ((prefs?.locations as string[]) ?? []).map((l) =>
+              l.toLowerCase()
+            ),
+            preferRemote: prefs?.workLocation === 'remote',
+            salaryMin: prefs?.salaryMin ?? null,
+          });
+        }
+      } catch (err) {
+        log.error('matches bootstrap failed', err);
       } finally {
-        setLoading(false); // Set loading to false after initial data fetch
+        if (!cancelled) setLoading(false);
       }
     };
-    fetchUserData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fetchJobs]); // Removed query from dependency to prevent auto-fetch on type
+    bootstrap();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
-  const handleSearch = () => {
-    fetchJobs(async () => {
-      const params = new URLSearchParams({ limit: '20' });
-      if (query) params.append('query', query);
-      const res = await fetch(`/api/matches?${params.toString()}`);
-      return res.json();
-    });
-  };
-
-  // ... (Effect for pref population remains same)
+  const handleSearch = () => loadPage({ reset: true });
 
   const handleRefresh = async () => {
     if (!query) return;
-    // 1. Scrape/Fetch new jobs from external APIs
-    await refreshJobs(async () => {
-      const res = await fetch('/api/jobs/fetch', {
+    setIsRefreshing(true);
+    try {
+      await fetch('/api/jobs/fetch', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query }), // Removed location as it's unused
+        body: JSON.stringify({ query }),
       });
-      return res.json();
-    });
-
-    // 2. Re-fetch ranked matches
-    fetchJobs(async () => {
-      const params = new URLSearchParams({ limit: '20', query });
-      const res = await fetch(`/api/matches?${params.toString()}`);
-      return res.json();
-    });
+      await loadPage({ reset: true });
+    } catch (err) {
+      log.error('refresh failed', err);
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   const handleDeepScrape = async () => {
@@ -138,21 +171,18 @@ const MatchesPage = () => {
       const data = await res.json();
       if (res.ok) {
         toast.success(data.message);
-      } else {
-        if (res.status === 403) toast.error('Upgrade to Pro to use Deep Scraper');
-        else toast.error(data.error || 'Failed to start scrape');
-      }
-    } catch (error) {
-      console.error('Deep scrape error', error);
+      } else if (res.status === 403) toast.error('Upgrade to Pro to use Deep Scraper');
+      else if (res.status === 429) toast.error(data.error || '5 deep scrapes per day max');
+      else toast.error(data.error || 'Failed to start scrape');
+    } catch (err) {
+      log.error('Deep scrape error', err);
       toast.error('Failed to trigger scrape');
     }
   };
 
   const handleSaveToggle = async (jobId: string, e?: React.MouseEvent) => {
-    e?.stopPropagation(); // Prevent opening modal
+    e?.stopPropagation();
     const isSaved = savedJobs.includes(jobId);
-
-    // Optimistic update
     setSavedJobs((prev) => (isSaved ? prev.filter((id) => id !== jobId) : [...prev, jobId]));
 
     try {
@@ -167,18 +197,53 @@ const MatchesPage = () => {
         });
         toast.success('Job saved');
       }
-    } catch (error) {
-      console.error('Error toggling save:', error);
-      // Revert on error
+    } catch (err) {
+      log.error('Error toggling save:', err);
       setSavedJobs((prev) => (isSaved ? [...prev, jobId] : prev.filter((id) => id !== jobId)));
       toast.error('Failed to update bookmark');
     }
   };
 
+  const handleHideJob = async (jobId: string, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setJobs((prev) => prev.filter((j) => j.id !== jobId));
+    try {
+      const res = await fetch('/api/matches/hide', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jobId }),
+      });
+      if (!res.ok) throw new Error('hide failed');
+      toast.success('Hidden');
+    } catch (err) {
+      log.error('hide job failed', err);
+      toast.error("Couldn't hide");
+      loadPage({ reset: true });
+    }
+  };
+
+  const handleHideCompany = async (company: string, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setJobs((prev) =>
+      prev.filter((j) => (j.company ?? '').toLowerCase() !== company.toLowerCase())
+    );
+    try {
+      const res = await fetch('/api/user/hidden-companies', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ company }),
+      });
+      if (!res.ok) throw new Error('hide company failed');
+      toast.success(`Hidden all from ${company}`);
+    } catch (err) {
+      log.error('hide company failed', err);
+      toast.error("Couldn't hide company");
+      loadPage({ reset: true });
+    }
+  };
+
   const handleUpdateStatus = async (status: string) => {
     if (!selectedJob) return;
-
-    // Optimistic update
     const previousStatus = applications[selectedJob.id];
     setApplications((prev) => ({ ...prev, [selectedJob.id]: status }));
 
@@ -188,20 +253,17 @@ const MatchesPage = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ jobId: selectedJob.id, status }),
       });
-
       if (!res.ok) {
         const errorData = await res.json();
-        console.error('Failed to update status:', errorData);
+        log.error('Failed to update status:', errorData);
         toast.error('Failed to update status');
-        // Revert on error
         setApplications((prev) => ({ ...prev, [selectedJob.id]: previousStatus }));
       } else {
         toast.success('Application status updated');
       }
-    } catch (error) {
-      console.error('Error updating status:', error);
+    } catch (err) {
+      log.error('Error updating status:', err);
       toast.error('Something went wrong');
-      // Revert on error
       setApplications((prev) => ({ ...prev, [selectedJob.id]: previousStatus }));
     }
   };
@@ -214,164 +276,46 @@ const MatchesPage = () => {
   return (
     <div className="font-poppins min-h-screen bg-gray-50 p-8">
       <div className="mx-auto max-w-5xl">
-        <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Job Matches</h1>
-            <p className="mt-1 text-gray-500">Jobs that match your preferences</p>
-          </div>
+        <MatchesHeader
+          query={query}
+          isRefreshing={isRefreshing}
+          onQueryChange={setQuery}
+          onSearch={handleSearch}
+          onRefresh={handleRefresh}
+          onDeepScrape={handleDeepScrape}
+        />
 
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 rounded-lg border bg-white px-3 py-2 shadow-sm">
-              <Search className="h-4 w-4 text-gray-400" />
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                placeholder="Job role..."
-                className="w-32 text-sm outline-none md:w-48"
-              />
-            </div>
-            <button
-              onClick={handleSearch}
-              className="rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200"
-            >
-              Search
-            </button>
-            <button
-              onClick={handleRefresh}
-              disabled={isRefreshing || !query}
-              className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
-            >
-              <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-              {isRefreshing ? 'Finding...' : 'Find New Jobs'}
-            </button>
-            <button
-              onClick={handleDeepScrape}
-              className="flex items-center gap-2 rounded-lg border border-purple-200 bg-purple-50 px-4 py-2 text-purple-700 hover:bg-purple-100"
-            >
-              <div className="flex h-2 w-2 animate-pulse rounded-full bg-purple-500" />
-              Deep Scrape
-            </button>
-          </div>
-        </div>
+        <MatchFilters active={filter} onChange={setFilter} total={total} />
 
-        {isLoadingJobs || loading ? ( // Added loading state
-          <div className="flex justify-center py-20">
-            <div className="h-10 w-10 animate-spin rounded-full border-b-2 border-blue-600"></div>
-          </div>
+        {isLoadingJobs || loading ? (
+          <MatchSkeleton />
         ) : (
-          <div className="space-y-4">
-            {fetchedJobs?.jobs && fetchedJobs.jobs.length > 0 ? (
-              fetchedJobs.jobs.map((job, index) => (
-                <motion.div
-                  key={job.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  onClick={() => openJobModal(job)}
-                  className="group cursor-pointer rounded-xl border bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
+          <>
+            <MatchesGrid
+              jobs={jobs}
+              savedJobs={savedJobs}
+              applications={applications}
+              userContext={userContext}
+              onOpenJob={openJobModal}
+              onToggleSave={handleSaveToggle}
+              onHideJob={handleHideJob}
+              onHideCompany={handleHideCompany}
+            />
+
+            {nextCursor && (
+              <div className="mt-6 flex justify-center">
+                <button
+                  onClick={() => loadPage({ reset: false, cursor: nextCursor })}
+                  disabled={isLoadingMore}
+                  className="rounded-full border border-gray-200 bg-white px-6 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 disabled:opacity-50"
                 >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3">
-                        <h3 className="text-xl font-semibold text-gray-900 transition-colors group-hover:text-blue-600">
-                          {job.title}
-                        </h3>
-                        <div className="flex gap-2">
-                          <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700 uppercase">
-                            {job.source}
-                          </span>
-                          {/* Application Status Badge */}
-                          {applications[job.id] && (
-                            <span className="rounded-full bg-purple-100 px-3 py-1 text-xs font-bold text-purple-700 uppercase">
-                              {applications[job.id]}
-                            </span>
-                          )}
-                          {job.similarity !== undefined && (
-                            <span
-                              className={`rounded-full px-3 py-1 text-xs font-bold text-white uppercase ${
-                                job.similarity > 0.85
-                                  ? 'bg-green-600'
-                                  : job.similarity > 0.7
-                                    ? 'bg-emerald-500'
-                                    : 'bg-blue-500'
-                              }`}
-                            >
-                              {Math.round(job.similarity * 100)}% Match
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <p className="mt-1 font-medium text-blue-600">{job.company}</p>
-
-                      <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-gray-500">
-                        <span className="flex items-center gap-1">
-                          <MapPin className="h-4 w-4" />
-                          {job.location || 'Remote (Not Specified)'}
-                        </span>
-                        {job.salary && (
-                          <span className="flex items-center gap-1">
-                            <DollarSign className="h-4 w-4" />
-                            {job.salary}
-                          </span>
-                        )}
-                        <span className="flex items-center gap-1">
-                          <Clock className="h-4 w-4" />
-                          {new Date(job.scrapedAt).toLocaleDateString()}
-                        </span>
-                      </div>
-
-                      <p className="mt-4 line-clamp-2 text-sm text-gray-600">
-                        {job.description ? job.description.replace(/<[^>]*>?/gm, '') : ''}
-                      </p>
-                    </div>
-
-                    <div className="ml-4 flex flex-col gap-2">
-                      <button
-                        onClick={(e) => handleSaveToggle(job.id, e)}
-                        className={`rounded-lg p-2 transition-colors ${
-                          savedJobs.includes(job.id)
-                            ? 'bg-blue-100 text-blue-600'
-                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                        }`}
-                      >
-                        {savedJobs.includes(job.id) ? (
-                          <BookmarkCheck className="h-5 w-5" />
-                        ) : (
-                          <Bookmark className="h-5 w-5" />
-                        )}
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          window.open(job.url, '_blank');
-                        }}
-                        className="flex justify-center rounded-lg bg-blue-600 p-2 text-white transition-colors hover:bg-blue-700"
-                      >
-                        <ExternalLink className="h-5 w-5" />
-                      </button>
-                    </div>
-                  </div>
-                </motion.div>
-              ))
-            ) : (
-              <div className="rounded-xl border bg-white py-20 text-center">
-                <div className="flex min-h-[50vh] flex-col items-center justify-center text-center">
-                  <div className="mb-4 rounded-full bg-gray-100 p-4">
-                    <Briefcase className="h-8 w-8 text-gray-400" />
-                  </div>
-                  <h3 className="text-xl font-semibold text-gray-900">No matches found yet</h3>
-                  <p className="mt-2 max-w-md text-gray-500">
-                    We&apos;re analyzing your profile against thousands of jobs. Check back soon for
-                    your personalized matches!
-                  </p>
-                </div>
+                  {isLoadingMore ? 'Loading…' : 'Load more'}
+                </button>
               </div>
             )}
-          </div>
+          </>
         )}
 
-        {/* Job Detail Modal */}
         {selectedJob && (
           <JobDetailModal
             job={selectedJob}

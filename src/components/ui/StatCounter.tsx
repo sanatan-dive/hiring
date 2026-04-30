@@ -27,7 +27,7 @@ const StatCounter = ({ value, suffix = '' }: { value: number; suffix?: string })
   }, [rounded]);
 
   return (
-    <div ref={ref} className="mb-2 text-3xl font-bold text-blue-600 sm:text-4xl">
+    <div ref={ref} className="mb-2 text-3xl font-bold text-sky-600 sm:text-4xl">
       {displayValue}
       {suffix}
     </div>

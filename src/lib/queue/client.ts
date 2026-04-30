@@ -1,3 +1,4 @@
+import { log } from '@/lib/log';
 import { Client } from '@upstash/qstash';
 
 const client = new Client({
@@ -6,7 +7,7 @@ const client = new Client({
 
 export const publishJob = async (destinationUrl: string, payload: unknown) => {
   if (!process.env.QSTASH_TOKEN) {
-    console.warn('QSTASH_TOKEN is not set. Skipping queue publication.');
+    log.warn('QSTASH_TOKEN is not set. Skipping queue publication.');
     return;
   }
 
@@ -17,7 +18,7 @@ export const publishJob = async (destinationUrl: string, payload: unknown) => {
     });
     return res;
   } catch (error) {
-    console.error('Failed to publish to QStash:', error);
+    log.error('Failed to publish to QStash:', error);
     throw error;
   }
 };

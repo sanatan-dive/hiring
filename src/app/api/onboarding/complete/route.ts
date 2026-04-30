@@ -1,3 +1,4 @@
+import { log } from '@/lib/log';
 import { auth, currentUser, clerkClient } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/db/prisma';
@@ -135,7 +136,7 @@ export async function POST(req: Request) {
       message: 'Onboarding data saved successfully',
     });
   } catch (error) {
-    console.error('Error saving onboarding:', error);
+    log.error('Error saving onboarding:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

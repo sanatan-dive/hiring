@@ -1,3 +1,4 @@
+import { log } from '@/lib/log';
 import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/db/prisma';
@@ -20,11 +21,11 @@ export async function GET() {
             parsedExperiences: true,
           },
           orderBy: { createdAt: 'desc' },
-          take: 1,
         },
         jobPreferences: true,
         socialLinks: true,
         projects: { orderBy: { createdAt: 'desc' } },
+        subscription: true,
       },
     });
 
@@ -42,6 +43,23 @@ export async function GET() {
         name: user.name,
         imageUrl: user.imageUrl,
         skills: user.skills,
+        emailDigestEnabled: user.emailDigestEnabled,
+        hiddenCompanies: user.hiddenCompanies,
+        subscription: user.subscription
+          ? {
+              plan: user.subscription.plan,
+              status: user.subscription.status,
+              currentPeriodEnd: user.subscription.currentPeriodEnd,
+              cancelAtPeriodEnd: user.subscription.cancelAtPeriodEnd,
+            }
+          : { plan: 'FREE', status: 'inactive', currentPeriodEnd: null, cancelAtPeriodEnd: false },
+        resumes: user.resumes.map((r) => ({
+          id: r.id,
+          fileName: r.fileName,
+          createdAt: r.createdAt,
+          parsedSkillsCount: r.parsedSkills.length,
+          parsedExperiencesCount: r.parsedExperiences.length,
+        })),
         resume: resume
           ? {
               id: resume.id,
@@ -83,7 +101,7 @@ export async function GET() {
       },
     });
   } catch (error) {
-    console.error('Error fetching user profile:', error);
+    log.error('Error fetching user profile:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

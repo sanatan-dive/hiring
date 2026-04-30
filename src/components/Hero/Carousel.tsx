@@ -112,13 +112,13 @@ const Carousel: React.FC<CarouselProps> = ({
       />
       <div className="relative z-20">
         <div className="mb-4 ml-4 flex items-center gap-1 pt-20 sm:ml-40">
-          <span className="z-10 text-2xl font-bold text-blue-600">—</span>
+          <span className="z-10 text-2xl font-bold text-sky-600">—</span>
           <h1 className="z-10 text-2xl font-bold text-black sm:text-4xl">Success Stories</h1>
         </div>
 
         <div className="mt-6 ml-4 flex flex-col gap-2 sm:ml-44">
           <p className="sm:text-md text-sm font-light text-black/60">
-            Hir&apos;in finds jobs that fit your skills and tailors your applications automatically.
+            Hirin finds jobs that fit your skills and tailors your applications automatically.
           </p>
         </div>
       </div>
@@ -130,28 +130,28 @@ const Carousel: React.FC<CarouselProps> = ({
             className="group absolute -left-175 z-40 flex flex-col items-end pt-32"
             onClick={goToPrevious}
           >
-            <div className="-z-10 mb-8 h-[3px] w-[100px] rounded-full bg-gradient-to-l from-blue-600 to-blue-400 transition-colors duration-200"></div>
-            <div className="-z-10 mb-6 h-[3px] w-[200px] rounded-full bg-gradient-to-l from-blue-600 to-blue-400 transition-colors duration-200"></div>
-            <div className="ml-4 flex cursor-pointer items-center text-blue-600 transition-all duration-200 group-hover:text-blue-800">
+            <div className="-z-10 mb-8 h-[3px] w-[100px] rounded-full bg-gradient-to-l from-sky-600 to-sky-400 transition-colors duration-200"></div>
+            <div className="-z-10 mb-6 h-[3px] w-[200px] rounded-full bg-gradient-to-l from-sky-600 to-sky-400 transition-colors duration-200"></div>
+            <div className="ml-4 flex cursor-pointer items-center text-sky-600 transition-all duration-200 group-hover:text-sky-800">
               <ChevronLeft size={32} className="font-bold" />
-              <div className="h-[3px] w-72 rounded-full bg-gradient-to-l from-blue-600 to-blue-400 transition-colors duration-200 hover:bg-gradient-to-l hover:from-blue-800 hover:to-blue-600"></div>
+              <div className="h-[3px] w-72 rounded-full bg-gradient-to-l from-sky-600 to-sky-400 transition-colors duration-200 hover:bg-gradient-to-l hover:from-sky-800 hover:to-sky-600"></div>
             </div>
-            <div className="-z-10 mt-6 h-[3px] w-[200px] rounded-full bg-gradient-to-l from-blue-600 to-blue-400 transition-colors duration-200"></div>
-            <div className="-z-10 mt-8 h-[3px] w-[100px] rounded-full bg-gradient-to-l from-blue-600 to-blue-400 transition-colors duration-200"></div>
+            <div className="-z-10 mt-6 h-[3px] w-[200px] rounded-full bg-gradient-to-l from-sky-600 to-sky-400 transition-colors duration-200"></div>
+            <div className="-z-10 mt-8 h-[3px] w-[100px] rounded-full bg-gradient-to-l from-sky-600 to-sky-400 transition-colors duration-200"></div>
           </div>
 
           <div
             className="group absolute -right-175 z-40 flex flex-col items-start pt-32"
             onClick={goToNext}
           >
-            <div className="-z-10 mb-8 h-[3px] w-[100px] rounded-full bg-gradient-to-r from-blue-600 to-blue-400"></div>
-            <div className="-z-10 mb-6 h-[3px] w-[200px] rounded-full bg-gradient-to-r from-blue-600 to-blue-400"></div>
-            <div className="mr-4 flex cursor-pointer items-center text-blue-600 transition-all duration-200 group-hover:text-blue-800">
-              <div className="h-[3px] w-72 rounded-full bg-gradient-to-r from-blue-600 to-blue-400 transition-colors duration-200 hover:bg-gradient-to-r hover:from-blue-800 hover:to-blue-600"></div>
+            <div className="-z-10 mb-8 h-[3px] w-[100px] rounded-full bg-gradient-to-r from-sky-600 to-sky-400"></div>
+            <div className="-z-10 mb-6 h-[3px] w-[200px] rounded-full bg-gradient-to-r from-sky-600 to-sky-400"></div>
+            <div className="mr-4 flex cursor-pointer items-center text-sky-600 transition-all duration-200 group-hover:text-sky-800">
+              <div className="h-[3px] w-72 rounded-full bg-gradient-to-r from-sky-600 to-sky-400 transition-colors duration-200 hover:bg-gradient-to-r hover:from-sky-800 hover:to-sky-600"></div>
               <ChevronRight size={32} />
             </div>
-            <div className="-z-10 mt-6 h-[3px] w-[200px] rounded-full bg-gradient-to-r from-blue-600 to-blue-400"></div>
-            <div className="-z-10 mt-8 h-[3px] w-[100px] rounded-full bg-gradient-to-r from-blue-600 to-blue-400"></div>
+            <div className="-z-10 mt-6 h-[3px] w-[200px] rounded-full bg-gradient-to-r from-sky-600 to-sky-400"></div>
+            <div className="-z-10 mt-8 h-[3px] w-[100px] rounded-full bg-gradient-to-r from-sky-600 to-sky-400"></div>
           </div>
           {items.map((item, index) => (
             <div
@@ -184,7 +184,7 @@ const Carousel: React.FC<CarouselProps> = ({
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-2xl font-bold text-blue-200">{item.package}</div>
+                    <div className="text-2xl font-bold text-sky-200">{item.package}</div>
                     <div className="text-xs text-gray-200">Annual Package</div>
                   </div>
                 </div>
@@ -192,7 +192,7 @@ const Carousel: React.FC<CarouselProps> = ({
                 {/* Student Details */}
                 <div className="space-y-3">
                   <div className="flex items-center space-x-2">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-r from-blue-500 to-blue-400 text-lg font-bold text-white">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-r from-sky-500 to-sky-400 text-lg font-bold text-white">
                       {item.name.charAt(0)}
                     </div>
                     <div>

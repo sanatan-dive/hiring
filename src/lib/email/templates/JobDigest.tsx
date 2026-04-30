@@ -16,6 +16,7 @@ import {
 interface JobDigestProps {
   userName: string;
   matchCount: number;
+  unsubscribeUrl?: string;
   jobs: {
     id: string;
     title: string;
@@ -27,22 +28,26 @@ interface JobDigestProps {
   }[];
 }
 
+const APP_URL =
+  process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+
 export const JobDigestEmail = ({
   userName = 'Job Seeker',
   matchCount = 0,
+  unsubscribeUrl,
   jobs = [],
 }: JobDigestProps) => {
   return (
     <Html>
       <Head />
-      <Preview>{`${matchCount} new job matches found for you!`}</Preview>
+      <Preview>{`${matchCount} new job matches for you on Hirin`}</Preview>
       <Body style={main}>
         <Container style={container}>
-          <Heading style={h1}>Hirin&apos; Job Digest</Heading>
+          <Heading style={h1}>Hirin&apos; — your matches today</Heading>
           <Text style={text}>Hi {userName},</Text>
           <Text style={text}>
-            We found <strong>{matchCount} new jobs</strong> that match your profile since your last
-            visit. Here are the top matches:
+            We ranked <strong>{matchCount}</strong> new jobs against your resume. Top picks
+            below.
           </Text>
 
           <Section style={jobList}>
@@ -55,26 +60,43 @@ export const JobDigestEmail = ({
                   {job.company} • {job.location || 'Remote'}
                 </Text>
                 {job.salary && <Text style={salary}>{job.salary}</Text>}
-                <Text style={matchScore}>{Math.round(job.score * 100)}% Match</Text>
+                <Text style={matchScore}>{Math.round(job.score * 100)}% match</Text>
                 <Link href={job.url} style={link}>
-                  View Job
+                  View job →
                 </Link>
               </Section>
             ))}
           </Section>
 
           {matchCount > 5 && (
-            <Text style={moreText}>...and {matchCount - 5} more matches waiting for you.</Text>
+            <Text style={moreText}>...and {matchCount - 5} more matches in your dashboard.</Text>
           )}
 
           <Section style={btnContainer}>
-            <Button href="https://smarthire.app/matches" style={button}>
-              View All Matches
+            <Button href={`${APP_URL}/matches`} style={button}>
+              View all matches
             </Button>
           </Section>
 
           <Hr style={hr} />
-          <Text style={footer}>Sent by Hirin&apos; • All rights reserved.</Text>
+          <Text style={footer}>
+            You&apos;re receiving this because you signed up at Hirin&apos;.{' '}
+            {unsubscribeUrl ? (
+              <>
+                <Link href={unsubscribeUrl} style={footerLink}>
+                  Unsubscribe
+                </Link>
+                {' · '}
+                <Link href={`${APP_URL}/profile`} style={footerLink}>
+                  Manage preferences
+                </Link>
+              </>
+            ) : (
+              <Link href={`${APP_URL}/profile`} style={footerLink}>
+                Manage preferences
+              </Link>
+            )}
+          </Text>
         </Container>
       </Body>
     </Html>
@@ -139,14 +161,14 @@ const companyName = {
 
 const salary = {
   fontSize: '14px',
-  color: '#16a34a', // green
+  color: '#16a34a',
   fontWeight: 'bold',
   margin: '0 0 5px',
 };
 
 const matchScore = {
   fontSize: '12px',
-  color: '#2563eb', // blue
+  color: '#2563eb',
   fontWeight: 'bold',
   marginBottom: '10px',
   display: 'block',
@@ -191,6 +213,12 @@ const hr = {
 const footer = {
   color: '#8898aa',
   fontSize: '12px',
-  lineHeight: '16px',
+  lineHeight: '18px',
   textAlign: 'center' as const,
+  padding: '0 20px',
+};
+
+const footerLink = {
+  color: '#8898aa',
+  textDecoration: 'underline',
 };

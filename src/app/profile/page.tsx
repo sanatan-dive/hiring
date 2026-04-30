@@ -21,6 +21,11 @@ import {
   Bookmark,
   Clock,
 } from 'lucide-react';
+import type { Bookmark as PrismaBookmark, Job } from '@prisma/client';
+import SubscriptionSection from '@/components/profile/SubscriptionSection';
+import EmailPreferencesSection from '@/components/profile/EmailPreferencesSection';
+import ResumeManagerSection from '@/components/profile/ResumeManagerSection';
+import DangerZoneSection from '@/components/profile/DangerZoneSection';
 import PreferenceCard from '@/components/preferences/PreferenceCard';
 import MultiSelect from '@/components/preferences/MultiSelect';
 import SalaryRangeSlider from '@/components/preferences/SalaryRangeSlider';
@@ -50,12 +55,28 @@ interface Project {
   techUsed: string[];
 }
 
+interface ResumeMeta {
+  id: string;
+  fileName: string;
+  createdAt: string;
+  parsedSkillsCount: number;
+  parsedExperiencesCount: number;
+}
+
 interface UserProfile {
   id: string;
   email: string;
   name: string | null;
   imageUrl: string | null;
   skills: string[];
+  emailDigestEnabled: boolean;
+  subscription: {
+    plan: string;
+    status: string;
+    currentPeriodEnd: string | null;
+    cancelAtPeriodEnd: boolean;
+  };
+  resumes: ResumeMeta[];
   resume: {
     id: string;
     fileName: string;
@@ -111,7 +132,20 @@ const ProfilePage = () => {
   const [editProjects, setEditProjects] = useState<Project[]>([]);
 
   // New State for Saved Jobs
-  const [savedJobs, setSavedJobs] = useState<any[]>([]); // eslint-disable-line @typescript-eslint/no-explicit-any
+  const [savedJobs, setSavedJobs] = useState<(PrismaBookmark & { job: Job })[]>([]);
+
+  // Re-fetch helper (also called by Subscription/Resume sections after mutate)
+  const refreshProfile = async () => {
+    try {
+      const userRes = await fetch('/api/user');
+      if (userRes.ok) {
+        const data = await userRes.json();
+        if (data.user) setProfile(data.user);
+      }
+    } catch (err) {
+      console.error('Error refreshing profile', err);
+    }
+  };
 
   // Fetch profile from database
   useEffect(() => {
@@ -319,7 +353,7 @@ const ProfilePage = () => {
               className={`flex items-center gap-2 rounded-xl px-6 py-3 font-medium transition-all disabled:opacity-50 ${
                 isEditing
                   ? 'bg-green-600 text-white hover:bg-green-700'
-                  : 'bg-blue-600 text-white hover:bg-blue-700'
+                  : 'bg-sky-600 text-white hover:bg-sky-700'
               }`}
             >
               {isSaving ? (
@@ -345,7 +379,7 @@ const ProfilePage = () => {
         {/* Social Links */}
         <div className="mb-8 rounded-2xl border bg-white p-6 shadow-sm">
           <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold text-black">
-            <Globe className="h-5 w-5 text-blue-600" />
+            <Globe className="h-5 w-5 text-sky-600" />
             Social Links
           </h2>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -366,14 +400,14 @@ const ProfilePage = () => {
                       value={link?.url || ''}
                       onChange={(e) => updateSocialLink(platform.id, e.target.value)}
                       placeholder={platform.placeholder}
-                      className="flex-1 rounded-lg border bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                      className="flex-1 rounded-lg border bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:ring-2 focus:ring-sky-500 focus:outline-none"
                     />
                   ) : link?.url ? (
                     <a
                       href={link.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-1 text-blue-600 hover:underline"
+                      className="flex items-center gap-1 text-sky-600 hover:underline"
                     >
                       {platform.label} <ExternalLink className="h-3 w-3" />
                     </a>
@@ -390,7 +424,7 @@ const ProfilePage = () => {
         <div className="mb-8 rounded-2xl border bg-white p-6 shadow-sm">
           <PreferenceCard
             title="Skills & Tech Stack"
-            icon={<Award className="h-5 w-5 text-blue-600" />}
+            icon={<Award className="h-5 w-5 text-sky-600" />}
           >
             {isEditing ? (
               <MultiSelect
@@ -406,7 +440,7 @@ const ProfilePage = () => {
                 {(profile?.skills || []).map((skill, idx) => (
                   <span
                     key={idx}
-                    className="rounded-full bg-blue-100 px-3 py-1.5 text-sm font-medium text-blue-800"
+                    className="rounded-full bg-sky-100 px-3 py-1.5 text-sm font-medium text-sky-800"
                   >
                     {skill}
                   </span>
@@ -423,13 +457,13 @@ const ProfilePage = () => {
         <div className="mb-8 rounded-2xl border bg-white p-6 shadow-sm">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="flex items-center gap-2 text-xl font-semibold text-black">
-              <FileText className="h-5 w-5 text-blue-600" />
+              <FileText className="h-5 w-5 text-sky-600" />
               Experience
             </h2>
             {isEditing && (
               <button
                 onClick={addExperience}
-                className="flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700"
+                className="flex items-center gap-1 text-sm font-medium text-sky-600 hover:text-sky-700"
               >
                 <Plus className="h-4 w-4" /> Add Experience
               </button>
@@ -487,9 +521,9 @@ const ProfilePage = () => {
           ) : (
             <div className="space-y-4">
               {(profile?.resume?.experiences || []).map((exp, idx) => (
-                <div key={idx} className="rounded-xl border-l-4 border-blue-500 bg-gray-50 p-4">
+                <div key={idx} className="rounded-xl border-l-4 border-sky-500 bg-gray-50 p-4">
                   <p className="font-semibold text-gray-900">{exp.role}</p>
-                  <p className="text-sm text-blue-600">{exp.company}</p>
+                  <p className="text-sm text-sky-600">{exp.company}</p>
                   {exp.duration && <p className="text-xs text-gray-500">{exp.duration}</p>}
                   {exp.description && (
                     <p className="mt-2 text-sm text-gray-600">{exp.description}</p>
@@ -507,13 +541,13 @@ const ProfilePage = () => {
         <div className="mb-8 rounded-2xl border bg-white p-6 shadow-sm">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="flex items-center gap-2 text-xl font-semibold text-black">
-              <FolderGit2 className="h-5 w-5 text-blue-600" />
+              <FolderGit2 className="h-5 w-5 text-sky-600" />
               Projects
             </h2>
             {isEditing && (
               <button
                 onClick={addProject}
-                className="flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700"
+                className="flex items-center gap-1 text-sm font-medium text-sky-600 hover:text-sky-700"
               >
                 <Plus className="h-4 w-4" /> Add Project
               </button>
@@ -572,7 +606,7 @@ const ProfilePage = () => {
           ) : (
             <div className="space-y-4">
               {(profile?.projects || []).map((project, idx) => (
-                <div key={idx} className="rounded-xl border-l-4 border-blue-500 bg-gray-50 p-4">
+                <div key={idx} className="rounded-xl border-l-4 border-sky-500 bg-gray-50 p-4">
                   <div className="flex items-start justify-between">
                     <h3 className="font-semibold text-gray-900">{project.name}</h3>
                     {project.url && (
@@ -580,7 +614,7 @@ const ProfilePage = () => {
                         href={project.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-700"
+                        className="text-sky-600 hover:text-sky-700"
                       >
                         <ExternalLink className="h-4 w-4" />
                       </a>
@@ -617,7 +651,7 @@ const ProfilePage = () => {
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <PreferenceCard
               title="Desired Roles"
-              icon={<Briefcase className="h-5 w-5 text-blue-600" />}
+              icon={<Briefcase className="h-5 w-5 text-sky-600" />}
             >
               {isEditing ? (
                 <MultiSelect
@@ -633,7 +667,7 @@ const ProfilePage = () => {
                   {(profile?.preferences?.desiredRoles || []).map((role) => (
                     <span
                       key={role}
-                      className="rounded-full bg-blue-100 px-3 py-1.5 text-sm font-medium text-blue-800"
+                      className="rounded-full bg-sky-100 px-3 py-1.5 text-sm font-medium text-sky-800"
                     >
                       {role}
                     </span>
@@ -647,7 +681,7 @@ const ProfilePage = () => {
 
             <PreferenceCard
               title="Experience Level"
-              icon={<Users className="h-5 w-5 text-blue-600" />}
+              icon={<Users className="h-5 w-5 text-sky-600" />}
             >
               {isEditing ? (
                 <RadioGroup
@@ -660,13 +694,13 @@ const ProfilePage = () => {
                   size="sm"
                 />
               ) : (
-                <span className="inline-block rounded-lg border border-blue-100 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700">
+                <span className="inline-block rounded-lg border border-sky-100 bg-sky-50 px-4 py-2 text-sm font-medium text-sky-700">
                   {profile?.preferences?.experienceLevel || 'Not set'}
                 </span>
               )}
             </PreferenceCard>
 
-            <PreferenceCard title="Job Type" icon={<Briefcase className="h-5 w-5 text-blue-600" />}>
+            <PreferenceCard title="Job Type" icon={<Briefcase className="h-5 w-5 text-sky-600" />}>
               {isEditing ? (
                 <RadioGroup
                   options={JOB_TYPES}
@@ -676,7 +710,7 @@ const ProfilePage = () => {
                   size="sm"
                 />
               ) : (
-                <span className="inline-block rounded-lg border border-blue-100 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700">
+                <span className="inline-block rounded-lg border border-sky-100 bg-sky-50 px-4 py-2 text-sm font-medium text-sky-700">
                   {profile?.preferences?.jobType || 'Not set'}
                 </span>
               )}
@@ -684,7 +718,7 @@ const ProfilePage = () => {
 
             <PreferenceCard
               title="Work Location"
-              icon={<MapPin className="h-5 w-5 text-blue-600" />}
+              icon={<MapPin className="h-5 w-5 text-sky-600" />}
             >
               {isEditing ? (
                 <RadioGroup
@@ -695,7 +729,7 @@ const ProfilePage = () => {
                   size="sm"
                 />
               ) : (
-                <span className="inline-block rounded-lg border border-blue-100 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700">
+                <span className="inline-block rounded-lg border border-sky-100 bg-sky-50 px-4 py-2 text-sm font-medium text-sky-700">
                   {profile?.preferences?.workLocation || 'Not set'}
                 </span>
               )}
@@ -703,7 +737,7 @@ const ProfilePage = () => {
 
             <PreferenceCard
               title="Salary Range"
-              icon={<DollarSign className="h-5 w-5 text-blue-600" />}
+              icon={<DollarSign className="h-5 w-5 text-sky-600" />}
             >
               {isEditing ? (
                 <SalaryRangeSlider
@@ -730,10 +764,39 @@ const ProfilePage = () => {
           </div>
         </div>
 
+        {/* Subscription / Email prefs / Resume manager — Phase 3 */}
+        {profile?.subscription && (
+          <SubscriptionSection
+            subscription={{
+              ...profile.subscription,
+              currentPeriodEnd:
+                profile.subscription.currentPeriodEnd
+                  ? new Date(profile.subscription.currentPeriodEnd).toISOString()
+                  : null,
+            }}
+            onChange={refreshProfile}
+          />
+        )}
+
+        {profile && (
+          <EmailPreferencesSection initialEnabled={profile.emailDigestEnabled ?? true} />
+        )}
+
+        {profile?.resumes && (
+          <ResumeManagerSection
+            resumes={profile.resumes.map((r) => ({
+              ...r,
+              createdAt: new Date(r.createdAt).toISOString(),
+            }))}
+            plan={profile.subscription?.plan ?? 'FREE'}
+            onChange={refreshProfile}
+          />
+        )}
+
         {/* Saved Jobs */}
         <div className="mt-8 rounded-2xl border bg-white p-6 shadow-sm">
           <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold text-black">
-            <Bookmark className="h-5 w-5 text-blue-600" />
+            <Bookmark className="h-5 w-5 text-sky-600" />
             Saved Jobs
           </h2>
 
@@ -747,13 +810,13 @@ const ProfilePage = () => {
                   <div className="flex items-start justify-between">
                     <div>
                       <h3 className="font-semibold text-gray-900">{bookmark.job.title}</h3>
-                      <p className="text-sm text-blue-600">{bookmark.job.company}</p>
+                      <p className="text-sm text-sky-600">{bookmark.job.company}</p>
                     </div>
                     <a
                       href={bookmark.job.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-gray-400 hover:text-blue-600"
+                      className="text-gray-400 hover:text-sky-600"
                     >
                       <ExternalLink className="h-4 w-4" />
                     </a>
@@ -775,6 +838,11 @@ const ProfilePage = () => {
           ) : (
             <p className="text-sm text-gray-500">No saved jobs yet.</p>
           )}
+        </div>
+
+        {/* Danger zone — Phase 3 (always last) */}
+        <div className="mt-8">
+          <DangerZoneSection />
         </div>
       </div>
     </div>

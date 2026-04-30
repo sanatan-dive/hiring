@@ -1,8 +1,9 @@
+import { log } from '@/lib/log';
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import prisma from '@/lib/db/prisma';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { checkRateLimit } from '@/lib/rate-limit';
+import { ratelimit } from '@/lib/ratelimit';
 
 // Initialize Gemini
 const genAI = process.env.GEMINI_API_KEY
@@ -15,14 +16,6 @@ export async function POST(req: Request) {
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
-    await checkRateLimit(userId);
-    /* Uncomment in prod
-    const { success } = await checkRateLimit(userId);
-    if (!success) {
-       return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
-    }
-    */
 
     // 1. Check Subscription
     const user = await prisma.user.findUnique({
@@ -45,13 +38,27 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Pro subscription required' }, { status: 403 });
     }
 
+    // 2. Enforce per-user daily AI rate limit (20/day)
+    const { success, remaining, reset } = await ratelimit.aiPro.limit(`ai:cover:${userId}`);
+    if (!success) {
+      return NextResponse.json(
+        { error: 'Daily limit reached (20/day)', retryAfter: reset },
+        {
+          status: 429,
+          headers: {
+            'X-RateLimit-Remaining': remaining.toString(),
+          },
+        }
+      );
+    }
+
     const { jobDescription, jobTitle, companyName } = await req.json();
 
     if (!genAI) {
       return NextResponse.json({ error: 'AI service not configured' }, { status: 500 });
     }
 
-    // 2. Prepare Context
+    // 3. Prepare Context
     const resume = user.resumes[0];
     if (!resume) {
       return NextResponse.json({ error: 'No resume found' }, { status: 400 });
@@ -63,12 +70,12 @@ export async function POST(req: Request) {
 
     const skillsText = resume.parsedSkills.map((s) => s.skill).join(', ');
 
-    // 3. Generate Cover Letter
+    // 4. Generate Cover Letter
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
     const prompt = `
       Write a professional and compelling cover letter for the position of "${jobTitle}" at "${companyName}".
-      
+
       Job Description:
       ${jobDescription.substring(0, 1000)}... (truncated)
 
@@ -85,9 +92,12 @@ export async function POST(req: Request) {
     const result = await model.generateContent(prompt);
     const text = result.response.text();
 
-    return NextResponse.json({ coverLetter: text });
+    return NextResponse.json(
+      { coverLetter: text },
+      { headers: { 'X-RateLimit-Remaining': remaining.toString() } }
+    );
   } catch (error) {
-    console.error('Cover letter generation error:', error);
+    log.error('Cover letter generation error:', error);
     return NextResponse.json({ error: 'Failed to generate cover letter' }, { status: 500 });
   }
 }

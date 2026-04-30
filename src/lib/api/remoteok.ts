@@ -1,3 +1,4 @@
+import { log } from '@/lib/log';
 export interface RemoteOkJob {
   slug: string;
   id: string;
@@ -37,7 +38,7 @@ export async function getRemoteOkJobs(limit: number = 20): Promise<RemoteOkJob[]
 
     return jobs.slice(0, limit);
   } catch (error) {
-    console.error('Error fetching RemoteOK jobs:', error);
+    log.error('Error fetching RemoteOK jobs:', error);
     return [];
   }
 }

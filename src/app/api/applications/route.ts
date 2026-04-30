@@ -1,3 +1,4 @@
+import { log } from '@/lib/log';
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import prisma from '@/lib/db/prisma';
@@ -19,7 +20,7 @@ export async function GET() {
 
     return NextResponse.json({ applications });
   } catch (error) {
-    console.error('Error fetching applications:', error);
+    log.error('Error fetching applications:', error);
     return NextResponse.json({ error: 'Failed to fetch applications' }, { status: 500 });
   }
 }
@@ -94,7 +95,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ application });
   } catch (error) {
-    console.error('Error creating/updating application:', error);
+    log.error('Error creating/updating application:', error);
     return NextResponse.json({ error: 'Failed to save application' }, { status: 500 });
   }
 }
@@ -117,7 +118,7 @@ export async function PATCH(req: Request) {
 
     return NextResponse.json({ application });
   } catch (error) {
-    console.error('Error updating application:', error);
+    log.error('Error updating application:', error);
     return NextResponse.json({ error: 'Failed to update application' }, { status: 500 });
   }
 }

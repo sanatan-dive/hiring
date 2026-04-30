@@ -1,3 +1,4 @@
+import { log } from '@/lib/log';
 import config from '@/config';
 
 const ADZUNA_BASE_URL = 'https://api.adzuna.com/v1/api/jobs';
@@ -23,7 +24,7 @@ export async function searchAdzunaJobs(
   const { adzunaAppId, adzunaApiKey } = config.jobApis;
 
   if (!adzunaAppId || !adzunaApiKey) {
-    console.warn('Adzuna API credentials missing');
+    log.warn('Adzuna API credentials missing');
     return [];
   }
 
@@ -45,7 +46,7 @@ export async function searchAdzunaJobs(
     const data = await response.json();
     return data.results || [];
   } catch (error) {
-    console.error('Failed to fetch from Adzuna:', error);
+    log.error('Failed to fetch from Adzuna:', error);
     return [];
   }
 }

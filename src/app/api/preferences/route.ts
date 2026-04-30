@@ -1,3 +1,4 @@
+import { log } from '@/lib/log';
 import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/db/prisma';
@@ -41,7 +42,7 @@ export async function GET() {
       },
     });
   } catch (error) {
-    console.error('Error fetching preferences:', error);
+    log.error('Error fetching preferences:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -103,7 +104,7 @@ export async function POST(req: Request) {
       preferences,
     });
   } catch (error) {
-    console.error('Error saving preferences:', error);
+    log.error('Error saving preferences:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

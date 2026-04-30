@@ -58,12 +58,12 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
         {selected.map((item) => (
           <div
             key={item}
-            className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-3 py-1 text-sm text-blue-700"
+            className="inline-flex items-center gap-1 rounded-full bg-sky-100 px-3 py-1 text-sm text-sky-700"
           >
             <span>{item}</span>
             <button
               onClick={() => handleRemove(item)}
-              className="transition-colors hover:text-blue-900"
+              className="transition-colors hover:text-sky-900"
             >
               <X className="h-3 w-3" />
             </button>
@@ -80,13 +80,13 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
           onFocus={() => setIsOpen(true)}
           onBlur={() => setTimeout(() => setIsOpen(false), 200)}
           placeholder={placeholder}
-          className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none"
+          className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-sky-500 focus:outline-none"
         />
 
         {allowCustom && inputValue.trim() && !selected.includes(inputValue.trim()) && (
           <button
             onMouseDown={handleAddCustom}
-            className="absolute top-1/2 right-2 -translate-y-1/2 transform p-1 text-blue-600 hover:text-blue-700"
+            className="absolute top-1/2 right-2 -translate-y-1/2 transform p-1 text-sky-600 hover:text-sky-700"
           >
             <Plus className="h-4 w-4" />
           </button>
@@ -104,7 +104,7 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
             >
               <div className="flex items-center justify-between">
                 <span>{option}</span>
-                {selected.includes(option) && <div className="h-4 w-4 rounded bg-blue-600" />}
+                {selected.includes(option) && <div className="h-4 w-4 rounded bg-sky-600" />}
               </div>
             </div>
           ))}
@@ -117,7 +117,7 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
                 onMouseDown={handleAddCustom}
                 className="cursor-pointer border-t border-gray-100 px-4 py-2 transition-colors hover:bg-gray-50"
               >
-                <div className="flex items-center text-blue-600">
+                <div className="flex items-center text-sky-600">
                   <Plus className="mr-2 h-4 w-4" />
                   Add &quot;{inputValue.trim()}&quot;
                 </div>

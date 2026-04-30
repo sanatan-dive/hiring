@@ -1,3 +1,4 @@
+import { log } from '@/lib/log';
 import Parser from 'rss-parser';
 
 const FEED_URLS = [
@@ -32,7 +33,7 @@ export async function getWeWorkRemotelyJobs(limit: number = 20): Promise<WWRJob[
         const feed = await parser.parseURL(url);
         return feed.items as unknown as WWRJob[];
       } catch (err) {
-        console.error(`Error fetching WWR feed ${url}:`, err);
+        log.error(`Error fetching WWR feed ${url}:`, err);
         return [];
       }
     });
@@ -61,7 +62,7 @@ export async function getWeWorkRemotelyJobs(limit: number = 20): Promise<WWRJob[
 
     return allJobs.slice(0, limit);
   } catch (error) {
-    console.error('Error fetching WeWorkRemotely jobs:', error);
+    log.error('Error fetching WeWorkRemotely jobs:', error);
     return [];
   }
 }

@@ -39,3 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Claude Code worktrees and scheduled task artifacts
+.claude/worktrees/
+.claude/scheduled_tasks.lock

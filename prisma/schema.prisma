@@ -10,14 +10,17 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  clerkId   String   @unique
-  email     String   @unique
-  name      String?
-  imageUrl  String?
-  skills    String[] // User's skills (merged from resume + manual)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                  String   @id @default(cuid())
+  clerkId             String   @unique
+  email               String   @unique
+  name                String?
+  imageUrl            String?
+  skills              String[] // User's skills (merged from resume + manual)
+  hiddenCompanies     String[] @default([]) @map("hidden_companies")
+  emailDigestEnabled  Boolean  @default(true) @map("email_digest_enabled")
+  unsubscribeToken    String?  @unique @map("unsubscribe_token")
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 
   resumes        Resume[]
   jobPreferences JobPreferences?
@@ -161,6 +164,7 @@ model Job {
   salary      String?
   description String?
   url         String   @unique
+  contentHash String?  @unique @map("content_hash")
   source      String   // adzuna, jsearch, scraper
   techStack   String[]
   embedding   Unsupported("vector(768)")?
@@ -187,17 +191,35 @@ model Bookmark {
 }
 
 model Subscription {
-  id              String   @id @default(cuid())
-  userId          String   @unique
-  plan            String   @default("FREE") // FREE, PRO
-  stripeCustomerId String?
-  razorpayId      String?
-  status          String   @default("active")
-  expiresAt       DateTime?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id                   String   @id @default(cuid())
+  userId               String   @unique
+  plan                 String   @default("FREE") // FREE, PRO
+  status               String   @default("inactive") // inactive, pending, active, on_hold, cancelled, expired
+
+  // Dodo Payments fields
+  dodoSubscriptionId   String?  @unique @map("dodo_subscription_id")
+  dodoCustomerId       String?  @map("dodo_customer_id")
+  dodoProductId        String?  @map("dodo_product_id")
+  currentPeriodEnd     DateTime? @map("current_period_end")
+  cancelAtPeriodEnd    Boolean  @default(false) @map("cancel_at_period_end")
+
+  expiresAt            DateTime?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("subscriptions")
+}
+
+model SubscriptionEvent {
+  id            String   @id @default(cuid())
+  webhookId     String   @unique @map("webhook_id")
+  userId        String?  @map("user_id")
+  eventType     String   @map("event_type")
+  payload       Json
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@map("subscription_events")
 }

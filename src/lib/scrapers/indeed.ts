@@ -1,8 +1,9 @@
+import { log } from '@/lib/log';
 import { chromium } from 'playwright';
 import { ScrapedJob } from './linkedin';
 
 export async function scrapeIndeed(query: string, location: string): Promise<ScrapedJob[]> {
-  console.log(`Starting Indeed scrape for ${query} in ${location}`);
+  log.info(`Starting Indeed scrape for ${query} in ${location}`);
   const browser = await chromium.launch({ headless: true });
   // Indeed has strong bot detection, so we need a convincing user agent
   const context = await browser.newContext({
@@ -19,11 +20,11 @@ export async function scrapeIndeed(query: string, location: string): Promise<Scr
     try {
       await page.waitForSelector('.job_seen_beacon', { timeout: 10000 });
     } catch {
-      console.log('Indeed selector wait failed, might be blocked or no results.');
+      log.info('Indeed selector wait failed, might be blocked or no results.');
     }
 
     const jobCards = await page.$$('.job_seen_beacon');
-    console.log(`Found ${jobCards.length} potential job cards on Indeed`);
+    log.info(`Found ${jobCards.length} potential job cards on Indeed`);
 
     for (const card of jobCards.slice(0, 10)) {
       try {
@@ -52,11 +53,11 @@ export async function scrapeIndeed(query: string, location: string): Promise<Scr
           });
         }
       } catch (e) {
-        console.error('Error parsing an Indeed job card:', e);
+        log.error('Error parsing an Indeed job card:', e);
       }
     }
   } catch (error) {
-    console.error('Indeed scrape failed:', error);
+    log.error('Indeed scrape failed:', error);
   } finally {
     await browser.close();
   }

@@ -35,14 +35,8 @@ function Header() {
               className="group flex items-center gap-1 transition-all duration-300 hover:scale-105 hover:cursor-pointer"
               onClick={handleLogoClick}
             >
-              {/* Optional icon */}
-              {/* <Briefcase className="h-8 w-8 lg:h-10 lg:w-10 text-blue-600 group-hover:text-blue-700 transition-colors duration-300" /> */}
-
-              <h1 className="font-sans text-2xl font-bold text-black lg:text-3xl">Hir&apos;</h1>
-
-              {/* 'in' part inside a blue box */}
-              <h1 className="rounded bg-blue-600 px-1 text-2xl font-bold text-white lg:text-3xl dark:bg-blue-600">
-                in
+              <h1 className="font-sans text-2xl font-bold tracking-tight text-white lg:text-3xl dark:text-black">
+                Hirin<span className="text-sky-400 dark:text-sky-600">.</span>
               </h1>
             </div>
 
@@ -58,7 +52,7 @@ function Header() {
                   <span className="font-poppins text-sm text-white md:text-base dark:text-black">
                     {item.label}
                   </span>
-                  <div className="absolute -bottom-1 left-0 h-0.5 w-0 bg-blue-500 transition-all duration-300 group-hover:w-full"></div>
+                  <div className="absolute -bottom-1 left-0 h-0.5 w-0 bg-sky-500 transition-all duration-300 group-hover:w-full"></div>
                 </div>
               ))}
             </div>
