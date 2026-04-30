@@ -14,7 +14,7 @@ const MatchScore: React.FC<MatchScoreProps> = ({ similarity }) => {
           ? 'bg-green-600'
           : similarity > 0.7
             ? 'bg-emerald-500'
-            : 'bg-indigo-500'
+            : 'bg-sky-500'
       }`}
     >
       {Math.round(similarity * 100)}% Match

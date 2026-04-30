@@ -32,7 +32,7 @@ function HowItWorks() {
 
       {/* Heading */}
       <div className="mb-4 ml-4 flex items-center gap-1 sm:ml-40">
-        <span className="font-poppins z-10 text-2xl font-bold text-indigo-600">—</span>
+        <span className="font-poppins z-10 text-2xl font-bold text-sky-600">—</span>
         <h1 className="font-poppins z-10 text-2xl font-bold text-black sm:text-4xl">
           How it Works
         </h1>

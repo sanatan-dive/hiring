@@ -26,7 +26,7 @@ const statusConfig: Record<
   },
   reviewing: {
     label: 'Under Review',
-    color: 'bg-indigo-100 text-indigo-700',
+    color: 'bg-sky-100 text-sky-700',
     icon: <Eye className="h-4 w-4" />,
   },
   interview: {
@@ -87,7 +87,7 @@ const ApplicationsPage = () => {
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center bg-gray-50">
-        <div className="h-10 w-10 animate-spin rounded-full border-b-2 border-indigo-600"></div>
+        <div className="h-10 w-10 animate-spin rounded-full border-b-2 border-sky-600"></div>
       </div>
     );
   }
@@ -100,7 +100,7 @@ const ApplicationsPage = () => {
             <h1 className="text-3xl font-bold text-gray-900">My Applications</h1>
             <p className="mt-1 text-gray-500">Track your job application progress</p>
           </div>
-          <div className="flex items-center gap-2 rounded-full bg-indigo-50 px-4 py-2 text-indigo-700">
+          <div className="flex items-center gap-2 rounded-full bg-sky-50 px-4 py-2 text-sky-700">
             <Briefcase className="h-5 w-5" />
             <span className="font-medium">{applications.length} total</span>
           </div>
@@ -112,7 +112,7 @@ const ApplicationsPage = () => {
             onClick={() => setFilter('all')}
             className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
               filter === 'all'
-                ? 'bg-indigo-600 text-white'
+                ? 'bg-sky-600 text-white'
                 : 'border bg-white text-gray-600 hover:bg-gray-100'
             }`}
           >
@@ -161,7 +161,7 @@ const ApplicationsPage = () => {
                       {statusConfig[app.status as ApplicationStatus]?.label || 'Applied'}
                     </span>
                   </div>
-                  <p className="mt-1 font-medium text-indigo-600">
+                  <p className="mt-1 font-medium text-sky-600">
                     {app.job?.company || 'Unknown Company'}
                   </p>
 

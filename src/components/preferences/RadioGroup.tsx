@@ -36,9 +36,9 @@ const RadioGroup: React.FC<RadioGroupProps> = ({
         <label
           key={option.value}
           className={cn(
-            'relative flex cursor-pointer items-center rounded-lg border border-gray-200 transition-all duration-200 hover:border-indigo-300 hover:bg-indigo-100',
+            'relative flex cursor-pointer items-center rounded-lg border border-gray-200 transition-all duration-200 hover:border-sky-300 hover:bg-sky-100',
             sizeClasses[size],
-            value === option.value && 'border-indigo-500 bg-indigo-100',
+            value === option.value && 'border-sky-500 bg-sky-100',
             orientation === 'horizontal' && 'min-w-0 flex-1'
           )}
         >
@@ -55,17 +55,17 @@ const RadioGroup: React.FC<RadioGroupProps> = ({
             <div
               className={cn(
                 'flex h-4 w-4 items-center justify-center rounded-full border-2 transition-colors',
-                value === option.value ? 'border-indigo-600' : 'border-gray-400'
+                value === option.value ? 'border-sky-600' : 'border-gray-400'
               )}
             >
-              {value === option.value && <div className="h-2 w-2 rounded-full bg-indigo-600"></div>}
+              {value === option.value && <div className="h-2 w-2 rounded-full bg-sky-600"></div>}
             </div>
 
             <div className="flex-1">
               <div
                 className={cn(
                   'font-medium',
-                  value === option.value ? 'text-indigo-900' : 'text-gray-900'
+                  value === option.value ? 'text-sky-900' : 'text-gray-900'
                 )}
               >
                 {option.label}
@@ -74,7 +74,7 @@ const RadioGroup: React.FC<RadioGroupProps> = ({
                 <div
                   className={cn(
                     'mt-0.5 text-sm',
-                    value === option.value ? 'text-indigo-700' : 'text-gray-600'
+                    value === option.value ? 'text-sky-700' : 'text-gray-600'
                   )}
                 >
                   {option.description}

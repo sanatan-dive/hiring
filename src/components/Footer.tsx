@@ -37,7 +37,7 @@ function Footer() {
               onClick={() => router.push('/')}
             >
               <h1 className="font-sans text-xl font-bold tracking-tight text-black lg:text-2xl">
-                Hirin<span className="text-indigo-600">.</span>
+                Hirin<span className="text-sky-600">.</span>
               </h1>
             </div>
             <p className="mb-3 max-w-sm text-sm text-gray-600">
@@ -63,7 +63,7 @@ function Footer() {
                 <li key={link.name}>
                   <a
                     href={link.href}
-                    className="text-xs text-gray-600 transition-colors duration-200 hover:text-indigo-600"
+                    className="text-xs text-gray-600 transition-colors duration-200 hover:text-sky-600"
                   >
                     {link.name}
                   </a>
@@ -80,7 +80,7 @@ function Footer() {
                 <li key={link.name}>
                   <a
                     href={link.href}
-                    className="text-xs text-gray-600 transition-colors duration-200 hover:text-indigo-600"
+                    className="text-xs text-gray-600 transition-colors duration-200 hover:text-sky-600"
                   >
                     {link.name}
                   </a>
@@ -103,7 +103,7 @@ function Footer() {
                 key={social.label}
                 href={social.href}
                 aria-label={social.label}
-                className="text-gray-400 transition-colors duration-200 hover:text-indigo-600"
+                className="text-gray-400 transition-colors duration-200 hover:text-sky-600"
               >
                 <social.icon className="h-4 w-4" />
               </a>

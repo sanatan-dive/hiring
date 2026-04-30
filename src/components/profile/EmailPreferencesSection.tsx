@@ -38,7 +38,7 @@ const EmailPreferencesSection: React.FC<EmailPreferencesSectionProps> = ({
   return (
     <section className="mb-8 rounded-2xl border bg-white p-6 shadow-sm">
       <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold text-black">
-        <Mail className="h-5 w-5 text-indigo-600" />
+        <Mail className="h-5 w-5 text-sky-600" />
         Email preferences
       </h2>
 
@@ -53,8 +53,8 @@ const EmailPreferencesSection: React.FC<EmailPreferencesSectionProps> = ({
           onClick={toggle}
           disabled={busy}
           aria-pressed={enabled}
-          className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 disabled:opacity-50 ${
-            enabled ? 'bg-indigo-600' : 'bg-gray-200'
+          className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 disabled:opacity-50 ${
+            enabled ? 'bg-sky-600' : 'bg-gray-200'
           }`}
         >
           <span

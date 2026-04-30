@@ -58,11 +58,11 @@ const MatchCard: React.FC<MatchCardProps> = ({
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <div className="flex items-center gap-3">
-            <h3 className="text-xl font-semibold text-gray-900 transition-colors group-hover:text-indigo-600">
+            <h3 className="text-xl font-semibold text-gray-900 transition-colors group-hover:text-sky-600">
               {job.title}
             </h3>
             <div className="flex gap-2">
-              <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700 uppercase">
+              <span className="rounded-full bg-sky-50 px-3 py-1 text-xs font-medium text-sky-700 uppercase">
                 {job.source}
               </span>
               {/* Application Status Badge */}
@@ -74,7 +74,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
               {job.similarity !== undefined && <MatchScore similarity={job.similarity} />}
             </div>
           </div>
-          <p className="mt-1 font-medium text-indigo-600">{job.company}</p>
+          <p className="mt-1 font-medium text-sky-600">{job.company}</p>
 
           <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-gray-500">
             <span className="flex items-center gap-1">
@@ -130,7 +130,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
             onClick={(e) => onToggleSave(job.id, e)}
             className={`rounded-lg p-2 transition-colors ${
               isSaved
-                ? 'bg-indigo-100 text-indigo-600'
+                ? 'bg-sky-100 text-sky-600'
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
@@ -145,7 +145,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
               e.stopPropagation();
               window.open(job.url, '_blank');
             }}
-            className="flex justify-center rounded-lg bg-indigo-600 p-2 text-white transition-colors hover:bg-indigo-700"
+            className="flex justify-center rounded-lg bg-sky-600 p-2 text-white transition-colors hover:bg-sky-700"
           >
             <ExternalLink className="h-5 w-5" />
           </button>

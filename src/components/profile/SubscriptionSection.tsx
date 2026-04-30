@@ -69,7 +69,7 @@ const SubscriptionSection: React.FC<SubscriptionSectionProps> = ({
   return (
     <section className="mb-8 rounded-2xl border bg-white p-6 shadow-sm">
       <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold text-black">
-        <Crown className="h-5 w-5 text-indigo-600" />
+        <Crown className="h-5 w-5 text-sky-600" />
         Subscription
       </h2>
 
@@ -99,7 +99,7 @@ const SubscriptionSection: React.FC<SubscriptionSectionProps> = ({
           {!isPro && (
             <Link
               href="/pricing"
-              className="inline-flex items-center gap-1 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+              className="inline-flex items-center gap-1 rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-700"
             >
               Upgrade to Pro
               <ExternalLink className="h-4 w-4" />

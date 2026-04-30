@@ -47,7 +47,7 @@ const MatchesHeader: React.FC<MatchesHeaderProps> = ({
         <button
           onClick={onRefresh}
           disabled={isRefreshing || !query}
-          className="flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700 disabled:opacity-50"
+          className="flex items-center gap-2 rounded-lg bg-sky-600 px-4 py-2 text-white hover:bg-sky-700 disabled:opacity-50"
         >
           <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
           {isRefreshing ? 'Finding...' : 'Find New Jobs'}

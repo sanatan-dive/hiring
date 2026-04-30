@@ -89,14 +89,14 @@ export default function PricingSection() {
           transition={{ duration: 0.7 }}
           viewport={{ once: true }}
         >
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-indigo-100 bg-indigo-50 px-4 py-1.5">
-            <Sparkles className="h-4 w-4 text-indigo-600" />
-            <span className="font-poppins text-sm font-medium text-indigo-700">Simple Pricing</span>
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-sky-100 bg-sky-50 px-4 py-1.5">
+            <Sparkles className="h-4 w-4 text-sky-600" />
+            <span className="font-poppins text-sm font-medium text-sky-700">Simple Pricing</span>
           </div>
 
           <h2 className="font-poppins mb-4 text-4xl font-bold text-black sm:text-5xl">
             Choose Your{' '}
-            <span className="bg-gradient-to-r from-indigo-600 to-indigo-400 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-sky-600 to-sky-400 bg-clip-text text-transparent">
               Plan
             </span>
           </h2>
@@ -120,13 +120,13 @@ export default function PricingSection() {
               whileHover={{ y: -6, transition: { duration: 0.3 } }}
               className={`relative rounded-2xl p-8 transition-shadow duration-300 ${
                 plan.featured
-                  ? 'border-2 border-indigo-500 bg-white shadow-xl shadow-indigo-500/10'
+                  ? 'border-2 border-sky-500 bg-white shadow-xl shadow-sky-500/10'
                   : 'border border-gray-100 bg-white shadow-sm hover:shadow-md'
               }`}
             >
               {plan.featured && (
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                  <div className="rounded-full bg-gradient-to-r from-indigo-600 to-indigo-500 px-4 py-1 text-xs font-bold tracking-wider text-white shadow-lg shadow-indigo-500/30">
+                  <div className="rounded-full bg-gradient-to-r from-sky-600 to-sky-500 px-4 py-1 text-xs font-bold tracking-wider text-white shadow-lg shadow-sky-500/30">
                     MOST POPULAR
                   </div>
                 </div>
@@ -136,11 +136,11 @@ export default function PricingSection() {
                 <div className="mb-3 flex items-center gap-3">
                   <div
                     className={`flex h-10 w-10 items-center justify-center rounded-xl ${
-                      plan.featured ? 'bg-indigo-100' : 'bg-gray-100'
+                      plan.featured ? 'bg-sky-100' : 'bg-gray-100'
                     }`}
                   >
                     <plan.icon
-                      className={`h-5 w-5 ${plan.featured ? 'text-indigo-600' : 'text-gray-600'}`}
+                      className={`h-5 w-5 ${plan.featured ? 'text-sky-600' : 'text-gray-600'}`}
                     />
                   </div>
                   <h3 className="font-poppins text-2xl font-bold text-black">{plan.name}</h3>
@@ -157,8 +157,8 @@ export default function PricingSection() {
                 {plan.features.map((feature, i) => (
                   <li key={i} className="flex items-center gap-3">
                     {feature.included ? (
-                      <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-indigo-100">
-                        <Check className="h-3 w-3 text-indigo-600" />
+                      <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-sky-100">
+                        <Check className="h-3 w-3 text-sky-600" />
                       </div>
                     ) : (
                       <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-gray-100">

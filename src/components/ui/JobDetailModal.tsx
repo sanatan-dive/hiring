@@ -40,7 +40,7 @@ interface JobDetailModalProps {
 
 const statusOptions = [
   { value: 'pending', label: 'Pending', color: 'bg-yellow-100 text-yellow-800' },
-  { value: 'applied', label: 'Applied', color: 'bg-indigo-100 text-indigo-800' },
+  { value: 'applied', label: 'Applied', color: 'bg-sky-100 text-sky-800' },
   { value: 'interview', label: 'Interview', color: 'bg-purple-100 text-purple-800' },
   { value: 'rejected', label: 'Rejected', color: 'bg-red-100 text-red-800' },
   { value: 'offered', label: 'Offered', color: 'bg-green-100 text-green-800' },
@@ -99,7 +99,7 @@ export default function JobDetailModal({
               <div>
                 <h2 className="text-2xl font-bold text-gray-900">{job.title}</h2>
                 <div className="mt-1 flex items-center gap-2">
-                  <span className="font-medium text-indigo-600">{job.company}</span>
+                  <span className="font-medium text-sky-600">{job.company}</span>
                   <span className="text-gray-300">•</span>
                   <span className="flex items-center gap-1 text-sm text-gray-500">
                     <Clock className="h-3 w-3" />
@@ -177,7 +177,7 @@ export default function JobDetailModal({
                   {job.techStack.map((tech) => (
                     <span
                       key={tech}
-                      className="rounded-full border border-indigo-100 bg-indigo-50 px-3 py-1 text-sm font-medium text-indigo-700"
+                      className="rounded-full border border-sky-100 bg-sky-50 px-3 py-1 text-sm font-medium text-sky-700"
                     >
                       {tech}
                     </span>
@@ -195,7 +195,7 @@ export default function JobDetailModal({
               <select
                 value={currentStatus}
                 onChange={(e) => handleStatusChange(e.target.value)}
-                className={`rounded-lg border-gray-300 py-2 pr-8 pl-3 text-sm focus:border-indigo-500 focus:ring-indigo-500 ${
+                className={`rounded-lg border-gray-300 py-2 pr-8 pl-3 text-sm focus:border-sky-500 focus:ring-sky-500 ${
                   statusOptions.find((o) => o.value === currentStatus)?.color
                 }`}
               >
@@ -213,7 +213,7 @@ export default function JobDetailModal({
                 onClick={onToggleSave}
                 className={`flex w-full items-center justify-center gap-2 rounded-lg border px-4 py-2.5 font-medium transition-colors md:w-auto ${
                   isSaved
-                    ? 'border-indigo-200 bg-indigo-50 text-indigo-600'
+                    ? 'border-sky-200 bg-sky-50 text-sky-600'
                     : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
                 }`}
               >

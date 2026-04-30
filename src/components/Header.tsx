@@ -36,7 +36,7 @@ function Header() {
               onClick={handleLogoClick}
             >
               <h1 className="font-sans text-2xl font-bold tracking-tight text-white lg:text-3xl dark:text-black">
-                Hirin<span className="text-indigo-400 dark:text-indigo-600">.</span>
+                Hirin<span className="text-sky-400 dark:text-sky-600">.</span>
               </h1>
             </div>
 
@@ -52,7 +52,7 @@ function Header() {
                   <span className="font-poppins text-sm text-white md:text-base dark:text-black">
                     {item.label}
                   </span>
-                  <div className="absolute -bottom-1 left-0 h-0.5 w-0 bg-indigo-500 transition-all duration-300 group-hover:w-full"></div>
+                  <div className="absolute -bottom-1 left-0 h-0.5 w-0 bg-sky-500 transition-all duration-300 group-hover:w-full"></div>
                 </div>
               ))}
             </div>

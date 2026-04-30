@@ -27,7 +27,7 @@ const JobSearchDashboard = ({
       value: '24',
       subtext: '80%+ compatibility',
       icon: Target,
-      color: 'bg-indigo-500',
+      color: 'bg-sky-500',
     },
     {
       label: 'Applications',
@@ -123,7 +123,7 @@ const JobSearchDashboard = ({
       case 'interview':
         return 'bg-green-100 text-green-800';
       case 'progress':
-        return 'bg-indigo-100 text-indigo-800';
+        return 'bg-sky-100 text-sky-800';
       case 'submitted':
         return 'bg-yellow-100 text-yellow-800';
       case 'rejected':
@@ -136,7 +136,7 @@ const JobSearchDashboard = ({
   const getMatchColor = (match: string) => {
     const percentage = parseInt(match);
     if (percentage >= 90) return 'text-green-600 bg-green-50';
-    if (percentage >= 80) return 'text-indigo-600 bg-indigo-50';
+    if (percentage >= 80) return 'text-sky-600 bg-sky-50';
     return 'text-orange-600 bg-orange-50';
   };
 
@@ -161,7 +161,7 @@ const JobSearchDashboard = ({
 
                 <div className="group flex items-center gap-1 transition-all duration-300 hover:scale-105 hover:cursor-pointer">
                   <h1 className="font-sans text-2xl font-bold tracking-tight text-white dark:text-black">
-                    Hirin<span className="text-indigo-400 dark:text-indigo-600">.</span>
+                    Hirin<span className="text-sky-400 dark:text-sky-600">.</span>
                   </h1>
                 </div>
 
@@ -176,7 +176,7 @@ const JobSearchDashboard = ({
                       <span className="font-poppins text-sm text-white dark:text-black">
                         {item.label}
                       </span>
-                      <div className="absolute -bottom-1 left-0 h-0.5 w-0 bg-indigo-500 transition-all duration-300 group-hover:w-full"></div>
+                      <div className="absolute -bottom-1 left-0 h-0.5 w-0 bg-sky-500 transition-all duration-300 group-hover:w-full"></div>
                     </div>
                   ))}
                 </div>
@@ -241,7 +241,7 @@ const JobSearchDashboard = ({
                     Top Job Matches
                   </h2>
                   <button
-                    className={`${isEmbedded ? 'text-xs' : 'text-sm'} font-medium text-indigo-600 hover:text-indigo-700`}
+                    className={`${isEmbedded ? 'text-xs' : 'text-sm'} font-medium text-sky-600 hover:text-sky-700`}
                   >
                     View All
                   </button>
@@ -279,12 +279,12 @@ const JobSearchDashboard = ({
                         </div>
                         <div className="flex space-x-2">
                           <button
-                            className={`px-3 py-1 ${isEmbedded ? 'text-xs' : 'text-sm'} rounded-lg border border-indigo-600 text-indigo-600 hover:bg-indigo-50`}
+                            className={`px-3 py-1 ${isEmbedded ? 'text-xs' : 'text-sm'} rounded-lg border border-sky-600 text-sky-600 hover:bg-sky-50`}
                           >
                             View
                           </button>
                           <button
-                            className={`px-3 py-1 ${isEmbedded ? 'text-xs' : 'text-sm'} rounded-lg bg-indigo-600 text-white hover:bg-indigo-700`}
+                            className={`px-3 py-1 ${isEmbedded ? 'text-xs' : 'text-sm'} rounded-lg bg-sky-600 text-white hover:bg-sky-700`}
                           >
                             Apply
                           </button>
@@ -352,7 +352,7 @@ const JobSearchDashboard = ({
                   <div className="space-y-4">
                     {/* Desired Roles */}
                     <div className="flex items-start space-x-3">
-                      <Briefcase className="mt-0.5 h-5 w-5 text-indigo-500" />
+                      <Briefcase className="mt-0.5 h-5 w-5 text-sky-500" />
                       <div className="flex-1">
                         <p className="text-sm font-medium text-gray-700">Desired Roles</p>
                         <p className="text-sm text-gray-600">
@@ -363,7 +363,7 @@ const JobSearchDashboard = ({
 
                     {/* Location */}
                     <div className="flex items-start space-x-3">
-                      <MapPin className="mt-0.5 h-5 w-5 text-indigo-500" />
+                      <MapPin className="mt-0.5 h-5 w-5 text-sky-500" />
                       <div className="flex-1">
                         <p className="text-sm font-medium text-gray-700">Location</p>
                         <p className="text-sm text-gray-600">Remote</p>
@@ -372,7 +372,7 @@ const JobSearchDashboard = ({
 
                     {/* Salary */}
                     <div className="flex items-start space-x-3">
-                      <DollarSign className="mt-0.5 h-5 w-5 text-indigo-500" />
+                      <DollarSign className="mt-0.5 h-5 w-5 text-sky-500" />
                       <div className="flex-1">
                         <p className="text-sm font-medium text-gray-700">Salary Range</p>
                         <p className="text-sm text-gray-600">$80k - $130k</p>
@@ -382,7 +382,7 @@ const JobSearchDashboard = ({
                     {/* Complete Preferences Button */}
                     <button
                       onClick={() => window.open('/preferences', '_self')}
-                      className="mt-4 flex w-full items-center justify-center space-x-2 rounded-lg bg-indigo-50 p-3 text-indigo-700 transition-colors hover:bg-indigo-100"
+                      className="mt-4 flex w-full items-center justify-center space-x-2 rounded-lg bg-sky-50 p-3 text-sky-700 transition-colors hover:bg-sky-100"
                     >
                       <Settings className="h-4 w-4" />
                       <span className="text-sm font-medium">Complete Preferences</span>

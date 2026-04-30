@@ -11,7 +11,7 @@ export default function Page() {
           <div className="mb-8 text-center">
             <div className="group mb-4 flex items-center justify-center gap-1 transition-all duration-300 hover:scale-105 hover:cursor-pointer">
               <h1 className="font-sans text-4xl font-bold tracking-tight text-black lg:text-5xl">
-                Hirin<span className="text-indigo-600">.</span>
+                Hirin<span className="text-sky-600">.</span>
               </h1>
             </div>
             <h1 className="text-3xl font-bold text-gray-900">Get Started</h1>
@@ -27,10 +27,10 @@ export default function Page() {
                   headerTitle: 'hidden',
                   headerSubtitle: 'hidden',
                   socialButtonsBlockButton: 'border border-gray-200 hover:bg-gray-50',
-                  formButtonPrimary: 'bg-indigo-600 hover:bg-indigo-700 text-white rounded-full py-3',
-                  footerActionLink: 'text-indigo-600 hover:text-indigo-700',
+                  formButtonPrimary: 'bg-sky-600 hover:bg-sky-700 text-white rounded-full py-3',
+                  footerActionLink: 'text-sky-600 hover:text-sky-700',
                   formFieldInput:
-                    'rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500',
+                    'rounded-lg border-gray-300 focus:border-sky-500 focus:ring-sky-500',
                   dividerLine: 'bg-gray-200',
                   dividerText: 'text-gray-400',
                 },
@@ -40,7 +40,7 @@ export default function Page() {
         </div>
 
         {/* Right Side - Gradient Image */}
-        <div className="relative m-4 hidden w-1/2 overflow-hidden rounded-2xl bg-indigo-600 md:block">
+        <div className="relative m-4 hidden w-1/2 overflow-hidden rounded-2xl bg-sky-600 md:block">
           <Image
             src="/login.jpg"
             alt="Sign In"

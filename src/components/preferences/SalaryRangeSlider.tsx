@@ -63,7 +63,7 @@ const SalaryRangeSlider: React.FC<SalaryRangeSliderProps> = ({
       <div className="relative pt-6">
         <div className="absolute top-1/2 right-0 left-0 h-1 -translate-y-1/2 rounded bg-gray-200"></div>
         <div
-          className="absolute top-1/2 h-1 -translate-y-1/2 rounded bg-indigo-600"
+          className="absolute top-1/2 h-1 -translate-y-1/2 rounded bg-sky-600"
           style={{ left: `${minPercent}%`, width: `${maxPercent - minPercent}%` }}
         ></div>
 
@@ -92,11 +92,11 @@ const SalaryRangeSlider: React.FC<SalaryRangeSliderProps> = ({
 
         {/* Thumb Handles */}
         <div
-          className="pointer-events-none absolute top-1/2 z-30 h-4 w-4 -translate-y-1/2 rounded-full border-2 border-indigo-600 bg-white shadow"
+          className="pointer-events-none absolute top-1/2 z-30 h-4 w-4 -translate-y-1/2 rounded-full border-2 border-sky-600 bg-white shadow"
           style={{ left: `${minPercent}%` }}
         ></div>
         <div
-          className="pointer-events-none absolute top-1/2 z-30 h-4 w-4 -translate-y-1/2 rounded-full border-2 border-indigo-600 bg-white shadow"
+          className="pointer-events-none absolute top-1/2 z-30 h-4 w-4 -translate-y-1/2 rounded-full border-2 border-sky-600 bg-white shadow"
           style={{ left: `${maxPercent}%` }}
         ></div>
       </div>

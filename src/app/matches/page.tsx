@@ -8,6 +8,7 @@ import MatchSkeleton from '@/components/matches/MatchSkeleton';
 import MatchFilters, { type FilterKey } from '@/components/matches/MatchFilters';
 import type { Job } from '@/components/matches/types';
 import { log } from '@/lib/log';
+import { track } from '@/lib/analytics';
 
 interface UserContext {
   skills: string[];
@@ -37,6 +38,7 @@ const MatchesPage = () => {
   const [isLoadingJobs, setIsLoadingJobs] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [hasTrackedFirstMatch, setHasTrackedFirstMatch] = useState(false);
 
   const [userContext, setUserContext] = useState<UserContext | undefined>();
 
@@ -61,12 +63,20 @@ const MatchesPage = () => {
         setJobs((prev) => (reset ? (data.jobs ?? []) : [...prev, ...(data.jobs ?? [])]));
         setNextCursor(data.nextCursor ?? null);
         setTotal(data.total ?? 0);
+        if (reset && (data.jobs?.length ?? 0) > 0 && !hasTrackedFirstMatch) {
+          track('first_match_shown', { count: data.jobs.length });
+          setHasTrackedFirstMatch(true);
+        }
       } catch (err) {
         log.error('matches fetch failed', err);
       } finally {
         setter(false);
       }
     },
+    // hasTrackedFirstMatch intentionally omitted — we only want the
+    // "fired once" semantics, recreating loadPage on each track would
+    // cancel pagination requests in flight.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [query, filter]
   );
 

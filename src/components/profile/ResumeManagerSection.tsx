@@ -54,14 +54,14 @@ const ResumeManagerSection: React.FC<ResumeManagerSectionProps> = ({
     <section className="mb-8 rounded-2xl border bg-white p-6 shadow-sm">
       <div className="mb-4 flex items-center justify-between">
         <h2 className="flex items-center gap-2 text-xl font-semibold text-black">
-          <FileText className="h-5 w-5 text-indigo-600" />
+          <FileText className="h-5 w-5 text-sky-600" />
           Resumes
           <span className="ml-2 text-sm font-normal text-gray-500">({usage})</span>
         </h2>
         {resumes.length < cap && (
           <a
             href="/onboard"
-            className="inline-flex items-center gap-1 text-sm font-medium text-indigo-600 hover:text-indigo-700"
+            className="inline-flex items-center gap-1 text-sm font-medium text-sky-600 hover:text-sky-700"
           >
             <Plus className="h-4 w-4" />
             Upload another
@@ -72,7 +72,7 @@ const ResumeManagerSection: React.FC<ResumeManagerSectionProps> = ({
       {resumes.length === 0 ? (
         <p className="text-sm text-gray-500">
           No resumes uploaded yet.{' '}
-          <a href="/onboard" className="text-indigo-600 underline">
+          <a href="/onboard" className="text-sky-600 underline">
             Upload one →
           </a>
         </p>
@@ -87,7 +87,7 @@ const ResumeManagerSection: React.FC<ResumeManagerSectionProps> = ({
                 <div className="flex items-center gap-2">
                   <span className="truncate font-medium text-gray-900">{r.fileName}</span>
                   {idx === 0 && (
-                    <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-700">
+                    <span className="rounded-full bg-sky-100 px-2 py-0.5 text-xs font-medium text-sky-700">
                       Active
                     </span>
                   )}

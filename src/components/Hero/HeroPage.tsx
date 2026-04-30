@@ -244,7 +244,9 @@ function HeroPage() {
         };
 
         const checkDarkMode = () => {
-          isDarkMode = document.documentElement.classList.contains('dark');
+          isDarkMode =
+            document.documentElement.classList.contains('dark') ||
+            window.matchMedia('(prefers-color-scheme: dark)').matches;
         };
 
         p.draw = () => {
@@ -327,9 +329,9 @@ function HeroPage() {
 
                 // Blue hover effect
                 if (isDarkMode) {
-                  p.stroke(79, 70, 229, alpha); // Indigo in dark mode
+                  p.stroke(2, 132, 199, alpha); // Sky-600 in dark mode
                 } else {
-                  p.stroke(129, 140, 248, alpha); // Light indigo in light mode
+                  p.stroke(56, 189, 248, alpha); // Sky-400 in light mode
                 }
 
                 p.strokeWeight(strokeWeight);
@@ -340,9 +342,9 @@ function HeroPage() {
                 // Add subtle fill for stronger hover effect
                 if (cell.hoverIntensity > 0.3) {
                   if (isDarkMode) {
-                    p.fill(79, 70, 229, alpha * 0.1);
+                    p.fill(2, 132, 199, alpha * 0.1);
                   } else {
-                    p.fill(129, 140, 248, alpha * 0.1);
+                    p.fill(56, 189, 248, alpha * 0.1);
                   }
                   p.rect(cell.x, cell.y, cell.size, cell.size);
                   p.noFill();
@@ -365,9 +367,9 @@ function HeroPage() {
             const alpha = p.noise(i * 0.1 + 300, time * 0.25) * 60 + 30;
 
             if (isDarkMode) {
-              p.fill(165, 180, 252, alpha);
+              p.fill(125, 211, 252, alpha);
             } else {
-              p.fill(129, 140, 248, alpha);
+              p.fill(56, 189, 248, alpha);
             }
             p.noStroke();
             p.circle(x, y, size);
@@ -517,7 +519,7 @@ function HeroPage() {
             variants={containerVariants}
           >
             <motion.div
-              className="space-y-6 rounded-lg bg-black/10 p-8 text-center md:p-12 dark:bg-white/10"
+              className="space-y-6 rounded-2xl bg-black/55 p-8 text-center backdrop-blur-md md:p-12 dark:bg-white/80"
               variants={itemVariants}
             >
               <motion.div className="flex items-center justify-center" variants={titleVariants}>
@@ -526,7 +528,7 @@ function HeroPage() {
                   whileHover={{ scale: 1.05 }}
                   transition={{ type: 'spring', stiffness: 300, damping: 20 }}
                 >
-                  Hirin<span className="text-indigo-400 dark:text-indigo-600">.</span>
+                  Hirin<span className="text-sky-400 dark:text-sky-600">.</span>
                 </motion.h1>
               </motion.div>
 

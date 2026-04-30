@@ -91,7 +91,7 @@ const InterviewPrepModal: React.FC<InterviewPrepModalProps> = ({
         <div className="flex-1 overflow-y-auto p-6">
           {!prepData ? (
             <div className="py-10 text-center">
-              <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-indigo-100 text-indigo-600">
+              <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-sky-100 text-sky-600">
                 <MessageCircle className="h-8 w-8" />
               </div>
               <p className="mb-6 text-gray-600">
@@ -116,7 +116,7 @@ const InterviewPrepModal: React.FC<InterviewPrepModalProps> = ({
               <button
                 onClick={generatePrep}
                 disabled={loading}
-                className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-indigo-700 disabled:opacity-50"
+                className="inline-flex items-center gap-2 rounded-lg bg-sky-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-sky-700 disabled:opacity-50"
               >
                 {loading ? (
                   <>
@@ -133,7 +133,7 @@ const InterviewPrepModal: React.FC<InterviewPrepModalProps> = ({
               {/* Questions */}
               <section>
                 <h4 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900">
-                  <MessageCircle className="h-5 w-5 text-indigo-500" />
+                  <MessageCircle className="h-5 w-5 text-sky-500" />
                   Likely Questions
                 </h4>
                 <div className="space-y-4">
@@ -143,7 +143,7 @@ const InterviewPrepModal: React.FC<InterviewPrepModalProps> = ({
                         {i + 1}. {q.question}
                       </p>
                       <div className="text-sm text-gray-600">
-                        <span className="font-semibold text-indigo-600">Tip:</span> {q.sampleAnswer}
+                        <span className="font-semibold text-sky-600">Tip:</span> {q.sampleAnswer}
                       </div>
                     </div>
                   ))}

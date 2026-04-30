@@ -32,6 +32,7 @@ import {
   WorkLocation,
 } from '@/types';
 import { usePreferencesState } from '@/lib/preferences-storage';
+import { track } from '@/lib/analytics';
 
 interface ParsedResumeExperience {
   company: string;
@@ -197,7 +198,7 @@ const OnboardingPage = () => {
           <PreferenceCard
             title="Desired role"
             description="Frontend, Backend, Fullstack, ML, etc."
-            icon={<Briefcase className="h-5 w-5 text-indigo-600" />}
+            icon={<Briefcase className="h-5 w-5 text-sky-600" />}
           >
             <MultiSelect
               options={COMMON_ROLES}
@@ -225,7 +226,7 @@ const OnboardingPage = () => {
             <PreferenceCard
               title="Experience level"
               description=""
-              icon={<Settings className="h-5 w-5 text-indigo-600" />}
+              icon={<Settings className="h-5 w-5 text-sky-600" />}
             >
               <RadioGroup
                 options={EXPERIENCE_LEVELS}
@@ -238,7 +239,7 @@ const OnboardingPage = () => {
             <PreferenceCard
               title="Job type"
               description="Internship / Full-time / Contract"
-              icon={<Briefcase className="h-5 w-5 text-indigo-600" />}
+              icon={<Briefcase className="h-5 w-5 text-sky-600" />}
             >
               <RadioGroup
                 options={JOB_TYPES}
@@ -265,7 +266,7 @@ const OnboardingPage = () => {
           <PreferenceCard
             title="Location"
             description="Remote / Hybrid / Onsite"
-            icon={<MapPin className="h-5 w-5 text-indigo-600" />}
+            icon={<MapPin className="h-5 w-5 text-sky-600" />}
           >
             <RadioGroup
               options={WORK_LOCATIONS}
@@ -278,7 +279,7 @@ const OnboardingPage = () => {
           <PreferenceCard
             title="Salary range"
             description=""
-            icon={<DollarSign className="h-5 w-5 text-indigo-600" />}
+            icon={<DollarSign className="h-5 w-5 text-sky-600" />}
           >
             <SalaryRangeSlider
               min={30000}
@@ -294,7 +295,7 @@ const OnboardingPage = () => {
           <motion.button
             onClick={handleCompleteOnboarding}
             disabled={isSaving}
-            className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-6 py-4 text-lg font-medium text-white shadow-lg transition-all duration-300 hover:bg-indigo-700 hover:shadow-xl disabled:bg-indigo-400"
+            className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-sky-600 px-6 py-4 text-lg font-medium text-white shadow-lg transition-all duration-300 hover:bg-sky-700 hover:shadow-xl disabled:bg-sky-400"
             whileHover={{ scale: isSaving ? 1 : 1.02 }}
             whileTap={{ scale: isSaving ? 1 : 0.98 }}
           >
@@ -421,7 +422,7 @@ const OnboardingPage = () => {
                       initial={{ rotate: 0, scale: 1 }}
                       animate={{ rotate: 0, scale: 1 }}
                     >
-                      <div className="mt-4 mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-indigo-700 text-indigo-700 transition-all duration-300">
+                      <div className="mt-4 mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-sky-700 text-sky-700 transition-all duration-300">
                         <svg className="h-7 w-7 rotate-45" viewBox="0 0 32 32" fill="currentColor">
                           <path d="M1.116 17.116c-0.617 0-1.116-0.5-1.116-1.116s0.5-1.116 1.116-1.116v2.233zM31.673 15.211c0.436 0.436 0.436 1.143 0 1.579l-7.104 7.104c-0.436 0.436-1.143 0.436-1.579 0s-0.436-1.143 0-1.579l6.315-6.315-6.315-6.315c-0.436-0.436-0.436-1.143 0-1.579s1.143-0.436 1.579 0l7.104 7.104zM1.116 14.884h29.767v2.233h-29.767v-2.233z"></path>
                         </svg>
@@ -450,7 +451,7 @@ const OnboardingPage = () => {
                     >
                       <div>
                         <motion.div
-                          className="mt-6 ml-6 flex h-18 w-18 items-center justify-center rounded-full bg-indigo-600 text-white"
+                          className="mt-6 ml-6 flex h-18 w-18 items-center justify-center rounded-full bg-sky-600 text-white"
                           initial={{ scale: 0, rotate: -180 }}
                           animate={{ scale: 1, rotate: 0 }}
                           transition={{
@@ -531,7 +532,7 @@ const OnboardingPage = () => {
                               return (
                                 <motion.div
                                   key={itemIndex}
-                                  className="mb-6 flex w-fit items-center space-x-2 rounded-full bg-gray-100 p-3 transition-colors hover:bg-indigo-100"
+                                  className="mb-6 flex w-fit items-center space-x-2 rounded-full bg-gray-100 p-3 transition-colors hover:bg-sky-100"
                                   variants={itemVariants}
                                   whileHover={{
                                     scale: 1.05,
@@ -544,7 +545,7 @@ const OnboardingPage = () => {
                                   }}
                                 >
                                   <motion.div
-                                    className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-indigo-600"
+                                    className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-sky-600"
                                     initial={{ scale: 0 }}
                                     animate={{ scale: 1 }}
                                     transition={{
@@ -578,7 +579,15 @@ const OnboardingPage = () => {
                           <h3 className="mb-4 text-xl font-medium text-gray-900">
                             Upload Your Resume
                           </h3>
-                          <FileUpload onUpload={setParsedResume} />
+                          <FileUpload
+                            onUpload={(parsed) => {
+                              setParsedResume(parsed);
+                              track('resume_uploaded', {
+                                skills: parsed?.skills?.length ?? 0,
+                                experiences: parsed?.experience?.length ?? 0,
+                              });
+                            }}
+                          />
                         </motion.div>
                       )}
 
@@ -590,7 +599,7 @@ const OnboardingPage = () => {
                       >
                         <div className="h-1 w-full rounded-full bg-gray-200">
                           <motion.div
-                            className="h-1 rounded-full bg-indigo-600"
+                            className="h-1 rounded-full bg-sky-600"
                             initial={{ width: 0 }}
                             animate={{ width: '100%' }}
                             transition={{
@@ -607,7 +616,7 @@ const OnboardingPage = () => {
                             transition={{ type: 'spring', stiffness: 300, damping: 20 }}
                           >
                             <ArrowLeft
-                              className="h-4 w-4 cursor-pointer text-gray-600 transition-colors duration-300 hover:text-indigo-600"
+                              className="h-4 w-4 cursor-pointer text-gray-600 transition-colors duration-300 hover:text-sky-600"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setActiveSection(
@@ -622,7 +631,7 @@ const OnboardingPage = () => {
                             transition={{ type: 'spring', stiffness: 300, damping: 20 }}
                           >
                             <ArrowRight
-                              className="h-4 w-4 cursor-pointer text-gray-600 transition-colors duration-300 hover:text-indigo-600"
+                              className="h-4 w-4 cursor-pointer text-gray-600 transition-colors duration-300 hover:text-sky-600"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setActiveSection(
