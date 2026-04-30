@@ -6,7 +6,7 @@ Three detailed plans covering the full Hirin' codebase refactor. Do in order: ba
 
 ### 1. [Backend Refactor](backend-refactor.md)
 
-**Do this first.** Security fixes (Razorpay subscriptions, webhook handler, AI rate limits, resume validation), architecture cleanup (delete duplicates, consolidate rate-limit modules, drop dead Stripe field), SaaS infrastructure (plan gating helper, scraper hardening). Every change mapped to exact files and line numbers.
+**Do this first.** Security fixes (AI rate limits, resume validation), architecture cleanup (delete duplicates, consolidate rate-limit modules), SaaS infrastructure (plan gating helper, scraper hardening). The Dodo Payments migration (hosted checkout + webhook source-of-truth + idempotency) is already done — see [DODO_INTEGRATION_GUIDE.md](../DODO_INTEGRATION_GUIDE.md). Every other change is mapped to exact files and line numbers.
 
 ### 2. [Frontend Refactor](frontend-refactor.md)
 
@@ -20,7 +20,7 @@ Three detailed plans covering the full Hirin' codebase refactor. Do in order: ba
 
 | Phase            | What                                                               | Effort         |
 | ---------------- | ------------------------------------------------------------------ | -------------- |
-| Backend Phase 1  | Razorpay subscriptions + webhook + idempotency                     | 1.5 days       |
+| Backend Phase 1  | Dodo Payments hosted checkout + webhook + idempotency (DONE)       | (already shipped) |
 | Backend Phase 2  | AI rate limits + resume validation + cron hardening                | 1 day          |
 | Backend Phase 3  | Code cleanup (duplicates, console.log, types) + plan gating helper | 1 day          |
 | Backend Phase 4  | Scraper hardening + per-user job fetching                          | 1-2 days       |
@@ -35,6 +35,6 @@ This assumes single dev, full-time focus. Stretch to 3-4 weeks if you're working
 
 ## Dependency Notes
 
-- Backend Phase 1 (Razorpay subs) **must** be done before any payment-related frontend work
+- Backend Phase 1 (Dodo Payments) is already shipped — see [DODO_INTEGRATION_GUIDE.md](../DODO_INTEGRATION_GUIDE.md). Any remaining payment-related frontend work (e.g. Manage Subscription on `/profile`) builds on top of it.
 - Resend domain verification (Production phase) takes 24-48 hours of DNS propagation — start it on Day 1 even if you're not done with the rest
 - Bright Data / proxy setup for scrapers — sign up early (KYC takes 1-3 days)

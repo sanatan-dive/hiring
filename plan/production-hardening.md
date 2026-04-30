@@ -243,7 +243,7 @@ rg "Sentry\.captureException|Sentry\.captureMessage" src/ -l
 
 Add at minimum:
 
-- Razorpay webhook errors (already in our plan)
+- Dodo webhook errors (signature verify, idempotency, state-update failures)
 - Cron job failures (per-user error in loop)
 - Resend send failures
 - Gemini API failures
@@ -495,7 +495,7 @@ Database
   [ ] Cleanup cron for stale jobs > 30 days
 
 Security (cross-ref `docs/security.md`)
-  [ ] Razorpay webhook with signature + idempotency
+  [x] Dodo webhook with Standard Webhooks signature + `webhookId` idempotency
   [ ] AI rate limits enforced
   [ ] Resume upload magic-byte + max-size
   [ ] CRON_SECRET hardened
@@ -513,7 +513,7 @@ Vercel Config
 Legal
   [ ] /terms, /privacy, /refund, /contact pages live
   [ ] Privacy policy mentions resume PII + GDPR delete
-  [ ] Razorpay merchant settings reference these URLs
+  [ ] Dodo dashboard business profile references these URLs (terms / privacy / refund / contact)
 ```
 
 ---

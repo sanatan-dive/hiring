@@ -8,14 +8,14 @@ Pair this with the per-doc breakdowns in `docs/` and `plan/`. This file is the *
 
 ## Reality check first — your actual blockers
 
-Before "launching," 7 non-negotiable things must ship:
+Before "launching," 7 non-negotiable things must ship (some already done):
 
-1. **Razorpay subscriptions, not orders.** Right now you're using one-shot orders. PRO users pay once and never again. **You're losing money you don't know about.** See [docs/payment.md](docs/payment.md).
-2. **Razorpay webhook handler with idempotency.** Without it, payments don't activate reliably.
+1. **Dodo Payments subscription flow.** ✅ Already shipped — hosted checkout + webhook source-of-truth + `webhookId` idempotency. See [docs/payment.md](docs/payment.md) and [DODO_INTEGRATION_GUIDE.md](DODO_INTEGRATION_GUIDE.md). Verify the webhook endpoint is registered in the Dodo dashboard for both test and live mode.
+2. **Dodo live-mode KYC.** Submit business verification in the Dodo dashboard (1-3 business days). Live API key + live webhook endpoint must be set on Vercel before launch.
 3. **Email custom domain.** `onboarding@resend.dev` lands in spam. Buy `hirin.app`, set DKIM/SPF/DMARC. Takes 24-48h DNS propagation — start NOW.
 4. **AI rate limits uncommented.** One abusive Pro user = $X00 Gemini bill.
 5. **Production deploy.** Vercel Pro ($20/mo, required for cron > 10s).
-6. **Terms / Privacy / Refund / Contact pages.** Razorpay rejects merchants without them.
+6. **Terms / Privacy / Refund / Contact pages.** Dodo requires these for live-mode KYC and links to them from the hosted checkout.
 7. **Resume upload validation.** Magic-byte check + 5MB limit. Without it, one bad file OOMs your serverless function.
 
 If any of these aren't done, do them FIRST. Marketing on a broken funnel is worse than no marketing.
@@ -30,8 +30,7 @@ Run in parallel (different work streams):
 
 **Engineering (Backend):**
 
-- [ ] Set up Razorpay subscriptions ([plan/backend-refactor.md](plan/backend-refactor.md) Phase 1)
-- [ ] Build webhook handler
+- [x] Dodo Payments hosted checkout + webhook handler (already shipped — see [DODO_INTEGRATION_GUIDE.md](DODO_INTEGRATION_GUIDE.md))
 - [ ] Uncomment AI rate limits, add scrape rate limit
 - [ ] Resume upload validation
 - [ ] Delete `madio-backend-user_accessKeys.csv` (and rotate any keys it had)
@@ -40,14 +39,14 @@ Run in parallel (different work streams):
 
 - [ ] Buy `hirin.app` domain
 - [ ] Add to Resend, set DKIM/SPF/DMARC (24-48h propagation)
-- [ ] Sign up for Razorpay, complete KYC (1-2 business days)
+- [ ] Sign up for Dodo Payments, register the webhook endpoint, submit live-mode business verification (1-3 business days)
 - [ ] Sign up for Bright Data Web Unlocker if you'll do paid scraping (1-3 days KYC)
 
 **Legal (yes, even for solo):**
 
 - [ ] Write Terms of Service (use Termly.io free generator + customize)
 - [ ] Write Privacy Policy (mention resume PII handling + GDPR delete)
-- [ ] Write Refund Policy (14-day, required by Razorpay)
+- [ ] Write Refund Policy (Dodo enforces what you publish at checkout)
 - [ ] Add Contact page with support email
 
 **Marketing prep:**
@@ -59,7 +58,7 @@ Run in parallel (different work streams):
 **Goals this week:**
 
 - Domain bought, DNS propagating
-- Razorpay KYC submitted
+- Dodo live-mode business verification submitted
 - Critical security fixes shipped
 - Waitlist live
 
@@ -124,7 +123,7 @@ Run in parallel (different work streams):
 
 - [ ] Run all P0 test cases ([docs/test-cases.md](docs/test-cases.md))
 - [ ] Test full payment flow with real card (refund yourself after)
-- [ ] Test webhook delivery (Razorpay "Resend" button)
+- [ ] Test webhook delivery (Dodo dashboard "Resend" on a delivered event → handler returns `{ ok: true, duplicate: true }`)
 - [ ] Recruit 5-10 beta testers (friends, X followers, r/cscareerquestions DM)
 - [ ] Monitor Sentry, fix top 3 errors
 - [ ] Compose launch tweet + demo video
@@ -138,7 +137,7 @@ Run in parallel (different work streams):
 
 1. Final smoke test: signup → resume upload → matches → upgrade → cancel
 2. Check Sentry, UptimeRobot, all green
-3. Check Razorpay live mode keys are set in Vercel env
+3. Check Dodo live-mode env is set on Vercel: `DODO_PAYMENTS_API_KEY=sk_live_...`, `DODO_PAYMENTS_ENV=live_mode`, `DODO_PAYMENTS_WEBHOOK_KEY=<live whsec>`, `DODO_PRO_PRODUCT_ID=<live product id>`
 
 **Launch tweet (8-10am ET):**
 
@@ -186,7 +185,7 @@ Continue 1 X post per day with metric updates.
 
 ### Week 2 — Content Flywheel
 
-- [ ] Publish blog: "How I built an AI job matcher with Next.js + pgvector + Razorpay"
+- [ ] Publish blog: "How I built an AI job matcher with Next.js + pgvector + Dodo Payments (MoR)"
 - [ ] Cross-post to Dev.to, Medium, Hashnode
 - [ ] Submit blog to HN (if launch HN was OK)
 - [ ] Long-form YouTube demo (3-5 min, "How to build vector search for jobs")
@@ -230,11 +229,11 @@ If you want immediate forward motion right now:
 
 1. Buy the domain (`hirin.app` or alternative). Costs $12-30. 30 minutes.
 2. Add it to Resend. Set DKIM/SPF/DMARC records. 30 minutes (then wait 24-48h).
-3. Sign up for Razorpay. Submit KYC. 30 minutes (then wait 1-2 days).
+3. Sign up for Dodo Payments. Create the Pro product. Submit live-mode business verification. 30 minutes (then wait 1-3 days).
 4. Delete `madio-backend-user_accessKeys.csv` from the repo. Rotate any keys in it. 15 minutes.
 5. Read [docs/audit.md](docs/audit.md) end-to-end. Make a mental list of the top 5 things scaring you most.
 
-That's the next 2 hours of work. Tomorrow start the backend refactor (Razorpay subscriptions). The rest is just compounding.
+That's the next 2 hours of work. The Dodo Payments migration is already done — tomorrow start on the remaining backend hardening (AI rate limits, resume validation). The rest is just compounding.
 
 ---
 
@@ -249,7 +248,7 @@ npm install @tanstack/react-query
 npm install @upstash/qstash  # for signature verification
 
 # Apply schema changes
-npx prisma migrate dev --name razorpay_subscriptions
+npx prisma migrate dev --name dodo_payments
 
 # Run tests
 npm test
@@ -273,7 +272,7 @@ rg "GEMINI_API_KEY" src/ -l
 2. `docs/architecture.md` — what exists today
 3. `docs/audit.md` — what's broken
 4. `docs/security.md` — what to fix first
-5. `docs/payment.md` — Razorpay subscriptions migration (the biggest open issue)
+5. `docs/payment.md` — Dodo Payments setup, webhook contract, and end-to-end flow (paired with the operational [DODO_INTEGRATION_GUIDE.md](DODO_INTEGRATION_GUIDE.md))
 6. `docs/pricing.md` + `docs/audience.md` — go-to-market alignment
 7. `plan/INDEX.md` → `backend-refactor.md` → `frontend-refactor.md` → `production-hardening.md`
 8. `docs/test-cases.md` — gates for "ready to ship"

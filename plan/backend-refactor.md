@@ -4,277 +4,30 @@ Every change is mapped to exact files. Ordered by priority — do top to bottom.
 
 ---
 
-## PHASE 1: Razorpay Subscriptions (CRITICAL — Day 1-2)
+## PHASE 1: Payments — Already Migrated to Dodo
 
-You're currently using Razorpay's Orders API (one-shot payments) when you need the Subscriptions API (recurring billing). Right now PRO users pay once and never again — you're losing every recurring dollar.
+The original Phase 1 here was a Razorpay one-shot-orders → Razorpay Subscriptions migration. The codebase has since moved to **Dodo Payments** (merchant-of-record), which addresses the same root problems with a simpler, hosted-checkout architecture.
 
-### 1.1 Update Prisma Schema
+For implementation details (schema, routes, webhook handler, env vars, testing) see **[DODO_INTEGRATION_GUIDE.md](../DODO_INTEGRATION_GUIDE.md)** — that doc is operational; this section is just the historical pointer.
 
-**File:** `prisma/schema.prisma`
+What was shipped (so you don't accidentally re-do it):
 
-Replace existing `Subscription` model (drops `stripeCustomerId` — unused):
+| Concern              | Resolution                                                                                          |
+| -------------------- | --------------------------------------------------------------------------------------------------- |
+| Subscription model   | `dodoSubscriptionId`, `dodoCustomerId`, `dodoProductId`, `currentPeriodEnd`, `cancelAtPeriodEnd`    |
+| Idempotency          | `SubscriptionEvent.webhookId @unique` (Dodo's `webhook-id` header)                                  |
+| Create payment route | `POST /api/payments/create-checkout` → returns Dodo hosted `checkoutUrl`                            |
+| Verify route         | Deleted — Dodo's webhook is the source of truth                                                     |
+| Cancel route         | `POST /api/payments/cancel` → `cancelAtPeriodEnd=true` via `client.subscriptions.update`            |
+| Webhook handler      | `POST /api/webhooks/dodo` — Standard Webhooks signature, idempotency, all subscription events       |
+| Env vars             | `DODO_PAYMENTS_API_KEY`, `DODO_PAYMENTS_WEBHOOK_KEY`, `DODO_PAYMENTS_ENV`, `DODO_PRO_PRODUCT_ID`    |
 
-```prisma
-enum Plan {
-  FREE
-  PRO
-  PRO_PLUS
-}
+The only remaining open items in the payments area are operational, not code:
 
-enum SubscriptionStatus {
-  inactive
-  pending
-  authenticated
-  active
-  halted
-  cancelled
-  completed
-  expired
-}
-
-model Subscription {
-  id        String   @id @default(uuid())
-  userId    String   @unique
-  plan      Plan     @default(FREE)
-  status    SubscriptionStatus @default(inactive)
-
-  razorpaySubscriptionId String?  @unique @map("razorpay_subscription_id")
-  razorpayCustomerId     String?  @unique @map("razorpay_customer_id")
-  razorpayPlanId         String?  @map("razorpay_plan_id")
-  currentPeriodEnd       DateTime? @map("current_period_end")
-  cancelAtPeriodEnd      Boolean   @default(false) @map("cancel_at_period_end")
-  pausedAt               DateTime? @map("paused_at")
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("subscriptions")
-}
-
-model SubscriptionEvent {
-  id              String   @id @default(uuid())
-  razorpayEventId String   @unique @map("razorpay_event_id")
-  userId          String?  @map("user_id")
-  eventType       String   @map("event_type")
-  payload         Json
-  createdAt       DateTime @default(now()) @map("created_at")
-
-  @@index([userId])
-  @@map("subscription_events")
-}
-```
-
-Run: `npx prisma migrate dev --name razorpay_subscriptions`
-
-### 1.2 Replace `/api/payments/create-order` with `/api/payments/create-subscription`
-
-**Delete:** `src/app/api/payments/create-order/route.ts`
-
-**New file:** `src/app/api/payments/create-subscription/route.ts`
-
-```ts
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
-import Razorpay from 'razorpay';
-import { prisma } from '@/lib/db/prisma';
-import { ratelimit } from '@/lib/ratelimit';
-
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID!,
-  key_secret: process.env.RAZORPAY_KEY_SECRET!,
-});
-
-const PLAN_ID_MAP: Record<string, string | undefined> = {
-  PRO_INR_MONTHLY: process.env.RAZORPAY_PRO_PLAN_INR,
-  PRO_USD_MONTHLY: process.env.RAZORPAY_PRO_PLAN_USD,
-  PRO_INR_ANNUAL: process.env.RAZORPAY_PRO_ANNUAL_INR,
-  PRO_USD_ANNUAL: process.env.RAZORPAY_PRO_ANNUAL_USD,
-};
-
-export async function POST(req: NextRequest) {
-  const { userId } = auth();
-  if (!userId) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
-
-  const { success } = await ratelimit.payments.limit(`pay:${userId}`);
-  if (!success) return NextResponse.json({ error: 'Too many attempts' }, { status: 429 });
-
-  const { plan, currency, billing } = await req.json();
-  const planKey = `${plan}_${currency}_${billing}`.toUpperCase();
-  const planId = PLAN_ID_MAP[planKey];
-  if (!planId) return NextResponse.json({ error: 'invalid plan' }, { status: 400 });
-
-  const user = await prisma.user.findUnique({ where: { clerkId: userId } });
-  if (!user) return NextResponse.json({ error: 'user not synced' }, { status: 404 });
-
-  const subscription = await razorpay.subscriptions.create({
-    plan_id: planId,
-    total_count: billing === 'annual' ? 10 : 120,
-    quantity: 1,
-    customer_notify: 1,
-    notes: { user_id: user.id, email: user.email, plan },
-  });
-
-  await prisma.subscription.upsert({
-    where: { userId: user.id },
-    create: {
-      userId: user.id,
-      plan: 'FREE',
-      status: 'pending',
-      razorpaySubscriptionId: subscription.id,
-      razorpayPlanId: planId,
-    },
-    update: {
-      status: 'pending',
-      razorpaySubscriptionId: subscription.id,
-      razorpayPlanId: planId,
-    },
-  });
-
-  return NextResponse.json({
-    subscription_id: subscription.id,
-    short_url: subscription.short_url,
-    razorpay_key_id: process.env.RAZORPAY_KEY_ID,
-  });
-}
-```
-
-### 1.3 Build Razorpay Webhook Handler
-
-**New file:** `src/app/api/webhooks/razorpay/route.ts`
-
-```ts
-import { NextRequest, NextResponse } from 'next/server';
-import crypto from 'crypto';
-import { prisma } from '@/lib/db/prisma';
-import * as Sentry from '@sentry/nextjs';
-
-export async function POST(req: NextRequest) {
-  const body = await req.text();
-  const sig = req.headers.get('x-razorpay-signature') ?? '';
-
-  const expected = crypto
-    .createHmac('sha256', process.env.RAZORPAY_WEBHOOK_SECRET!)
-    .update(body)
-    .digest('hex');
-
-  if (
-    expected.length !== sig.length ||
-    !crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(sig))
-  ) {
-    return new NextResponse('invalid signature', { status: 400 });
-  }
-
-  const payload = JSON.parse(body);
-  const eventId: string = payload.id;
-  const event: string = payload.event;
-
-  const existing = await prisma.subscriptionEvent.findUnique({
-    where: { razorpayEventId: eventId },
-  });
-  if (existing) return NextResponse.json({ ok: true, duplicate: true });
-
-  const sub = payload.payload?.subscription?.entity;
-  const userId: string | undefined = sub?.notes?.user_id;
-
-  await prisma.subscriptionEvent.create({
-    data: { razorpayEventId: eventId, userId, eventType: event, payload },
-  });
-
-  if (!userId) return NextResponse.json({ ok: true, ignored: true });
-
-  try {
-    switch (event) {
-      case 'subscription.activated':
-      case 'subscription.charged':
-        await prisma.subscription.update({
-          where: { userId },
-          data: {
-            plan: 'PRO',
-            status: 'active',
-            currentPeriodEnd: new Date(sub.current_end * 1000),
-            razorpayCustomerId: sub.customer_id ?? undefined,
-            cancelAtPeriodEnd: false,
-            pausedAt: null,
-          },
-        });
-        break;
-      case 'subscription.cancelled':
-        await prisma.subscription.update({
-          where: { userId },
-          data: { status: 'cancelled', cancelAtPeriodEnd: true },
-        });
-        break;
-      case 'subscription.completed':
-      case 'subscription.expired':
-        await prisma.subscription.update({
-          where: { userId },
-          data: { plan: 'FREE', status: 'expired' },
-        });
-        break;
-      case 'subscription.paused':
-        await prisma.subscription.update({
-          where: { userId },
-          data: { status: 'halted', pausedAt: new Date() },
-        });
-        break;
-      case 'subscription.resumed':
-        await prisma.subscription.update({
-          where: { userId },
-          data: { status: 'active', pausedAt: null },
-        });
-        break;
-      case 'payment.failed':
-        // TODO: trigger email notification, keep PRO until currentPeriodEnd
-        break;
-    }
-  } catch (err) {
-    Sentry.captureException(err, { tags: { event, userId } });
-    return new NextResponse('processing error', { status: 500 });
-  }
-
-  return NextResponse.json({ ok: true });
-}
-```
-
-### 1.4 Add Cancel Subscription Endpoint
-
-**New file:** `src/app/api/payments/cancel/route.ts`
-
-```ts
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
-import Razorpay from 'razorpay';
-import { prisma } from '@/lib/db/prisma';
-
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID!,
-  key_secret: process.env.RAZORPAY_KEY_SECRET!,
-});
-
-export async function POST() {
-  const { userId } = auth();
-  if (!userId) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
-
-  const user = await prisma.user.findUnique({
-    where: { clerkId: userId },
-    include: { subscription: true },
-  });
-
-  if (!user?.subscription?.razorpaySubscriptionId) {
-    return NextResponse.json({ error: 'no active subscription' }, { status: 404 });
-  }
-
-  await razorpay.subscriptions.cancel(
-    user.subscription.razorpaySubscriptionId,
-    true /* cancel_at_cycle_end */
-  );
-  // Webhook will fire `subscription.cancelled` to update DB
-
-  return NextResponse.json({ ok: true });
-}
-```
+- [ ] Submit live-mode business verification in the Dodo dashboard
+- [ ] Register the live-mode webhook endpoint with the live signing secret
+- [ ] Set live env vars on Vercel
+- [ ] Create the Pro Product in live mode (test products don't carry over)
 
 ---
 
@@ -731,11 +484,13 @@ When enqueueing, pass only `userId`. Worker fetches user record to get email.
 
 | File                                                               | Changes                                                                            |
 | ------------------------------------------------------------------ | ---------------------------------------------------------------------------------- |
-| `prisma/schema.prisma`                                             | Subscription model rebuilt, SubscriptionEvent added, Plan enum, contentHash on Job |
+| `prisma/schema.prisma`                                             | Subscription model on Dodo fields, SubscriptionEvent added, Plan enum, contentHash on Job |
 | `src/app/api/payments/create-order/route.ts`                       | DELETED                                                                            |
-| `src/app/api/payments/create-subscription/route.ts`                | NEW — Razorpay subscriptions API                                                   |
-| `src/app/api/payments/cancel/route.ts`                             | NEW — cancel at period end                                                         |
-| `src/app/api/webhooks/razorpay/route.ts`                           | NEW — HMAC verify, idempotency, all event types                                    |
+| `src/app/api/payments/verify/route.ts`                             | DELETED — Dodo webhook is source of truth                                          |
+| `src/app/api/payments/create-checkout/route.ts`                    | NEW — Dodo hosted checkout session                                                 |
+| `src/app/api/payments/cancel/route.ts`                             | NEW — cancel at period end via Dodo SDK                                            |
+| `src/app/api/webhooks/dodo/route.ts`                               | NEW — Standard Webhooks signature, `webhookId` idempotency, all subscription events |
+| `src/lib/payments/dodo.ts`                                         | NEW — Dodo SDK singleton                                                           |
 | `src/app/api/parse-resume/`                                        | DELETED (duplicate)                                                                |
 | `src/app/api/resume/route.ts`                                      | Magic-byte + max-size validation                                                   |
 | `src/app/api/ai/cover-letter/route.ts`                             | Uncomment + harden rate limit                                                      |

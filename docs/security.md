@@ -4,61 +4,72 @@ These are ordered by severity. Fix top-to-bottom.
 
 ---
 
-## 1. CRITICAL: Razorpay Webhook Missing — You Are Losing Revenue
+## 1. CRITICAL: Dodo Webhook Must Be the Source of Truth
 
-**Problem:** Currently `/api/payments/verify` is the only path that flips `Subscription.plan = 'PRO'`. If the user closes the tab between paying and the verify call, **they paid you and stayed free forever.**
+**Status:** Implemented at `src/app/api/webhooks/dodo/route.ts`. This section documents what to verify and never regress.
 
-There is no `/api/webhooks/razorpay` listener. There is no handler for `subscription.charged` (recurring billing), `subscription.cancelled`, or `payment.failed`.
+**Why it matters:** With Dodo, the user is redirected to a hosted checkout page. If they close the tab between paying and the redirect-back, the only thing that activates their subscription is the webhook. Without a working, signature-verified, idempotent webhook handler, **you accept payments without flipping the user to PRO** — exactly the failure mode the previous Razorpay verify-on-redirect flow had.
 
-**Impact:** Payment loss + drift between Razorpay state and your DB state. Eventually a user will threaten a chargeback.
+**What the handler must do:**
 
-**Fix:**
-
-Create `src/app/api/webhooks/razorpay/route.ts`:
+1. **Verify the Standard Webhooks signature** using `DODO_PAYMENTS_WEBHOOK_KEY` and the raw request body. Dodo signs `webhook-id.webhook-timestamp.body` with HMAC-SHA256 and sends it in the `webhook-signature` header.
+2. **Check idempotency** — look up the `webhook-id` header value in `SubscriptionEvent.webhookId` (unique). Skip if already processed.
+3. **Resolve the user** from `metadata.user_id` (set when the checkout session was created).
+4. **Apply the state change** based on the event type.
 
 ```ts
 import { NextRequest, NextResponse } from 'next/server';
-import crypto from 'crypto';
+import { Webhook } from 'standardwebhooks';
 import { prisma } from '@/lib/db/prisma';
+import { config } from '@/config';
+
+const wh = new Webhook(config.dodo.webhookKey);
 
 export async function POST(req: NextRequest) {
   const body = await req.text();
-  const sig = req.headers.get('x-razorpay-signature') ?? '';
+  const headers = {
+    'webhook-id': req.headers.get('webhook-id') ?? '',
+    'webhook-timestamp': req.headers.get('webhook-timestamp') ?? '',
+    'webhook-signature': req.headers.get('webhook-signature') ?? '',
+  };
 
-  const expected = crypto
-    .createHmac('sha256', process.env.RAZORPAY_WEBHOOK_SECRET!)
-    .update(body)
-    .digest('hex');
-
-  if (!crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(sig))) {
+  try {
+    await wh.verify(body, headers);
+  } catch {
     return new NextResponse('invalid signature', { status: 400 });
   }
 
+  const webhookId = headers['webhook-id'];
   const payload = JSON.parse(body);
-  const eventId = payload.id; // razorpay event id
-  const event = payload.event;
+  const event: string = payload.type; // e.g. "subscription.active"
+  const userId: string | undefined = payload.data?.metadata?.user_id;
 
   // Idempotency
-  const existing = await prisma.subscriptionEvent.findUnique({
-    where: { razorpayEventId: eventId },
-  });
+  const existing = await prisma.subscriptionEvent.findUnique({ where: { webhookId } });
   if (existing) return NextResponse.json({ ok: true, duplicate: true });
 
   await prisma.subscriptionEvent.create({
-    data: { razorpayEventId: eventId, eventType: event, payload },
+    data: { webhookId, userId, eventType: event, payload },
   });
 
+  if (!userId) return NextResponse.json({ ok: true, ignored: true });
+
   switch (event) {
-    case 'subscription.activated':
-    case 'subscription.charged':
-      await activateOrExtend(payload);
+    case 'subscription.active':
+    case 'subscription.renewed':
+      // plan=PRO, status=active, currentPeriodEnd extended
       break;
     case 'subscription.cancelled':
-    case 'subscription.paused':
-      await downgradeToFree(payload);
+      // status=cancelled, cancelAtPeriodEnd=true (still PRO until period end)
+      break;
+    case 'subscription.expired':
+      // plan=FREE, status=expired
+      break;
+    case 'subscription.on_hold':
+      // status=on_hold (Dodo's payment-retry phase)
       break;
     case 'payment.failed':
-      // Notify user, keep PRO active until expiresAt
+      // Log; don't downgrade — let grace period play out
       break;
   }
 
@@ -66,21 +77,22 @@ export async function POST(req: NextRequest) {
 }
 ```
 
-Add to `prisma/schema.prisma`:
+Schema (already in `prisma/schema.prisma`):
 
 ```prisma
 model SubscriptionEvent {
-  id              String   @id @default(uuid())
-  razorpayEventId String   @unique @map("razorpay_event_id")
-  eventType       String   @map("event_type")
-  payload         Json
-  createdAt       DateTime @default(now()) @map("created_at")
+  id          String   @id @default(uuid())
+  webhookId   String   @unique @map("webhook_id")
+  userId      String?  @map("user_id")
+  eventType   String   @map("event_type")
+  payload     Json
+  createdAt   DateTime @default(now()) @map("created_at")
 
   @@map("subscription_events")
 }
 ```
 
-Register the webhook in Razorpay Dashboard with `RAZORPAY_WEBHOOK_SECRET` (separate from `RAZORPAY_KEY_SECRET`).
+Register the webhook in the Dodo dashboard under **Developer → Webhooks**. The signing secret (`whsec_...`) goes into `DODO_PAYMENTS_WEBHOOK_KEY` — separate from `DODO_PAYMENTS_API_KEY`.
 
 ---
 
@@ -175,11 +187,11 @@ Add `User.emailDigestEnabled Boolean @default(true)` and a `/unsubscribe` route 
 
 ---
 
-## 5. HIGH: No Idempotency on Razorpay Webhook
+## 5. HIGH: No Idempotency on Dodo Webhook
 
-**Problem:** Razorpay retries webhooks if you don't return 2xx fast. Without an idempotency check, you'll process `subscription.charged` twice → user's `expiresAt` extended twice → free month.
+**Problem:** Dodo (like every well-behaved webhook sender) retries delivery if you don't return 2xx promptly. Without an idempotency check, you'll process `subscription.renewed` twice → `currentPeriodEnd` extended twice → free month.
 
-**Fix:** Persist `razorpay_event_id` (unique) before processing. See fix #1.
+**Fix:** Persist the `webhook-id` header value in `SubscriptionEvent.webhookId @unique` BEFORE applying any state change. See fix #1.
 
 ---
 
@@ -249,15 +261,14 @@ if (!detected || !ALLOWED.has(detected.mime)) {
 
 ---
 
-## 10. MEDIUM: Webhook Signature for Clerk vs Razorpay vs QStash
+## 10. MEDIUM: Webhook Signature for Clerk vs Dodo vs QStash
 
 **Problem:** Three different webhook senders, three different signature schemes. Easy to mix up.
 
 **Audit:**
 
 - `/api/webhooks/clerk` — uses Svix (`svix.Webhook`). ✅ Should be correct.
-- `/api/payments/verify` — uses `RAZORPAY_KEY_SECRET` HMAC. ✅ Correct for client-confirm.
-- `/api/webhooks/razorpay` — must use `RAZORPAY_WEBHOOK_SECRET` (different secret). ⚠️ Don't reuse.
+- `/api/webhooks/dodo` — uses Standard Webhooks (`new Webhook(DODO_PAYMENTS_WEBHOOK_KEY).verify(...)`). HMAC-SHA256 over `webhook-id.webhook-timestamp.body`. ⚠️ Verify against the **raw** body — don't `JSON.parse` first.
 - `/api/queue/process-job` — must use QStash signature (`Upstash-Signature` header) verified with `QSTASH_CURRENT_SIGNING_KEY` and `QSTASH_NEXT_SIGNING_KEY`. ⚠️ Verify it does.
 
 Use Upstash's verifier:
@@ -308,15 +319,15 @@ Apply both in email template and matches detail modal.
 
 ---
 
-## 13. MEDIUM: `/api/payments/create-order` Has No Rate Limit
+## 13. MEDIUM: `/api/payments/create-checkout` Needs a Rate Limit
 
-**Problem:** Anonymous spam can create thousands of Razorpay orders. Razorpay rate-limits the API but you'll waste calls.
+**Problem:** Spam can create thousands of Dodo checkout sessions. Dodo rate-limits the API but you'll waste calls and pollute your dashboard with abandoned sessions.
 
 **Fix:**
 
 ```ts
 const { success } = await ratelimit.payments.limit(`pay:${userId}`);
-// Allow 10 order creates per day
+// Allow 10 checkout sessions per user per day
 ```
 
 ---
@@ -385,7 +396,7 @@ git filter-repo --path madio-backend-user_accessKeys.csv --invert-paths
 
 | #                               | Severity        | Fix Time                  |
 | ------------------------------- | --------------- | ------------------------- |
-| 1. Razorpay webhook missing     | CRITICAL        | 1 day                     |
+| 1. Dodo webhook source-of-truth | CRITICAL        | (already shipped — verify) |
 | 2. AI rate limits commented out | CRITICAL        | 30 min                    |
 | 3. Email sender on test domain  | CRITICAL        | 2 hours (DNS propagation) |
 | 4. No unsubscribe link          | HIGH            | 2 hours                   |

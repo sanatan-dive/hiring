@@ -8,12 +8,12 @@ Everything must be checked off before you tell anyone about Hirin'. Ordered by p
 
 ### Security & Payments
 
-- [ ] **Implement Razorpay Subscriptions API** (replace one-shot orders) — see [payment.md](payment.md)
-- [ ] **Build `/api/webhooks/razorpay`** — handle activated/charged/cancelled/failed events
-- [ ] **Add idempotency** — `SubscriptionEvent.razorpayEventId` unique
+- [x] **Dodo Payments hosted checkout** (replaced Razorpay one-shot orders) — see [payment.md](payment.md)
+- [x] **Built `/api/webhooks/dodo`** — handles `subscription.active`, `subscription.renewed`, `subscription.cancelled`, `subscription.expired`, `subscription.on_hold`, `payment.failed`
+- [x] **Idempotency** — `SubscriptionEvent.webhookId` unique on Dodo `webhook-id` header
 - [ ] **Uncomment AI rate limits** — `/api/ai/cover-letter`, `/api/ai/interview-prep` (20/day per Pro user)
 - [ ] **Add rate limit on `/api/jobs/scrape`** — 5/day per Pro user
-- [ ] **Add rate limit on `/api/payments/create-subscription`** — 10/day
+- [ ] **Add rate limit on `/api/payments/create-checkout`** — 10/day
 - [ ] **Resume upload validation** — magic-byte check, max 5MB
 - [ ] **Email custom domain** — buy `hirin.app`, set DKIM/SPF/DMARC in Resend
 - [ ] **`List-Unsubscribe` header on digest emails**
@@ -28,7 +28,7 @@ Everything must be checked off before you tell anyone about Hirin'. Ordered by p
 
 - [ ] **Delete duplicate `/api/parse-resume/`** (keep `/api/resume/parse/`)
 - [ ] **Consolidate `lib/ratelimit.ts` and `lib/rate-limit.ts`** into one
-- [ ] **Drop `Subscription.stripeCustomerId`** field (run migration)
+- [x] **Drop `Subscription.stripeCustomerId`** field (replaced by Dodo fields in migration)
 - [ ] **Replace `console.log` calls with `log` helper** routing to Sentry breadcrumbs
 - [ ] **Remove `useState<any>`** in `Onboard/`, `matches/`, `profile/`, `lib/api/remoteok.ts`
 - [ ] **Pick one of `GOOGLE_API_KEY` / `GEMINI_API_KEY`** — drop the other from env
@@ -39,17 +39,18 @@ Everything must be checked off before you tell anyone about Hirin'. Ordered by p
 
 ### Subscriptions
 
-- [ ] Create Razorpay test account, complete KYC
-- [ ] Create Plans in Razorpay Dashboard: Pro Monthly INR/USD, Pro Annual INR/USD
-- [ ] Save Plan IDs to env: `RAZORPAY_PRO_PLAN_INR`, `RAZORPAY_PRO_PLAN_USD`
-- [ ] Update `prisma/schema.prisma` (Subscription model + SubscriptionEvent)
-- [ ] Run migration: `npx prisma migrate dev --name razorpay_subscriptions`
-- [ ] Build `/api/payments/create-subscription` (replace create-order)
-- [ ] Build `/api/payments/cancel`
-- [ ] Build `/api/webhooks/razorpay` with HMAC verify and idempotency
-- [ ] Update Pricing page UI to use new subscription flow
+- [ ] Create Dodo Payments account, switch to Test Mode (no KYC for test)
+- [ ] Create the Pro Product in Dodo dashboard (Subscription type, $9/mo, monthly billing); enable Adaptive Pricing if you want auto-INR
+- [ ] Save Product ID to env: `DODO_PRO_PRODUCT_ID`
+- [x] Update `prisma/schema.prisma` (Subscription with `dodoSubscriptionId`/`dodoCustomerId`/`currentPeriodEnd`/`cancelAtPeriodEnd` + `SubscriptionEvent.webhookId`)
+- [x] Run migration: `npx prisma migrate dev --name dodo_payments`
+- [x] Build `/api/payments/create-checkout` (replaced create-order)
+- [x] Build `/api/payments/cancel`
+- [x] Build `/api/webhooks/dodo` with Standard Webhooks verify and `webhookId` idempotency
+- [x] Update Pricing page UI to redirect to Dodo's hosted checkout
 - [ ] Add "Manage subscription" section on `/profile`
-- [ ] Test end-to-end with `rzp_test_` keys + ngrok webhook
+- [ ] Test end-to-end with `sk_test_` Dodo key + ngrok webhook (card `4242 4242 4242 4242`)
+- [ ] Submit business verification for Dodo live mode (1-3 business days)
 
 ### Plan Gating
 
@@ -116,18 +117,18 @@ Everything must be checked off before you tell anyone about Hirin'. Ordered by p
 - [ ] Verify `robots.ts` and `sitemap.ts` include all public routes
 - [ ] Ensure `noindex` on `/matches`, `/profile`, `/applications` (private)
 
-### Legal (Razorpay requires these)
+### Legal (Dodo requires these for live-mode KYC, and the checkout page links to them)
 
 - [ ] **Terms of Service** at `/terms`
 - [ ] **Privacy Policy** at `/privacy` — explicitly mention resume PII handling, GDPR delete-on-request, scraping disclaimer
-- [ ] **Refund Policy** at `/refund` — 14-day, must be visible at checkout for Razorpay
-- [ ] **Contact** at `/contact` with support email — also Razorpay requirement
+- [ ] **Refund Policy** at `/refund` — set your refund window (Dodo enforces what you publish)
+- [ ] **Contact** at `/contact` with support email — Dodo requires a contact channel for buyers
 
 ### Domain & Deploy
 
 - [ ] Buy domain (`hirin.app` or alternative)
 - [ ] Vercel: production deployment, custom domain, SSL
-- [ ] Set all env vars in Vercel: DATABASE*URL, CLERK*_, RAZORPAY\__, RESEND\_\*, etc.
+- [ ] Set all env vars in Vercel: DATABASE_URL, CLERK_*, DODO_PAYMENTS_*, DODO_PRO_PRODUCT_ID, RESEND_*, etc.
 - [ ] Verify Sentry source maps upload in CI
 - [ ] Configure Vercel cron secret = `CRON_SECRET`
 - [ ] Test daily cron in production (manually trigger first time)
@@ -144,7 +145,7 @@ Everything must be checked off before you tell anyone about Hirin'. Ordered by p
 - [ ] Run all P0 tests from [test-cases.md](test-cases.md) (47 tests)
 - [ ] Test on iPhone Safari, Android Chrome, desktop Chrome/Firefox/Safari
 - [ ] Test full payment flow with real card (you, not test mode) — refund yourself after
-- [ ] Test webhook delivery via Razorpay's "Resend" button
+- [ ] Test webhook delivery via Dodo dashboard's "Resend" button on a delivered event
 - [ ] Recruit 5-10 beta testers (friends, indie hackers, r/cscareerquestions DMs)
 - [ ] Monitor Sentry for errors during beta — fix top 3 before public launch
 - [ ] Stress test cron: simulate 500 users, ensure digest cron completes in < 60s

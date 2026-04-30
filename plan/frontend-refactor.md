@@ -536,36 +536,27 @@ export function PricingClient({ defaultCurrency }: { defaultCurrency: 'INR' | 'U
 }
 ```
 
-### 4.3 ✅ Razorpay Checkout in PlanCard
+### 4.3 ✅ Dodo Hosted Checkout in PlanCard
 
 ```tsx
 function PlanCard({ ..., currency, billing }: PlanCardProps) {
   const handleClick = async () => {
-    const res = await fetch('/api/payments/create-subscription', {
+    const res = await fetch('/api/payments/create-checkout', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ plan: 'PRO', currency, billing }),
     });
-    const { subscription_id, razorpay_key_id } = await res.json();
+    const { checkoutUrl } = await res.json();
 
-    const rzp = new (window as any).Razorpay({
-      key: razorpay_key_id,
-      subscription_id,
-      name: 'Hirin',
-      description: `Pro ${billing}`,
-      handler: () => {
-        window.location.href = '/matches?upgraded=1';
-      },
-      theme: { color: '#000' },
-    });
-    rzp.open();
+    // Dodo is a redirect-style hosted checkout — no JS modal to load.
+    window.location.href = checkoutUrl;
   };
 
   // Render
 }
 ```
 
-Load Razorpay script via `<Script src="https://checkout.razorpay.com/v1/checkout.js" />` at app root.
+No external script needed. The Dodo SDK lives server-side; the browser just follows the redirect to `https://checkout.dodopayments.com/...` (or `https://test.checkout.dodopayments.com/...` in test mode). After payment, Dodo redirects back to `NEXT_PUBLIC_APP_URL/matches?upgraded=1` and the webhook flips the user to PRO asynchronously.
 
 ---
 
@@ -617,7 +608,7 @@ const [savedJobs, setSavedJobs] = useState<BookmarkWithJob[]>([]);
 </button>
 ```
 
-Backend: `/api/account/delete` cascades via Prisma, calls `clerk.users.deleteUser(...)`, cancels Razorpay subscription.
+Backend: `/api/account/delete` cascades via Prisma, calls `clerk.users.deleteUser(...)`, cancels the user's Dodo subscription via `cancelSubscription()`.
 
 ### 5.4 ✅ Resume Versions UI
 
@@ -757,7 +748,7 @@ const [confirmOpen, setConfirmOpen] = useState(false);
 | `src/hooks/useMatches.ts`                        | NEW — useInfiniteQuery                                               |
 | `src/app/api/matches/route.ts`                   | Cursor pagination                                                    |
 | `src/app/pricing/page.tsx`                       | Server-side currency detection                                       |
-| `src/app/pricing/PricingClient.tsx`              | NEW — currency + annual toggle, Razorpay subscription flow           |
+| `src/app/pricing/PricingClient.tsx`              | NEW — currency + annual toggle, Dodo hosted-checkout redirect        |
 | `src/app/profile/page.tsx`                       | Type savedJobs, manage subscription, delete account, resume versions |
 | `src/app/layout.tsx`                             | OG/Twitter meta, favicon                                             |
 | `src/lib/analytics.ts`                           | NEW — track helper                                                   |

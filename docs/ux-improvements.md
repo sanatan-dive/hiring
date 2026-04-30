@@ -420,7 +420,7 @@ const [savedJobs, setSavedJobs] = useState<Job[]>([]);
 </button>
 ```
 
-Backend: cascade-delete via Prisma, cancel Razorpay subscription, sign out via Clerk.
+Backend: cascade-delete via Prisma, cancel Dodo subscription via `cancelSubscription()`, sign out via Clerk.
 
 ### 4. ✅ Show Resume Versions
 
@@ -483,7 +483,7 @@ This converts better than two stacked cards.
 3-4 FAQ items below the cards:
 
 - "Can I cancel anytime?" Yes, plan stays active until period end.
-- "What payment methods?" UPI, cards, netbanking via Razorpay.
+- "What payment methods?" Cards, UPI, netbanking, wallets — handled by Dodo's hosted checkout (varies by buyer country).
 - "Do you offer refunds?" 14-day refund if you haven't used Pro features.
 - "Can I change plans?" Yes, prorated.
 

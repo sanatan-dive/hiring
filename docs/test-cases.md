@@ -30,20 +30,20 @@ Priority levels:
 
 ## Payment & Subscription Tests (P0)
 
-| #   | Test Case                                     | Steps                                                   | Expected Result                                           |
-| --- | --------------------------------------------- | ------------------------------------------------------- | --------------------------------------------------------- |
-| 16  | Razorpay subscription creation                | Click "Upgrade Pro"                                     | Razorpay subscription created, modal opens with plan      |
-| 17  | Subscription activation via webhook           | Pay test card → Razorpay sends `subscription.activated` | DB: `plan=PRO, status=active, currentPeriodEnd` set       |
-| 18  | Webhook signature validation                  | Send webhook with bad signature                         | 400, no DB write                                          |
-| 19  | Webhook idempotency                           | Send same webhook event twice                           | Second call returns `{ duplicate: true }`, DB unchanged   |
-| 20  | Recurring charge                              | Trigger `subscription.charged` event                    | `currentPeriodEnd` extended by 1 month                    |
-| 21  | Cancel subscription                           | User clicks "Cancel" on profile                         | `cancelAtPeriodEnd=true`, plan stays PRO until period end |
-| 22  | Subscription expires                          | `subscription.completed` event after period end         | `plan=FREE, status=expired`, user loses Pro features      |
-| 23  | Payment failed                                | `payment.failed` event                                  | User gets email, stays PRO during grace period            |
-| 24  | INR vs USD pricing                            | Indian user vs US user opens `/pricing`                 | Indian sees ₹699/mo, US sees $9/mo                        |
-| 25  | Plan gating: free user clicks AI cover letter | Free plan + click "Generate Cover Letter"               | 403 with upgrade CTA                                      |
-| 26  | Plan gating: free user weekly limit           | Free user fetches jobs 4× in a week                     | 4th call returns 429                                      |
-| 27  | Plan gating: pro user daily limit             | Pro user calls AI cover letter 21× in a day             | 21st call returns 429                                     |
+| #   | Test Case                                     | Steps                                                       | Expected Result                                                 |
+| --- | --------------------------------------------- | ----------------------------------------------------------- | --------------------------------------------------------------- |
+| 16  | Dodo checkout session creation                | Click "Upgrade Pro"                                         | Dodo checkout session created, browser redirects to checkout URL |
+| 17  | Subscription activation via webhook           | Pay test card → Dodo sends `subscription.active`            | DB: `plan=PRO, status=active, currentPeriodEnd` set             |
+| 18  | Webhook signature validation                  | Send webhook with bad `webhook-signature` header            | 400, no DB write                                                |
+| 19  | Webhook idempotency                           | Replay same webhook (same `webhook-id`) twice               | Second call returns `{ duplicate: true }`, DB unchanged         |
+| 20  | Recurring charge                              | Trigger `subscription.renewed` event                        | `currentPeriodEnd` extended by 1 month                          |
+| 21  | Cancel subscription                           | User clicks "Cancel" on profile                             | `cancelAtPeriodEnd=true`, plan stays PRO until period end       |
+| 22  | Subscription expires                          | `subscription.expired` event after period end               | `plan=FREE, status=expired`, user loses Pro features            |
+| 23  | Payment failed                                | `payment.failed` event                                      | Logged; user stays PRO during Dodo's retry/grace window         |
+| 24  | INR vs USD pricing                            | Indian user vs US user opens `/pricing`                     | Indian sees localized INR (Dodo Adaptive Pricing), US sees $9/mo |
+| 25  | Plan gating: free user clicks AI cover letter | Free plan + click "Generate Cover Letter"                   | 403 with upgrade CTA                                            |
+| 26  | Plan gating: free user weekly limit           | Free user fetches jobs 4× in a week                         | 4th call returns 429                                            |
+| 27  | Plan gating: pro user daily limit             | Pro user calls AI cover letter 21× in a day                 | 21st call returns 429                                           |
 
 ## Security Tests (P0)
 
@@ -55,7 +55,7 @@ Priority levels:
 | 31  | XSS via job description              | Scrape a job with `<script>alert('xss')</script>` in description | Sanitized in `/matches` modal AND in email render |
 | 32  | SQL injection via search             | Search query: `'; DROP TABLE jobs;--`                            | Prisma parameterizes — no injection               |
 | 33  | Resume PII in logs                   | Upload resume, check Vercel logs                                 | No raw resume text or email in logs               |
-| 34  | Webhook replay attack                | Save a real Razorpay webhook payload, replay it 1 hour later     | Idempotency check blocks duplicate processing     |
+| 34  | Webhook replay attack                | Save a real Dodo webhook payload, replay it 1 hour later         | Idempotency check (`webhookId` unique) blocks duplicate processing |
 | 35  | Clerk webhook spoofing               | POST to `/api/webhooks/clerk` with bad Svix signature            | 400, no DB write                                  |
 | 36  | QStash worker spoofing               | POST to `/api/queue/process-job` without Upstash signature       | 400                                               |
 | 37  | Rate limit on payment order creation | Create 11 subscriptions in 1 day                                 | 11th returns 429                                  |
@@ -119,10 +119,10 @@ Priority levels:
 | 75  | DB down                     | Stop Postgres, hit `/api/matches`                 | 503, no crash                                             | P1       |
 | 76  | Redis down                  | Stop Upstash Redis, trigger rate-limited endpoint | Fail open or 503, configurable                            | P1       |
 | 77  | Resend down                 | Resend returns 500                                | Cron logs to Sentry, retries once, then continues         | P1       |
-| 78  | Razorpay down               | Razorpay API returns 503                          | Pricing page shows "Payments temporarily unavailable"     | P1       |
+| 78  | Dodo down                   | Dodo API returns 503                              | Pricing page shows "Payments temporarily unavailable"     | P1       |
 | 79  | Gemini quota exceeded       | API returns 429                                   | Cover letter modal shows "Try again in a few minutes"     | P1       |
 | 80  | Cron timeout                | 5000 users, cron > 60s                            | Function chunked or queued via QStash, no silent failures | P0       |
-| 81  | Concurrent webhook delivery | Razorpay sends 2 events at same instant           | DB transactions ordered correctly via `updated_at` check  | P1       |
+| 81  | Concurrent webhook delivery | Dodo sends 2 events at same instant               | DB transactions ordered correctly via `updated_at` check  | P1       |
 
 ## Account & Data Tests (P0-P1)
 
@@ -152,7 +152,7 @@ Currently **zero tests exist**. See [plan/production-hardening.md](../plan/produ
 
 - **Vitest** for unit tests (services, lib/, helpers)
 - **Playwright** for e2e (`/sign-up` → `/Onboard` → `/matches` flow)
-- **MSW** for mocking external APIs (Adzuna, Razorpay, Resend)
+- **MSW** for mocking external APIs (Adzuna, Dodo Payments, Resend)
 
 Minimum CI gate before merging to main:
 
