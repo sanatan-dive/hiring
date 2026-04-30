@@ -1,0 +1,16 @@
+{
+  "name": "hirin-extension",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Chrome/Edge extension that autofills job application forms from your Hirin profile + saves jobs while you browse.",
+  "scripts": {
+    "build": "node build.mjs",
+    "watch": "node build.mjs --watch",
+    "lint": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.299",
+    "esbuild": "^0.24.0",
+    "typescript": "^5.0.0"
+  }
+}
