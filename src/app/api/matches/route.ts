@@ -9,6 +9,7 @@ import {
   type UserSignals,
 } from '@/services/matching.service';
 import { generateEmbedding } from '@/lib/ai/google';
+import { diversifyBySource } from '@/lib/jobs/diversity';
 
 const MAX_LIMIT = 100;
 
@@ -146,6 +147,10 @@ export async function GET(req: Request) {
     } else {
       scored = reRankJobs(scored, null);
     }
+
+    // Diversify by source so dominant sources don't crowd out the head.
+    // Cap any single source to 40% of the result set.
+    scored = diversifyBySource(scored, { maxPerSourceFraction: 0.4 });
 
     // Cursor pagination over the filtered, ranked list
     let startIdx = 0;

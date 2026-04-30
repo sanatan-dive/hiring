@@ -5,10 +5,10 @@ import { searchAdzunaJobs } from '@/lib/api/adzuna';
 import { searchJSearchJobs } from '@/lib/api/jsearch';
 import { getRemoteOkJobs } from '@/lib/api/remoteok';
 import { getWeWorkRemotelyJobs } from '@/lib/api/weworkremotely';
+import { fetchYcJobs } from '@/lib/api/yc';
 import { generateEmbedding } from '@/lib/ai/google';
 import { publishJob } from '@/lib/queue/client';
 import { scrapeLinkedIn } from '@/lib/scrapers/linkedin';
-import { scrapeIndeed } from '@/lib/scrapers/indeed';
 import { sendScrapeCompleteEmail } from '@/services/email.service';
 
 // jobContentHash is now in @/lib/jobs/hash — re-export for back-compat
@@ -19,9 +19,9 @@ export { jobContentHash };
  * based on their JobPreferences. Deduplicates so we make N API calls, not 1
  * per user. Also enforces a small fan-out cap to stay inside free-tier quotas.
  */
-export async function buildPerUserFetchPlan(maxUnique = 25): Promise<
-  Array<{ query: string; location: string }>
-> {
+export async function buildPerUserFetchPlan(
+  maxUnique = 25
+): Promise<Array<{ query: string; location: string }>> {
   const users = await prisma.user.findMany({
     where: { jobPreferences: { isNot: null } },
     include: { jobPreferences: true },
@@ -35,9 +35,7 @@ export async function buildPerUserFetchPlan(maxUnique = 25): Promise<
     const role = prefs.desiredRoles?.[0]?.trim();
     if (!role) continue;
     const location =
-      prefs.workLocation === 'remote'
-        ? 'remote'
-        : (prefs.locations?.[0]?.trim() ?? 'remote');
+      prefs.workLocation === 'remote' ? 'remote' : (prefs.locations?.[0]?.trim() ?? 'remote');
     const key = `${role.toLowerCase()}|${location.toLowerCase()}`;
     if (!uniq.has(key)) uniq.set(key, { query: role, location });
     if (uniq.size >= maxUnique) break;
@@ -60,16 +58,19 @@ interface JobInput {
 export async function fetchAndSaveJobs(query: string, location: string = 'us') {
   log.info(`Fetching jobs for: ${query} in ${location}`);
 
-  // Fetch from sources in parallel
-  const [adzunaJobs, jsearchJobs, remoteOkJobs, wwrJobs] = await Promise.all([
+  // Fetch from sources in parallel.
+  // Indeed scraper removed (REVIEW §12) — Cloudflare-walled and unreliable.
+  // YC's WorkAtAStartup added — high-quality startup-focused, no API key.
+  const [adzunaJobs, jsearchJobs, remoteOkJobs, wwrJobs, ycJobs] = await Promise.all([
     searchAdzunaJobs(query, location).catch(() => []),
     searchJSearchJobs(`${query} in ${location}`).catch(() => []),
     getRemoteOkJobs(20).catch(() => []),
     getWeWorkRemotelyJobs(20).catch(() => []),
+    fetchYcJobs(15).catch(() => []),
   ]);
 
   log.info(
-    `Found ${adzunaJobs.length} Adzuna, ${jsearchJobs.length} JSearch, ${remoteOkJobs.length} RemoteOK, ${wwrJobs.length} WWR jobs`
+    `Found ${adzunaJobs.length} Adzuna, ${jsearchJobs.length} JSearch, ${remoteOkJobs.length} RemoteOK, ${wwrJobs.length} WWR, ${ycJobs.length} YC jobs`
   );
 
   // Transform to common format
@@ -135,12 +136,19 @@ export async function fetchAndSaveJobs(query: string, location: string = 'us') {
         scrapedAt: new Date(),
       };
     }),
+    ...ycJobs.map((j) => ({
+      title: j.title,
+      company: j.company,
+      location: j.location ?? 'Remote',
+      description: j.description,
+      url: j.url,
+      salary: j.salary,
+      source: 'yc',
+      scrapedAt: new Date(),
+    })),
   ];
 
-  // Bulk upsert (one by one for safety or use createMany with skipDuplicates if unique constraint exists)
-  // Since we have `url` as unique, we can use upsert or createMany (createMany skips duplicates is efficient)
-  // But createMany doesn't update existing records. Upsert loop is safer for updates but slower.
-  // For now, let's just loop and upsert to keep data fresh.
+  // Bulk upsert; saveJobs handles dedup via contentHash + URL upsert.
   return saveJobs(jobs);
 }
 
@@ -253,18 +261,13 @@ export async function performDeepScrape(source: string, query: string, location:
       salary: j.salary || null,
       scrapedAt: new Date(),
     }));
-  } else if (source === 'indeed') {
-    const scraped = await scrapeIndeed(query, location);
-    jobs = scraped.map((j) => ({
-      ...j,
-      description: j.description || null,
-      salary: j.salary || null,
-      scrapedAt: new Date(),
-    }));
   }
+  // Indeed scraper removed (REVIEW §12) — Cloudflare-walled, unreliable.
+  // For Indeed coverage, route through Bright Data Web Unlocker if you
+  // commit to a paid scraper service.
 
   await saveJobs(jobs);
-  return jobs; // Return the actual job objects
+  return jobs;
 }
 
 export async function getJobs(page: number = 1, limit: number = 10, filters?: { source?: string }) {
