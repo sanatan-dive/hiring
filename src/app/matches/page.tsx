@@ -120,16 +120,14 @@ const MatchesPage = () => {
         ]);
 
         if (bookmarksRes.ok) {
-          const data = await bookmarksRes.json();
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          setSavedJobs(data.bookmarks.map((b: any) => b.jobId));
+          const data: { bookmarks: { jobId: string }[] } = await bookmarksRes.json();
+          setSavedJobs(data.bookmarks.map((b) => b.jobId));
         }
 
         if (appsRes.ok) {
-          const data = await appsRes.json();
+          const data: { applications: { jobId: string; status: string }[] } = await appsRes.json();
           const appMap: Record<string, string> = {};
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          data.applications.forEach((app: any) => {
+          data.applications.forEach((app) => {
             appMap[app.jobId] = app.status;
           });
           setApplications(appMap);

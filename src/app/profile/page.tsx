@@ -21,6 +21,7 @@ import {
   Bookmark,
   Clock,
 } from 'lucide-react';
+import type { Bookmark as PrismaBookmark, Job } from '@prisma/client';
 import PreferenceCard from '@/components/preferences/PreferenceCard';
 import MultiSelect from '@/components/preferences/MultiSelect';
 import SalaryRangeSlider from '@/components/preferences/SalaryRangeSlider';
@@ -111,7 +112,7 @@ const ProfilePage = () => {
   const [editProjects, setEditProjects] = useState<Project[]>([]);
 
   // New State for Saved Jobs
-  const [savedJobs, setSavedJobs] = useState<any[]>([]); // eslint-disable-line @typescript-eslint/no-explicit-any
+  const [savedJobs, setSavedJobs] = useState<(PrismaBookmark & { job: Job })[]>([]);
 
   // Fetch profile from database
   useEffect(() => {

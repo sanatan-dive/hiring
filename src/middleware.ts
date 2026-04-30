@@ -24,8 +24,8 @@ export default clerkMiddleware(async (auth, request) => {
     return NextResponse.redirect(new URL('/matches', request.url), 303);
   }
 
-  // 2. Already-onboarded user trying to access /Onboard → block, send to matches
-  if (userId && pathname === '/Onboard' && isOnboarded) {
+  // 2. Already-onboarded user trying to access /onboard → block, send to matches
+  if (userId && pathname === '/onboard' && isOnboarded) {
     return NextResponse.redirect(new URL('/matches', request.url), 303);
   }
 

@@ -33,10 +33,30 @@ import {
 } from '@/types';
 import { usePreferencesState } from '@/lib/preferences-storage';
 
+interface ParsedResumeExperience {
+  company: string;
+  role: string;
+  duration: string;
+  description: string;
+}
+
+interface ParsedResumeEducation {
+  degree: string;
+  institute: string;
+}
+
+interface ParsedResume {
+  rawText: string;
+  skills: string[];
+  experience: ParsedResumeExperience[];
+  education: ParsedResumeEducation[];
+  name: string;
+  fileName: string;
+}
+
 const OnboardingPage = () => {
   const [activeSection, setActiveSection] = useState(0);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [parsedResume, setParsedResume] = useState<any>(null);
+  const [parsedResume, setParsedResume] = useState<ParsedResume | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true });
