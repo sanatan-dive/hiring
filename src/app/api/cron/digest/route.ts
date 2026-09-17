@@ -2,6 +2,7 @@ import { log } from '@/lib/log';
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/db/prisma';
 import { sendJobDigest, newUnsubscribeToken } from '@/services/email.service';
+import { materializeMatches } from '@/services/matching.service';
 
 export const dynamic = 'force-dynamic';
 // Vercel cron timeout safety: process in chunks
@@ -66,6 +67,10 @@ export async function GET(req: Request) {
       await Promise.allSettled(
         batch.map(async (user) => {
           try {
+            // Persist top matches before digest send — JobMatch rows are not
+            // created by GET /api/matches (live search only).
+            await materializeMatches(user.id, { limit: 10 });
+
             const newMatches = await prisma.jobMatch.findMany({
               where: { userId: user.id, emailedAt: null, status: { not: 'hidden' } },
               include: {
