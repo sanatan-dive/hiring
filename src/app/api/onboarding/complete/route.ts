@@ -2,6 +2,8 @@ import { log } from '@/lib/log';
 import { auth, currentUser, clerkClient } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/db/prisma';
+import { updateResumeEmbedding } from '@/services/resume.service';
+import { materializeMatches, buildMatchProfileText } from '@/services/matching.service';
 
 // POST - Save complete onboarding data (resume + preferences + skills)
 export async function POST(req: Request) {
@@ -122,6 +124,53 @@ export async function POST(req: Request) {
         jobType,
       },
     });
+
+    // Embed + materialize JobMatch rows so digest/cron have rows immediately.
+    const latestResume = await prisma.resume.findFirst({
+      where: { userId: user.id },
+      orderBy: { createdAt: 'desc' },
+      include: { parsedSkills: true, parsedExperiences: true },
+    });
+    if (latestResume) {
+      const refreshed = await prisma.user.findUnique({
+        where: { id: user.id },
+        select: {
+          skills: true,
+          hiddenCompanies: true,
+          resumes: {
+            where: { id: latestResume.id },
+            take: 1,
+            select: {
+              id: true,
+              rawText: true,
+              parsedSkills: { select: { skill: true } },
+              parsedExperiences: {
+                select: { role: true, company: true, description: true },
+              },
+            },
+          },
+          jobPreferences: {
+            select: {
+              desiredRoles: true,
+              experienceLevel: true,
+              workLocation: true,
+              locations: true,
+            },
+          },
+        },
+      });
+      if (refreshed) {
+        const profileText = buildMatchProfileText(refreshed);
+        if (profileText) {
+          await updateResumeEmbedding(latestResume.id, profileText);
+        }
+      }
+      try {
+        await materializeMatches(user.id, { limit: 10 });
+      } catch (err) {
+        log.error('materializeMatches after onboarding failed', err, { userId: user.id });
+      }
+    }
 
     // Update Clerk metadata to mark user as onboarded
     const client = await clerkClient();

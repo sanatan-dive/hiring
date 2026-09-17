@@ -2,6 +2,8 @@ import { log } from '@/lib/log';
 import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/db/prisma';
+import { updateResumeEmbedding } from '@/services/resume.service';
+import { materializeMatches } from '@/services/matching.service';
 import { fileTypeFromBuffer } from 'file-type';
 
 const MAX_RESUME_BYTES = 5 * 1024 * 1024; // 5MB
@@ -136,6 +138,19 @@ export async function POST(req: Request) {
         rawText,
       },
     });
+
+    // After a successful upload with extractable text, embed + materialize matches.
+    if (rawText?.trim()) {
+      try {
+        await updateResumeEmbedding(resume.id, rawText);
+        await materializeMatches(user.id, { limit: 10 });
+      } catch (err) {
+        log.error('materializeMatches after resume upload failed', err, {
+          userId: user.id,
+          resumeId: resume.id,
+        });
+      }
+    }
 
     return NextResponse.json({ resume });
   } catch (error) {
