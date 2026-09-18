@@ -17,6 +17,11 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 });
 
+// ClerkProvider (below) requires NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY during
+// render. Skip static prerender so `next build` works without Clerk secrets;
+// auth still enforced at request time by middleware + Clerk.
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: {
     default: "Hirin' — AI-Powered Job Matching",
