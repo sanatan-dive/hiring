@@ -1,10 +1,8 @@
 import crypto from 'node:crypto';
-import { Resend } from 'resend';
 import sanitizeHtml from 'sanitize-html';
 import { log } from '@/lib/log';
 import JobDigestEmail from '@/lib/email/templates/JobDigest';
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+import { getResend } from '@/lib/email/resend';
 
 const EMAIL_FROM = process.env.EMAIL_FROM ?? 'Hirin <onboarding@resend.dev>';
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
@@ -120,7 +118,7 @@ export const sendJobDigest = async ({
   const unsubUrl = unsubscribeUrl(unsubscribeToken);
 
   try {
-    const { data, error } = await resend.emails.send({
+    const { data, error } = await getResend().emails.send({
       from: EMAIL_FROM,
       to: [to],
       subject: generateDigestSubject(jobs),
@@ -192,7 +190,7 @@ export const sendScrapeCompleteEmail = async (to: string, jobs: ScrapedJob[], so
     .join('');
 
   try {
-    const { data, error } = await resend.emails.send({
+    const { data, error } = await getResend().emails.send({
       from: EMAIL_FROM,
       to: [to],
       subject: `${count} new jobs from ${source}`,

@@ -1,14 +1,12 @@
 import { log } from '@/lib/log';
 import { NextResponse } from 'next/server';
-import { Resend } from 'resend';
 import { findNewJobsForWatchedCompanies, refreshFromCareersPage } from '@/services/watched-company.service';
 import WatchedCompanyAlertEmail from '@/lib/email/templates/WatchedCompanyAlert';
 import prisma from '@/lib/db/prisma';
+import { getResend } from '@/lib/email/resend';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
-
-const resend = new Resend(process.env.RESEND_API_KEY);
 const EMAIL_FROM = process.env.EMAIL_FROM ?? 'Hirin <onboarding@resend.dev>';
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
 
@@ -64,7 +62,7 @@ export async function GET(req: Request) {
             : undefined;
 
           const totalJobs = alerts.reduce((acc, a) => acc + a.jobs.length, 0);
-          await resend.emails.send({
+          await getResend().emails.send({
             from: EMAIL_FROM,
             to: [bucket.user.email],
             subject: `${totalJobs} new role${totalJobs === 1 ? '' : 's'} at ${alerts[0].company}${alerts.length > 1 ? ` and ${alerts.length - 1} more` : ''}`,
